@@ -1,0 +1,1739 @@
+{
+  "updatedAt": "2025-07-11T02:58:37.231Z",
+  "createdAt": "2024-05-22T06:32:10.581Z",
+  "id": "sMqldMSmVSSiykUz",
+  "name": "[Sync] - 同步OMS渠道到MES上",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "76d5f5c6-13e8-443b-a2f9-72ca5097df8e",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "R",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2c018ec3-7490-472a-b4e1-1027434b8e67",
+      "name": "If_Type_eq_R",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "collection": "companydelivernotes",
+        "options": {
+          "limit": 1,
+          "sort": "{\"_id\":1}"
+        },
+        "query": "={{ $('get_job_info').item.json.last_nosql_id ?\nJSON.stringify(\n{ \"$expr\": { \"$gt\": [\"$_id\", { \"$toObjectId\": $('get_job_info').item.json.last_nosql_id }] } })\n: \n \"{}\"\n\n }}\n\n "
+      },
+      "id": "a14135d3-3f5f-4e08-b776-59b73bed22e7",
+      "name": "companydelivernotes",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "companyorders",
+        "options": {
+          "limit": 1,
+          "sort": "{\"_id\":1}"
+        },
+        "query": "={ \"$expr\": { \"$gt\": [\"$_id\", { \"$toObjectId\": \"{{$json.orderId }}\"} ] } }"
+      },
+      "id": "7e155909-e005-477f-8b7b-b2970c43ad2c",
+      "name": "companyorders",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        160
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\"channels\": {{$jmespath($input.first().json,\" not_null(path[*].tradeInfo.channel)[]|[0]\")}}\n}",
+        "options": {}
+      },
+      "id": "dedb109b-0498-4526-8b91-e06b5dda1fab",
+      "name": "GetChannels",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        2288,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\"snlist\": {{ $jmespath($input.first().json,\"goodsList[*].snList[]\") }}}\n",
+        "options": {}
+      },
+      "id": "5cd62530-5800-4a2d-9fab-60f5291b011a",
+      "name": "GetSnlist",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        2048,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "767970c3-58da-48f8-bfcc-2b150ee22696",
+              "leftValue": "={{ $json.snlist }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2d28a033-3c01-4218-945d-b46f0c3f39dd",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2288,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "sMqldMSmVSSiykUz",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "fd48077e-862c-48a8-afc7-08be56edc43e",
+      "name": "Execute Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        4064,
+        272
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"job_id\": 1\n}\n",
+        "options": {}
+      },
+      "id": "ff2f26b1-2ff4-484a-9721-16a04167fc59",
+      "name": "set_job_id",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -160,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"task_result\": \"sn是空的\"\n}\n",
+        "options": {}
+      },
+      "id": "468dfcb6-b0ba-4354-b8e2-d146a375cbbf",
+      "name": "set_task_result_sn_empty",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        2592,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('create_task_log').item.json.id }}",
+            "task_result": "任务正在执行，本次检查结束 。"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start_id",
+              "displayName": "start_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "41c8d0f4-fba8-49f6-a4db-9e0eb9d4b060",
+      "name": "update_task_log2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1296,
+        -304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      },
+      "id": "c0cd8259-2dd7-4275-95f8-8fdaae832e27",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.job_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "130a541f-ba09-4265-a397-bf4b94ac265d",
+      "name": "get_job_info",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        80,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "execution",
+        "operation": "get",
+        "executionId": "={{ $json.last_n8n_execution_id || 0  }}",
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "98d43d3f-98ef-43c9-bbd0-6b01b0039906",
+      "name": "n8n",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        560,
+        304
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "BEGIN TRANSACTION;\nupdate consm_barcodebindinfo set \n  Channel='{{ $json.channels }}',\n  modifytime=GETDATE() from consm_barcodebindinfo \n\n  and \n  retroid IN {{ JSON.stringify($jmespath($json,\"snlist\" )).replace(\"[\",\"(\").replace(\"]\",\")\").replaceAll(\"\\\"\",\"'\") }};\n\nDECLARE @UpdatedRows INT;\nSET @UpdatedRows = @@ROWCOUNT;\n\nCOMMIT TRANSACTION;\nSELECT @UpdatedRows AS UpdatedRowsCount;\n"
+      },
+      "id": "28c0a08b-0d06-48a5-91fc-2de62f2c3602",
+      "name": "SQL_update_mes",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        288
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{ $json.id }}",
+            "task_start_time": "={{ $now }}",
+            "previous_id": "={{ $json.last_nosql_id||\"empty\" }}",
+            "n8n_execution_id": "={{ $execution.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "previous_id",
+              "displayName": "previous_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "n8n_execution_id",
+              "displayName": "n8n_execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "job_id"
+          ]
+        }
+      },
+      "id": "4ebd6d42-d7c8-467e-bb81-6f5960149e85",
+      "name": "create_task_log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        800,
+        -448
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "task_end_time": "={{ $now }}",
+            "task_result": "={{ $json.task_result }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start_id",
+              "displayName": "start_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "07f1e9b3-3f21-4b07-9c97-eb208a4e2fb6",
+      "name": "update_task_log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        3744,
+        -320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2ac3bf83-4353-48a0-839f-9dc19367a4d9",
+              "leftValue": "={{ $json?.status || \"404\" }}",
+              "rightValue": "running",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "68b31562-bb20-4c8f-911a-6dfd234013de",
+      "name": "If_running",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        784,
+        304
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "263a1ea6-40a4-4e5d-9bb7-75eb32738586",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3264,
+        448
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "2c2bcd0b-06e5-4432-9155-c2a044f08e7c",
+      "name": "No Operation, do nothing3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3008,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Sync",
+        "height": 513.0450063385582,
+        "width": 2495.2588698108416
+      },
+      "id": "be21fdb5-2256-49e8-9542-c20337040f9a",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        752,
+        128
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f58fa82e-1b85-40a4-acb5-c3957dc296f9",
+      "name": "When clicking \"Test workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "6a8cd95f-ea59-4ba5-87d4-2ebdc049ea59",
+      "name": "Merge_sn_channel",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2592,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "494d1c5b-652f-40b5-9152-dec725ec8137",
+      "name": "Merge_wait_task_finish",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        3584,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "b62a9d6b-ffd8-49fd-9731-956b1826eda2",
+      "name": "Merge_taskid_and_loginfo",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        3504,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"task_result\": \"{{$('companydelivernotes').item.json.isEmpty()?\"No Record!\":\"Type not 'R'\" }}\"\n}\n",
+        "options": {}
+      },
+      "id": "b5357bb5-e28a-479d-86ac-56427b918c20",
+      "name": "set_task_empty_or_type_not_R",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        2048,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "52c9e053-8068-4677-b591-0b674420b424",
+      "name": "Wait_2S",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        320
+      ],
+      "webhookId": "c9670ed2-983d-4129-880b-896d30851c1b"
+    },
+    {
+      "parameters": {},
+      "id": "86e8c977-bab1-4040-91cc-d83b16d7b826",
+      "name": "No Operation, do nothing1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Task - 更新任务日志",
+        "height": 367.8073421100579,
+        "width": 2971.182210589338
+      },
+      "id": "60867518-32e7-4bfa-9694-9dfc6f11dacb",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -496
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Job - 更新同步工作表",
+        "height": 182.83597166044598,
+        "width": 2489.1843687387563
+      },
+      "id": "75b9dca9-3ecc-4c89-91d8-4db90bf44849",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2b8eedab-d796-4602-9613-886c2a675054",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "83df1e7d-333d-4cc3-b42d-fce968a7a199",
+      "name": "If_job_status_eq_1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        304,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"task_result\":\" {{ $json.UpdatedRowsCount||0 }} 已更新 / 共 {{$('GetSnlist').first()?.json?.snlist.length || 0 }} 条记录\"\n}\n ",
+        "options": {}
+      },
+      "id": "3eff32b2-1909-4b6f-b6fe-7df62b6cb530",
+      "name": "set_task_result_update_records",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        3008,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "cc34cc0a-90ea-4163-a000-c84b3dd72452",
+      "name": "Merge_taskid_order_id",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1712,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "1d2afb6f-364e-4c84-a999-a6e2f3ed55ca",
+      "name": "Merge_taskid_runningid",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1104,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('get_job_info').item.json.id }}",
+            "last_n8n_execution_id": "={{ $execution.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_nosql_id",
+              "displayName": "last_nosql_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_n8n_execution_id",
+              "displayName": "last_n8n_execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3f699030-bf7b-48bc-a334-85f43c678d4e",
+      "name": "update_job_n8n_execution_id",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1104,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('get_job_info').item.json.id }}",
+            "last_nosql_id": "={{ $('companydelivernotes').item.json._id.toString() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_nosql_id",
+              "displayName": "last_nosql_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_datetime",
+              "displayName": "last_datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a76a9c2c-ea3b-41f0-a409-6bf00405ad72",
+      "name": "update_job_last_nosql_id",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1920,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "20f8ace2-d0a2-4332-a831-8f4ed317fbc3",
+              "leftValue": "={{ $json?._id.toString() || null}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "636c472e-33f1-47da-bc94-f58885dec6e6",
+      "name": "If_id_esists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "id": "5d0f4796-f017-4f6a-8057-cd9b169b0f41",
+      "name": "Wait_10S",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3808,
+        272
+      ],
+      "webhookId": "b9548502-de51-4803-a683-40adbe0aba06"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "current_id": "={{ $json?._id.toString() || '' }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start_id",
+              "displayName": "start_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "98e5c491-6954-482e-aaf5-02d0896f41ad",
+      "name": "update_task_log1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1936,
+        -304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## companydelivernotes\n\n### status 说明\n\n* W - 待审核\n* N - 审核未通过\n* U - 未发货\n* C - 取消\n* D - 已发货\n* S - 已收货\n* A - 已收货(存在丢货)\n",
+        "height": 332.2503612501389,
+        "width": 336.25755481625345,
+        "color": 6
+      },
+      "id": "d7ba939d-7189-4fbc-9002-a3c7431a07ad",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        752,
+        688
+      ]
+    }
+  ],
+  "connections": {
+    "If_Type_eq_R": {
+      "main": [
+        [
+          {
+            "node": "companyorders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GetSnlist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "set_task_empty_or_type_not_R",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "companydelivernotes": {
+      "main": [
+        [
+          {
+            "node": "If_Type_eq_R",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge_taskid_order_id",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "If_id_esists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "companyorders": {
+      "main": [
+        [
+          {
+            "node": "GetChannels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetSnlist": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetChannels": {
+      "main": [
+        [
+          {
+            "node": "Merge_sn_channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Merge_sn_channel",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "set_task_result_sn_empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_job_id": {
+      "main": [
+        [
+          {
+            "node": "get_job_info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_task_result_sn_empty": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "set_job_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_job_info": {
+      "main": [
+        [
+          {
+            "node": "If_job_status_eq_1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n": {
+      "main": [
+        [
+          {
+            "node": "If_running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL_update_mes": {
+      "main": [
+        [
+          {
+            "node": "set_task_result_update_records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_task_log": {
+      "main": [
+        [
+          {
+            "node": "Merge_taskid_and_loginfo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge_taskid_order_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge_taskid_runningid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_running": {
+      "main": [
+        [
+          {
+            "node": "Merge_taskid_runningid",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "update_job_n8n_execution_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait_2S",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Merge_taskid_and_loginfo",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge_wait_task_finish",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing3": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \"Test workflow\"": {
+      "main": [
+        [
+          {
+            "node": "set_job_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_sn_channel": {
+      "main": [
+        [
+          {
+            "node": "SQL_update_mes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_wait_task_finish": {
+      "main": [
+        [
+          {
+            "node": "Wait_10S",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_taskid_and_loginfo": {
+      "main": [
+        [
+          {
+            "node": "update_task_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_task_empty_or_type_not_R": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait_2S": {
+      "main": [
+        [
+          {
+            "node": "companydelivernotes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        [
+          {
+            "node": "Merge_wait_task_finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_job_status_eq_1": {
+      "main": [
+        [
+          {
+            "node": "create_task_log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_task_result_update_records": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_taskid_order_id": {
+      "main": [
+        [
+          {
+            "node": "update_task_log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_taskid_runningid": {
+      "main": [
+        [
+          {
+            "node": "update_task_log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_job_last_nosql_id": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_id_esists": {
+      "main": [
+        [
+          {
+            "node": "update_job_last_nosql_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait_10S": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "any",
+    "executionTimeout": -1,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrencyRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When clicking \"Test workflow\"": [
+      {
+        "json": {
+          "id": 1,
+          "name": "同步OMS渠道到MES上",
+          "last_nosql_id": "6657e0565b473211141a5a8f",
+          "last_n8n_execution_id": 286245,
+          "status": 1,
+          "task_result": "sn是空的"
+        }
+      }
+    ]
+  },
+  "versionId": "090ae206-1637-4361-80f5-957d1558002f",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-05-30T08:42:25.307Z",
+      "createdAt": "2024-05-22T06:32:04.530Z",
+      "id": "TMB7KjfrkAxTdTwk",
+      "name": "[DATA SYNC] - 数据同步任务"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-01-28T16:55:05.706Z",
+      "createdAt": "2025-01-28T16:55:05.706Z",
+      "role": "workflow:owner",
+      "workflowId": "sMqldMSmVSSiykUz",
+      "projectId": "W2w8tFYL8Ed6J49w",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:55.733Z",
+        "createdAt": "2025-01-28T16:53:34.840Z",
+        "id": "W2w8tFYL8Ed6J49w",
+        "name": "4.OMS_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

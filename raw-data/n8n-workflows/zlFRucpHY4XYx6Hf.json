@@ -1,0 +1,348 @@
+{
+  "updatedAt": "2025-04-24T06:09:29.220Z",
+  "createdAt": "2024-09-04T10:55:36.115Z",
+  "id": "zlFRucpHY4XYx6Hf",
+  "name": "updateResourceInfo",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "862217fe-2ade-4577-8bf4-fd930d6fbda2",
+      "name": "check params is not null",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\"\n}",
+        "options": {}
+      },
+      "id": "eb8da160-2ed6-4169-9fe9-e720ec91a646",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "resource_mac",
+              "value": "={{ $json.body.mac }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "84f2ef95-b66b-4bd4-9c63-decbe3d30ee4",
+      "name": "according mac get deviceTypeList",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1100,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0576d01f-5ddf-4862-ada6-8e6bfe988655",
+              "leftValue": "={{ $json.isNewDevice }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6549d71d-3133-42ef-af9e-7ea7c4ccade0",
+      "name": "List in mes is different params",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1580,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE mes.resources\nSET resource_info = jsonb_set(resource_info, '{deviceTypeList}','{{ JSON.stringify($json.newDeviceTypeList) }}'),\n    update_status = 4\nWHERE resource_mac = '{{ $('Webhook').all()[0].json.body.mac }}';\n",
+        "options": {}
+      },
+      "id": "c0baa4b3-cb3e-4159-a893-be0760b3c3b5",
+      "name": "update resource deviceTypeList",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1880,
+        140
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet res={};\nfor (const item of $input.all()) {\n  const deviceTypeList= item.json.resource_info.deviceTypeList||[];\n  const newDeviceTypeList=$('Webhook').all()[0].json.body.deviceTypeList||[];\n  const isNewDevice=arraysEqual(deviceTypeList,newDeviceTypeList);\n  res.isNewDevice=isNewDevice;\n  res.newDeviceTypeList=newDeviceTypeList;\n  \n}\nfunction arraysEqual(arr1, arr2) {\n    // 如果长度不同，直接返回false\n    if (arr1.length !== arr2.length) {\n        return false;\n    }\n\n    // 判断每个元素是否相同\n    for (let i = 0; i < arr1.length; i++) {\n        if (arr1[i] !== arr2[i]) {\n            return false;\n        }\n    }\n\n    return true;\n}\n\nreturn res;"
+      },
+      "id": "00f35308-1a4a-4fda-ac89-988c1a787622",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/resource/updateResourceInfo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c0294741-9c70-4caf-b4f9-5bf80ef3b9fc",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        580,
+        300
+      ],
+      "webhookId": "1ebd63f1-2cf9-406a-8fab-641bcf776862"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\"\n}",
+        "options": {}
+      },
+      "id": "d5828a42-e279-472a-9b5c-ed018a382a64",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1880,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\"\n}",
+        "options": {}
+      },
+      "id": "4ebda3a7-797e-4531-beb0-f4d90ad765f4",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2120,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "check params is not null": {
+      "main": [
+        [
+          {
+            "node": "according mac get deviceTypeList",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "according mac get deviceTypeList": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List in mes is different params": {
+      "main": [
+        [
+          {
+            "node": "update resource deviceTypeList",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "List in mes is different params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check params is not null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update resource deviceTypeList": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.40",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "52",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "deviceTypeList": [
+              2,
+              3,
+              4
+            ],
+            "mac": "d8:47:8f:90:57:b5"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/updateResourceInfo",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "149a9e7a-1fff-4439-9b84-eb7573266e64",
+  "activeVersionId": "149a9e7a-1fff-4439-9b84-eb7573266e64",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:48:29.226Z",
+      "createdAt": "2025-04-24T05:48:29.226Z",
+      "role": "workflow:owner",
+      "workflowId": "zlFRucpHY4XYx6Hf",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

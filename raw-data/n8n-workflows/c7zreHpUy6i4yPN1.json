@@ -1,0 +1,2516 @@
+{
+  "updatedAt": "2026-02-04T10:38:25.433Z",
+  "createdAt": "2025-05-26T06:37:34.789Z",
+  "id": "c7zreHpUy6i4yPN1",
+  "name": "get_mesdailydata",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        -16
+      ],
+      "id": "be717777-64af-4728-bcfc-5c2d976626fa",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.00",
+              "type": "number"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.99",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "0732cd5d-e529-4fdf-b076-3000a8f88313",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -80,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "f4e9feae-bd44-4c08-a507-a5714b502643",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "fd9621b7-662d-4e03-886e-00e97e5b968e",
+      "name": "Date & Time1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -304
+      ],
+      "id": "518e37dd-c25a-48f4-967a-eaa7ceafc04f",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = {};\n\n// 遍历输入的数组\nfor (const record of items) {\n    const retroidId = record.json.retroid_id;\n    \n    // 从数据中获取 retroid，如果存在\n    const retroidValue = record.json.data.retroid || null;\n      // 从数据中获取 retroid，如果存在\n    const create_time = record.json.createtime || null;\n  \n\n    if (!results[retroidId]) {\n        // 初始化默认值\n        results[retroidId] = {\n            retroid_id: retroidId,\n            retroid: retroidValue,  // 初始化retroid字段\n            uuid: null,\n            wifi_mac: null,\n            battery: null,\n            screen: null,\n            remark: null,\n            createtime: create_time\n        };\n    }\n\n    // 检查解绑标记和操作\n    const procedureDetailId = record.json.procedure_detail_id;\n    const isUnbound = record.json.unbound;\n\n    switch (procedureDetailId) {\n        case 39: // UUID\n            results[retroidId].uuid = isUnbound ? null : record.json.data.uuid;\n            break;\n        case 42: // WiFi MAC\n            results[retroidId].wifi_mac = isUnbound ? null : record.json.data.mac;\n            break;\n        case 31: // Battery\n            results[retroidId].battery = isUnbound ? null : record.json.data.battery_id;\n            break;\n        case 50: // Screen\n            results[retroidId].screen = isUnbound ? null : record.json.data.screen;\n            break;\n        case 59: // Remark\n            results[retroidId].remark = isUnbound ? null : record.json.data.remark;\n            break;\n    }\n\n    // 确保在每个记录中更新 retroid\n    if (retroidValue) {\n        results[retroidId].retroid = retroidValue;\n    }\n}\n\n// 将结果转换为 n8n 所需的格式\nconst output = Object.values(results).map(record => ({ json: record }));\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -256
+      ],
+      "id": "0ae7367d-c251-4cf0-8eba-702c7ca6a7ed",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "79137454-c7ce-41f6-a087-6e0449367503",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        -240
+      ],
+      "id": "482fd6c8-94e1-4ce6-9f69-f037e24246d8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取国内生产数据成功-get_mesdailydata",
+        "html": "={{JSON.stringify( $json.data )}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2032,
+        -256
+      ],
+      "id": "f365d0d7-4cfd-4d41-9b49-cb0dd6b75217",
+      "name": "成功",
+      "webhookId": "4b2d5afe-f9d1-406f-8912-c51a7f0e4148",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT b.retroid_id\nFROM mes.machine_data a\nJOIN mes.retroid b ON a.retroid_id::int = b.retroid_id\nWHERE a.createtime BETWEEN '{{ $json.startdate }}' AND '{{ $json.enddate }}'\nand \nprocedure_detail_id = 58 ;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        128,
+        -288
+      ],
+      "id": "2623dee7-9dac-4a62-b436-cb0bb55df5d4",
+      "name": "查询machine_data中新增数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid_id",
+              "value": "={{ $json.retroid_id }}"
+            },
+            {
+              "column": "status",
+              "condition": "<",
+              "value": "3"
+            },
+            {
+              "column": "status",
+              "condition": ">",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        544,
+        -400
+      ],
+      "id": "19728f21-916c-4fe3-a0cc-ec195617dc4e",
+      "name": "查询对应底壳号",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_binding AS (\n  SELECT\n    md.*\n  FROM\n    mes.machine_data md\n  JOIN (\n    SELECT\n      retroid_id,\n      procedure_detail_id,\n      MAX(machine_data_id) AS max_id\n    FROM\n      mes.machine_data\n    WHERE\n      procedure_detail_id IN (39, 42, 31, 50, 59)\n      AND retroid_id = '{{ $json.retroid_id }}'\n    GROUP BY\n      retroid_id,\n      procedure_detail_id\n  ) latest ON\n    md.retroid_id = latest.retroid_id\n    AND md.procedure_detail_id = latest.procedure_detail_id\n    AND md.machine_data_id = latest.max_id\n  \t\tUNION ALL\nSELECT *\nFROM mes.machine_data\nWHERE procedure_detail_id = 148\n  AND retroid_id = '{{ $json.retroid_id }}'\n  AND data ->> 'mac' IS NOT NULL\n),\nall_unbinding AS (\n  SELECT\n    ub.*\n  FROM\n    mes.machine_data ub\n  WHERE\n    ub.procedure_detail_id = 62\n    AND ub.retroid_id = '{{ $json.retroid_id }}'\n)\nSELECT * FROM latest_binding\nUNION ALL\nSELECT * FROM all_unbinding;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        768,
+        -432
+      ],
+      "id": "cb04396b-0cea-4d9c-acdf-aac42325f5b1",
+      "name": "查询当日最新生产数据",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    r.retroid_id,\n    r.retroid,\n    j.joborder_number,\n    j.phase,\n    i.product_model_name\nFROM \n    mes.retroid r\nJOIN \n    mes.joborder j ON r.joborder_id = j.joborder_id\nJOIN \n    mes.product_info p ON j.product_id = p.product_id\nJOIN \n    mes.product_model i ON p.product_model_id = i.product_model_id \nwhere r.retroid_id = {{ $json.retroid_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        -224
+      ],
+      "id": "f3c31244-27c6-4023-80fb-73008e350eea",
+      "name": "查询工单以及机型",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "retroid_id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1088,
+        -240
+      ],
+      "id": "d234f805-d1b7-42f7-8d50-336063a87c43",
+      "name": "整合数据"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "production_detail",
+          "mode": "list",
+          "cachedResultName": "production_detail"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "job_number": "={{ $json.joborder_number }}",
+            "machine_type": "={{ $json.product_model_name }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac }}",
+            "battery": "={{ $json.battery }}",
+            "screen": "={{ $json.screen }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $json.createtime }}",
+            "country": "1"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1264,
+        -208
+      ],
+      "id": "9c8542ff-701e-407d-b124-322cd874e3a5",
+      "name": "插入到production_detail",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "daily_info",
+          "mode": "list",
+          "cachedResultName": "daily_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "production_id": "={{ $json.id }}",
+            "retroid": "={{ $json.retroid }}",
+            "machine_type": "={{ $json.machine_type }}",
+            "job_number": "={{ $json.job_number }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac.replace(/\\n/g, '') }}",
+            "battery": "={{ $json.battery.replace(/\\n/g, '') }}",
+            "screen": "={{ $json.screen.replace(/\\n/g, '') }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $now }}",
+            "country": "1"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "production_id",
+              "displayName": "production_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_id",
+              "displayName": "delivery_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1632,
+        -240
+      ],
+      "id": "f9343e5f-a063-4edb-95a9-66bf3a66cff7",
+      "name": "插入到daily_info",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        -272
+      ],
+      "id": "23ddb8bc-84bd-4d37-b76d-4f7eb9f29e45",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT b.retroid_id\nFROM mes.machine_data a\nJOIN mes.retroid b ON a.retroid_id::int = b.retroid_id\nWHERE a.createtime BETWEEN '{{ $json.startdate }}' AND '{{ $json.enddate }}'\nand \nprocedure_detail_id = 58 ;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        144,
+        64
+      ],
+      "id": "fa517b06-f50e-4ffe-9c06-429b5049347f",
+      "name": "查询machine_data中新增数据（越南mes）",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        576,
+        48
+      ],
+      "id": "cb4903a8-3893-4e74-a4d3-16f0bed69105",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = {};\n\n// 遍历输入的数组\nfor (const record of items) {\n    const retroidId = record.json.retroid_id;\n    \n    // 从数据中获取 retroid，如果存在\n    const retroidValue = record.json.data.retroid || null;\n      // 从数据中获取 retroid，如果存在\n    const create_time = record.json.createtime || null;\n  \n\n    if (!results[retroidId]) {\n        // 初始化默认值\n        results[retroidId] = {\n            retroid_id: retroidId,\n            retroid: retroidValue,  // 初始化retroid字段\n            uuid: null,\n            wifi_mac: null,\n            battery: null,\n            screen: null,\n            remark: null,\n            createtime: create_time\n        };\n    }\n\n    // 检查解绑标记和操作\n    const procedureDetailId = record.json.procedure_detail_id;\n    const isUnbound = record.json.unbound;\n\n    switch (procedureDetailId) {\n        case 39: // UUID\n            results[retroidId].uuid = isUnbound ? null : record.json.data.uuid;\n            break;\n        case 42: // WiFi MAC\n            results[retroidId].wifi_mac = isUnbound ? null : record.json.data.mac;\n            break;\n        case 31: // Battery\n            results[retroidId].battery = isUnbound ? null : record.json.data.battery_id;\n            break;\n        case 50: // Screen\n            results[retroidId].screen = isUnbound ? null : record.json.data.screen;\n            break;\n        case 59: // Remark\n            results[retroidId].remark = isUnbound ? null : record.json.data.remark;\n            break;\n    }\n\n    // 确保在每个记录中更新 retroid\n    if (retroidValue) {\n        results[retroidId].retroid = retroidValue;\n    }\n}\n\n// 将结果转换为 n8n 所需的格式\nconst output = Object.values(results).map(record => ({ json: record }));\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        96
+      ],
+      "id": "23c4d046-ddba-4103-9b04-39a9179bedb9",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "79137454-c7ce-41f6-a087-6e0449367503",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1728,
+        128
+      ],
+      "id": "a2769484-f91b-498e-88dc-43d01a4ebe48",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid_id",
+              "value": "={{ $json.retroid_id }}"
+            },
+            {
+              "column": "status",
+              "condition": "<",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        752,
+        64
+      ],
+      "id": "7cc74b31-3932-4fa4-9915-86adb4331276",
+      "name": "查询对应底壳号1",
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_binding AS (\n  SELECT\n    md.*\n  FROM\n    mes.machine_data md\n  JOIN (\n    SELECT\n      retroid_id,\n      procedure_detail_id,\n      MAX(machine_data_id) AS max_id\n    FROM\n      mes.machine_data\n    WHERE\n      procedure_detail_id IN (39, 42, 31, 50, 59)\n      AND retroid_id = '{{ $json.retroid_id }}'\n    GROUP BY\n      retroid_id,\n      procedure_detail_id\n  ) latest ON\n    md.retroid_id = latest.retroid_id\n    AND md.procedure_detail_id = latest.procedure_detail_id\n    AND md.machine_data_id = latest.max_id\n),\nall_unbinding AS (\n  SELECT\n    ub.*\n  FROM\n    mes.machine_data ub\n  WHERE\n    ub.procedure_detail_id = 62\n    AND ub.retroid_id = '{{ $json.retroid_id }}'\n)\nSELECT * FROM latest_binding\nUNION ALL\nSELECT * FROM all_unbinding;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        960,
+        80
+      ],
+      "id": "b50fd351-5a08-4087-b006-05deba832d0e",
+      "name": "查询当日最新生产数据1",
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    r.retroid_id,\n    r.retroid,\n    j.joborder_number,\n    j.phase,\n    i.product_model_name\nFROM \n    mes.retroid r\nJOIN \n    mes.joborder j ON r.joborder_id = j.joborder_id\nJOIN \n    mes.product_info p ON j.product_id = p.product_id\nJOIN \n    mes.product_model i ON p.product_model_id = i.product_model_id \nwhere r.retroid_id = {{ $json.retroid_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        272
+      ],
+      "id": "dd919495-14a2-4cb1-9628-793ffa24ee9d",
+      "name": "查询工单以及机型1",
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "retroid_id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        128
+      ],
+      "id": "f806e75d-6302-405b-a503-b77b08c39305",
+      "name": "整合数据1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "production_detail",
+          "mode": "list",
+          "cachedResultName": "production_detail"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "job_number": "={{ $json.joborder_number }}",
+            "machine_type": "={{ $json.product_model_name }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac }}",
+            "battery": "={{ $json.battery }}",
+            "screen": "={{ $json.screen }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $json.createtime }}",
+            "country": "2"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1520,
+        128
+      ],
+      "id": "0d0cba3f-3176-4482-876f-75ab321886b9",
+      "name": "插入到production_detail1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "daily_info",
+          "mode": "list",
+          "cachedResultName": "daily_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "production_id": "={{ $json.id }}",
+            "retroid": "={{ $json.retroid }}",
+            "machine_type": "={{ $json.machine_type }}",
+            "job_number": "={{ $json.job_number }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac.replace(/\\n/g, '') }}",
+            "battery": "={{ $json.battery.replace(/\\n/g, '') }}",
+            "screen": "={{ $json.screen.replace(/\\n/g, '') }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $now }}",
+            "country": "2"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "production_id",
+              "displayName": "production_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_id",
+              "displayName": "delivery_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1872,
+        128
+      ],
+      "id": "2263b600-d524-4a5c-95c4-174a533cfffc",
+      "name": "插入到daily_info1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "越南",
+        "height": 368,
+        "width": 2112
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        96,
+        48
+      ],
+      "id": "7c202e5f-23ac-4843-ae7e-527470b605f1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取越南生产数据成功-get_mesdailydata",
+        "html": "={{JSON.stringify( $json.data )}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2208,
+        112
+      ],
+      "id": "c2ddef9e-6da5-4ace-8a7e-5e7362689e8f",
+      "name": "成功1",
+      "webhookId": "4b2d5afe-f9d1-406f-8912-c51a7f0e4148",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        128
+      ],
+      "id": "9124f295-30fa-456c-9037-8ef85974b9ab",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes_jp.machine_data WHERE uploadtime BETWEEN '{{ $json.startdate }}' AND '{{ $json.enddate }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        144,
+        560
+      ],
+      "id": "6b397559-c305-4239-b3db-947a510f2d71",
+      "name": "查询machine_data中新增数据（日本mes）",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "production_detail",
+          "mode": "list",
+          "cachedResultName": "production_detail"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "job_number": "={{ $json.job_number }}",
+            "machine_type": "={{ $json.machine_type }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac }}",
+            "battery": "={{ $json.battery }}",
+            "screen": "={{ $json.screen }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $json.createtime }}",
+            "country": "3"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        512,
+        560
+      ],
+      "id": "4e17161f-866d-4db8-a7d1-fb5c7b1b9a23",
+      "name": "插入到production_detail2",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 安全地获取输入数据\nconst input = Array.isArray(items) ? items.map(it => it?.json ?? it) : [];\n\n// 数据转换函数\nconst transformData = (input) => {\n  return input.map(item => {\n    // 提取QRCODE中的参数并构建uuid\n    const qrcode = item?.data?.[\"QRCODE\"];\n    let uuid = null;\n\n    if (typeof qrcode === 'string' && qrcode.includes('?')) {\n      const urlPart = qrcode.split('?')[1] ?? '';\n\n      // 正则用于提取 a 的末尾十六进制部分，以及 b、c\n      const match = urlPart.match(/a=([\\w]+?)([A-F0-9]+)&b=([A-F0-9]+)&c=([A-F0-9]+)/i)\n        || urlPart.match(/a=[\\w\\s]+?([A-F0-9]+)&b=([A-F0-9]+)&c=([A-F0-9]+)/i);\n\n      if (match && match.length === 4) {\n        uuid = (match[1] + match[2] + match[3]).toUpperCase();\n      }\n    }\n\n    // remark 的来源：优先使用数据中的 \"reamrk\"，若没有再尝试 \"remark\"，都没有则为 null\n    const remarkFromInput = item?.data?.[\"reamrk\"] ?? item?.data?.[\"remark\"] ?? null;\n\n    // 构建输出对象\n    return {\n      \"retroid\": item.retroid,\n      \"machine_type\": item.data?.[\"TestStation\"] ?? null,\n      \"job_number\": item.job_number ?? null,\n      \"uuid\": uuid,\n      \"phase\": item.data?.[\"phase\"] ?? null,\n      \"wifi_mac\": item.data?.[\"Bluetooth MAC\"] ?? null,\n      \"battery\": item.data?.[\"BatteryPackLot\"] ?? null,\n      \"screen\": null,\n      \"remark\": remarkFromInput,\n      \"createtime\": item.createtime ?? null\n    };\n  });\n};\n\n// 执行转换并返回结果\nconst output = transformData(input);\n\n// 返回处理后的数据\nreturn output.map(data => ({ json: data }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        560
+      ],
+      "id": "479ad5ef-77b7-4f1b-998a-30a7dd537e59",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "79137454-c7ce-41f6-a087-6e0449367503",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        560
+      ],
+      "id": "f57a5fb1-3cb9-4b37-aa4d-911e9618dd15",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "daily_info",
+          "mode": "list",
+          "cachedResultName": "daily_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "production_id": "={{ $json.id }}",
+            "retroid": "={{ $json.retroid }}",
+            "machine_type": "={{ $json.machine_type }}",
+            "job_number": "={{ $json.job_number }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac.replace(/\\n/g, '') }}",
+            "battery": "={{ $json.battery.replace(/\\n/g, '') }}",
+            "screen": "={{ $json.screen.replace(/\\n/g, '') }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $now }}",
+            "country": "3",
+            "pack_id": "={{ $json.pack_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "production_id",
+              "displayName": "production_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_id",
+              "displayName": "delivery_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pack_id",
+              "displayName": "pack_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1232,
+        560
+      ],
+      "id": "dedc68fa-9f2d-4e89-84e1-12fae6ca47cf",
+      "name": "插入到daily_info2",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取日本生产数据成功-get_mesdailydata",
+        "html": "={{JSON.stringify( $json.data )}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1728,
+        560
+      ],
+      "id": "262f952c-2acc-4dad-95d4-603ee75f5d4b",
+      "name": "成功2",
+      "webhookId": "4b2d5afe-f9d1-406f-8912-c51a7f0e4148",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        560
+      ],
+      "id": "45163cec-3675-48d6-9bfd-833428f57b7f",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "content": "日本",
+        "height": 368,
+        "width": 2112,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        512
+      ],
+      "id": "a6b0377a-71da-490c-ba17-1561162ad1b7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9a1e4fd6-f810-4d4a-8423-63d7d6b771d7",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        64
+      ],
+      "id": "e5e2ee30-4eb6-4361-9d1b-56724fdda0b2",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取越南生产数据失败-get_mesdailydata",
+        "emailFormat": "text",
+        "text": "拉取越南生产数据失败",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2112,
+        560
+      ],
+      "id": "5296696f-973f-48e6-a14e-cff8df17ee7c",
+      "name": "失败-越南生产数据",
+      "webhookId": "4b2d5afe-f9d1-406f-8912-c51a7f0e4148",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取中国生产数据失败-get_mesdailydata",
+        "emailFormat": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1776,
+        -64
+      ],
+      "id": "a7348781-ee33-415b-a9fc-0053618908db",
+      "name": "失败-中国生产数据",
+      "webhookId": "4b2d5afe-f9d1-406f-8912-c51a7f0e4148",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "pack_detail",
+          "mode": "list",
+          "cachedResultName": "pack_detail"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "createtime": "={{ $json.createtime }}",
+            "retroid": "={{ $json.retroid }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        848,
+        560
+      ],
+      "id": "09bbca03-c8f8-4acc-bd2a-449d5f0edff0",
+      "name": "插入到pack_detail",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) 当前 Code 节点的入参（上一节点传进来的）\nconst inputItems = $input.all();  // [{ json: {...} }, ...]\n\n// 2) 另一个节点的数据（用节点名引用）\nconst prodItems = $('插入到production_detail2').all(); // [{ json: {...} }, ...]\n\n// 建 retroid -> 入参json 映射\nconst inputByRetroid = new Map(\n  inputItems.map(i => [i.json.retroid, i.json])\n);\n\n// 合并：以 production_detail2 为主\nconst out = prodItems.map(p => {\n  const pjson = p.json;\n  const injson = inputByRetroid.get(pjson.retroid);\n\n  return {\n    json: {\n      ...pjson,\n      pack_id: injson ? Number(injson.id) : null,  // 入参id -> pack_id\n    }\n  };\n});\n\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        560
+      ],
+      "id": "7222bed1-d481-4fb3-b378-47a96693f90b",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "connections": {
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "查询machine_data中新增数据（日本mes）",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询machine_data中新增数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询machine_data中新增数据（越南mes）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "查询工单以及机型",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询对应底壳号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "整合数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "插入到daily_info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中新增数据": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应底壳号": {
+      "main": [
+        [
+          {
+            "node": "查询当日最新生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-中国生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询当日最新生产数据": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-中国生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工单以及机型": {
+      "main": [
+        [
+          {
+            "node": "整合数据",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "失败-中国生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据": {
+      "main": [
+        [
+          {
+            "node": "插入到production_detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到production_detail": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-中国生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到daily_info": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-中国生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中新增数据（越南mes）": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "查询工单以及机型1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询对应底壳号1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "整合数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "插入到daily_info1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应底壳号1": {
+      "main": [
+        [
+          {
+            "node": "查询当日最新生产数据1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询当日最新生产数据1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工单以及机型1": {
+      "main": [
+        [
+          {
+            "node": "整合数据1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据1": {
+      "main": [
+        [
+          {
+            "node": "插入到production_detail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到production_detail1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到daily_info1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "成功1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中新增数据（日本mes）": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "插入到production_detail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "插入到pack_detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到daily_info2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "成功2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到production_detail2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "失败-中国生产数据": {
+      "main": [
+        []
+      ]
+    },
+    "插入到pack_detail": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "插入到daily_info2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-11-13T01:00:45.013+08:00",
+          "Readable date": "November 13th 2025, 1:00:45 am",
+          "Readable time": "1:00:45 am",
+          "Day of week": "Thursday",
+          "Year": "2025",
+          "Month": "November",
+          "Day of month": "13",
+          "Hour": "01",
+          "Minute": "00",
+          "Second": "45",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "日期格式转换-中国": [
+      {
+        "json": {
+          "startdate": "2025-12-23 00:00:00.00",
+          "enddate": "2025-12-23 23:59:59.99"
+        }
+      }
+    ],
+    "Code in JavaScript": [
+      {
+        "json": {
+          "retroid": "C01AJ03082",
+          "machine_type": "BY01",
+          "job_number": "921000006610",
+          "uuid": "REDACTED",
+          "phase": null,
+          "wifi_mac": "F7AF2c1B148E",
+          "battery": "ABY0125062019497",
+          "screen": null,
+          "remark": null,
+          "createtime": "2025-12-22T16:50:04.000Z"
+        }
+      }
+    ]
+  },
+  "versionId": "995d17bf-4b18-4eee-97b7-d3de23c7bacd",
+  "activeVersionId": "995d17bf-4b18-4eee-97b7-d3de23c7bacd",
+  "versionCounter": 48,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-26T06:37:34.789Z",
+      "createdAt": "2025-05-26T06:37:34.789Z",
+      "role": "workflow:owner",
+      "workflowId": "c7zreHpUy6i4yPN1",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

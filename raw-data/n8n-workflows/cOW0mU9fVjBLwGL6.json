@@ -1,0 +1,587 @@
+{
+  "updatedAt": "2026-01-15T08:37:50.164Z",
+  "createdAt": "2025-11-13T03:03:50.166Z",
+  "id": "cOW0mU9fVjBLwGL6",
+  "name": "[sync]同步日本工单数据",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -800,
+        96
+      ],
+      "id": "29ef31f2-2772-423f-8ee3-355ab24d0642",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes_jp.machine_data \nWHERE uploadtime::date = CURRENT_DATE\nORDER BY id ASC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -560,
+        96
+      ],
+      "id": "06c73d5c-e4c5-4a82-bed1-507cb83703e2",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26e87796-dea4-4dab-be0f-57e1e4f97e46",
+              "name": "workOrderNo",
+              "value": "={{ $json.job_number }}",
+              "type": "string"
+            },
+            {
+              "id": "7c38decf-b9e7-4d48-9fdb-b23e5cebef3d",
+              "name": "sn",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "b94b6218-1aef-4e13-8562-5b62ace83914",
+              "name": "inboundTime",
+              "value": "={{ new Date($json.uploadtime).getTime() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        -128
+      ],
+      "id": "75ea9380-febb-4005-ae6c-29536d65ddfa",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -208
+      ],
+      "id": "9fc7abbf-c786-4eb0-9fcb-21a2fd29bf31",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://oa.mpnew.com/oms2/api/warehouse/inventory/MesSnInventoryHook",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"token\": \"ddaedde70b51a78ccbb2a23e808a0aeb\",\n    \"sapFactoryCode\": \"1050\", \n    \"sapBinCode\":\"8023\",\n    \"fix\":true,\n    \"list\": {{JSON.stringify($json.list)}}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1472,
+        -176
+      ],
+      "id": "cef06c90-3b1b-43ef-bb7d-3fa99e28259e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c91cf1d5-10a1-4514-9f27-7f7fd0387019",
+              "leftValue": "={{ $json.errCode }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        -176
+      ],
+      "id": "77c60984-21f5-4ff0-bb0c-e3f7040a9cb9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -OMS同步日本工单数据：数据库错误！",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "id": "66653bea-64ad-4bb5-8a82-fcd0272832cd",
+      "name": "同步错误发送错误信息",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -368,
+        224
+      ],
+      "retryOnFail": false,
+      "webhookId": "f54cc5ad-4303-4c84-af36-155bb8e945af",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0a815556-e2ec-4830-9063-10fd5ee32d25",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        32
+      ],
+      "id": "ef1c0fb4-2838-4617-82bb-d5214c07c024",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -  OMS同步日本工单信息",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data",
+          "ccEmail": "panzhijie@coros.com"
+        }
+      },
+      "id": "851fe88d-d588-42dc-94a8-1ec207f319e0",
+      "name": "同步错误发送错误",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1824,
+        -64
+      ],
+      "retryOnFail": false,
+      "webhookId": "f54cc5ad-4303-4c84-af36-155bb8e945af",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "sap_job_info_cache",
+          "mode": "list",
+          "cachedResultName": "sap_job_info_cache"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "job_number",
+              "value": "={{ $json.workOrderNo }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "material_code",
+            "job_number"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        336,
+        -16
+      ],
+      "id": "1e1c3ac1-107c-445e-ab28-ac1a3ea9c1db",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "workOrderNo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -16
+      ],
+      "id": "02df72ba-4ee5-4d21-bdc7-c276bf044ba2",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ed2291df-9366-440d-b767-a03379f4ed14",
+              "name": "material_code",
+              "value": "={{ $json.material_code }}",
+              "type": "string"
+            },
+            {
+              "id": "028105eb-569d-44a3-96ec-2e1e93f80b8e",
+              "name": "job_number",
+              "value": "={{ $json.job_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        -16
+      ],
+      "id": "55f00936-27a0-4e67-a8e6-b601990b09fe",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        848,
+        -192
+      ],
+      "id": "efaa92f3-8bb5-4c23-86b3-fe4ceb198218",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const materialList = $input.all()[1].json.materialList;\nconst map = new Map(materialList.map(material => \n  [material.job_number, material.material_code]\n));\n\nconst snList = $input.all()[0].json.list;\nconst res = snList.map(e => ({\n  ...e,\n  material: map.get(e.workOrderNo),\n  workOrderNo:e.workOrderNo\n}));\n\nreturn {\n  list:res\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -192
+      ],
+      "id": "cf83d8f7-ffa2-4391-b19a-7d6ecfe868a2",
+      "name": "SN通过工单号获取到对应料号"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "materialList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -16
+      ],
+      "id": "2418921b-4afb-402c-b38c-d4d9c65d3b72",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -320
+      ],
+      "id": "5e9b6f4b-513b-468f-a767-e572f699ff7e",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "同步错误发送错误信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "同步错误发送错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "SN通过工单号获取到对应料号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "SN通过工单号获取到对应料号": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d37b42d1-1c1b-4a58-a49c-465450f652cb",
+  "activeVersionId": "d37b42d1-1c1b-4a58-a49c-465450f652cb",
+  "versionCounter": 84,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-13T03:03:50.166Z",
+      "createdAt": "2025-11-13T03:03:50.166Z",
+      "role": "workflow:owner",
+      "workflowId": "cOW0mU9fVjBLwGL6",
+      "projectId": "W2w8tFYL8Ed6J49w",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:55.733Z",
+        "createdAt": "2025-01-28T16:53:34.840Z",
+        "id": "W2w8tFYL8Ed6J49w",
+        "name": "4.OMS_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,718 @@
+{
+  "updatedAt": "2026-01-29T09:05:20.021Z",
+  "createdAt": "2024-07-23T05:37:59.691Z",
+  "id": "b8PLwgqZdrZkLrBs",
+  "name": "getproductinfo_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d651c2bc-8c2a-4524-b594-0367ecbc493e",
+              "leftValue": "={{ $json.body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1898da34-d0f1-45fa-b53b-adfc355f50aa",
+      "name": "判断是否属于查询明细",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f1842726-6ffd-42a8-bfa2-f7df37d17d1b",
+              "leftValue": "={{ $json.body.product_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3ccdf0f6-b98c-4bad-aa57-4bfcbe66e907",
+              "leftValue": "={{ $json.body.product_model_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "7430542d-7700-46de-8bb3-42dde34b516b",
+              "leftValue": "={{ $json.body.product_type }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "970288b7-be7a-4be8-b8a5-5516d67ce291",
+      "name": "判断是否填写必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        224,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "3971972c-0ad4-481f-949a-d7a40841e857",
+              "leftValue": "={{ $json.body.product_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cdc0e1b7-f49e-495f-87de-40d1c4047afd",
+      "name": "判断是否填写物料号",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        384,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n  let itemJson = item.json;\n  switch (itemJson.product_type) {\n    case 1:\n      itemJson.product_type = \"整机\";\n      break;\n    case 2:\n      itemJson.product_type = \"机头\";\n      break;\n    case 3:\n      itemJson.product_type = \"表带\";\n      break;\n    case 4:\n      itemJson.product_type = \"屏组件\";\n      break;\n    default:\n      itemJson.product_type = \"未知\";\n  }\n  res.push(itemJson);\n}\n\nreturn {\n  result: res,\n};\n"
+      },
+      "id": "c8b51f7f-d729-457b-be6c-6d044e2ac91d",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"查询成功\",\n  \"result\":{{JSON.stringify($json.result)}}\n}",
+        "options": {}
+      },
+      "id": "c60c087e-cfe5-4725-923b-4cd79489c2ca",
+      "name": "成功查询",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.product_id,\n    p.product_code,\n    p.product_color,\n    p.createtime,\n    p.product_type,\n    u.user_name,\n    p.product_type,\n    m.product_model_name\nFROM \n    mes.product_info p\nJOIN \n    mes.sys_user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nwhere p.product_id= {{ $json.body.product_id}} and p.status = '1';",
+        "options": {}
+      },
+      "id": "e4fcf7cc-3578-4edd-870e-94d4ca2cd131",
+      "name": "根据物料号查询信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        560,
+        304
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7d39695a-9a33-4808-aac4-3fc66e967760",
+              "name": "body.product_type",
+              "value": "={{ $json.body.product_type }}",
+              "type": "array"
+            },
+            {
+              "id": "69dc9768-230b-4f29-aa81-353db88886d9",
+              "name": "body.product_model_id",
+              "value": "={{ $json.body.product_model_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c9694c80-ac77-4181-820f-25832e60b7da",
+      "name": "整理入参",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d2a277e8-1394-4731-9328-6836414873c6",
+              "leftValue": "={{ $json.body.product_type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7cf10da5-eeba-45cc-bcd8-2646a482fbf9",
+      "name": "判断是否填写产品类型",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        752,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.product_id,\n    p.product_code,\n    p.product_color,\n    p.createtime,\n    p.product_type,\n    u.user_name,\n    m.product_model_name,\n    p.product_type\nFROM \n    mes.product_info p\nJOIN \n    mes.sys_user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nWHERE \n    (CASE WHEN '{{ $json[\"body\"][\"product_model_id\"] }}' = '' THEN true ELSE p.product_model_id = {{ $json[\"body\"][\"product_model_id\"] | int }} END)\nAND \n    p.status = 1;\n\n\n\n\n\n",
+        "options": {}
+      },
+      "id": "7f1acfd0-eff2-4297-b9b1-ff3b9821454d",
+      "name": "根据机型查询",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        944,
+        464
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.product_id,\n    p.product_code,\n    p.product_color,\n    p.createtime,\n    p.product_type,\n    u.user_name,\n    m.product_model_name,\n    p.product_type\nFROM \n    mes.product_info p\nJOIN \n    mes.sys_user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nWHERE \n    (CASE WHEN '{{ $json[\"body\"][\"product_model_id\"] }}' = '' THEN true ELSE p.product_model_id = {{ $json[\"body\"][\"product_model_id\"] | int }} END)\nAND \n   p.product_type = ANY(ARRAY[{{ $json[\"body\"][\"product_type\"].map(id => id | int).join(',') }}]) \nAND \n    p.status = 1;\n\n\n\n\n\n",
+        "options": {}
+      },
+      "id": "6a33975a-4bea-4bf3-8cfe-8e275f6b9056",
+      "name": "根据机型和产品类型去查询",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        944,
+        640
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f1222f5f-5bb3-4a53-8c6c-b92ee866a46a",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5b9e8106-8f1f-4426-b7b9-4b245eefe35b",
+      "name": "判断是否查询成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库报错，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "e915ede2-e926-46bd-be1e-c35eb6b83227",
+      "name": "报错信息：数据库报错",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"查找不到相关产品，请检查选项是否正确\"\n}",
+        "options": {}
+      },
+      "id": "4f63e7c4-a4a6-4e55-96d5-0bcd63570d94",
+      "name": "报错信息：检查选项是否正确",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.product_id,\n    p.product_code,\n    p.product_color,\n    p.createtime,\n    p.product_type,\n    u.user_name,\n    m.product_model_name,\n    p.product_type\nFROM \n    mes.product_info p\nJOIN \n    mes.sys_user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nWHERE \n    p.status = 1;\n",
+        "options": {}
+      },
+      "id": "207620d9-47d3-4928-92f3-fbddac0b0350",
+      "name": "查询所有产品信息1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        432,
+        592
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "getproductinfo_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1a542084-997d-45ee-9804-7185a16cacd3",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        320
+      ],
+      "webhookId": "18a95132-c40a-4c47-81d6-10b6e3a1ca2f"
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n  let itemJson = item.json;\n  switch (itemJson.product_type) {\n    case 1:\n      itemJson.product_type = \"整机\";\n      break;\n    case 2:\n      itemJson.product_type = \"机头\";\n      break;\n    case 3:\n      itemJson.product_type = \"表带\";\n      break;\n    case 4:\n      itemJson.product_type = \"屏组件\";\n      break;\n    default:\n      itemJson.product_type = \"未知\";\n  }\n  res.push(itemJson);\n}\n\nreturn {\n  result: res,\n};\n"
+      },
+      "id": "eea89dd1-fc33-4f42-aa90-53a218ba5756",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"查询成功\",\n  \"result\":{{JSON.stringify($json.result)}}\n}",
+        "options": {}
+      },
+      "id": "569c2696-cb89-4801-b92e-d232557f58e5",
+      "name": "成功查询1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        512,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.product_id,\n    p.product_code,\n    p.product_color,\n    p.createtime,\n    p.product_type,\n    u.user_name,\n    m.product_model_name,\n    p.product_type\nFROM \n    mes.product_info p\nJOIN \n    mes.sys_user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nWHERE \n    p.status = 1;",
+        "options": {}
+      },
+      "id": "8be5b94e-ec8d-45af-9917-2a78c28a5d41",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        48,
+        224
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "判断是否属于查询明细": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断是否填写必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否填写必填项": {
+      "main": [
+        [
+          {
+            "node": "判断是否填写物料号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询所有产品信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否填写物料号": {
+      "main": [
+        [
+          {
+            "node": "根据物料号查询信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "整理入参",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "成功查询",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据物料号查询信息": {
+      "main": [
+        [
+          {
+            "node": "判断是否查询成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理入参": {
+      "main": [
+        [
+          {
+            "node": "判断是否填写产品类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否填写产品类型": {
+      "main": [
+        [
+          {
+            "node": "根据机型查询",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "根据机型和产品类型去查询",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据机型查询": {
+      "main": [
+        [
+          {
+            "node": "判断是否查询成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据机型和产品类型去查询": {
+      "main": [
+        [
+          {
+            "node": "判断是否查询成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否查询成功": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：检查选项是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询所有产品信息1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否属于查询明细",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "成功查询1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getproductinfo_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "56277783-c09d-4955-92e6-32f5499d387d",
+  "activeVersionId": "56277783-c09d-4955-92e6-32f5499d387d",
+  "versionCounter": 36,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:54:03.569Z",
+      "createdAt": "2025-04-24T05:54:03.569Z",
+      "role": "workflow:owner",
+      "workflowId": "b8PLwgqZdrZkLrBs",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,515 @@
+{
+  "updatedAt": "2025-12-12T02:51:54.154Z",
+  "createdAt": "2025-09-12T08:24:08.562Z",
+  "id": "y1vPbVaqL4Lxxeoq",
+  "name": "[sync]同步越南工单信息",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        16
+      ],
+      "id": "dc1cb9a9-ccfd-443b-89c5-6c377b601eda",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH RecentMachineData AS (\n    SELECT\n        md.machine_data_id,\n        md.retroid_id,\n        md.procedure_detail_id,\n        md.data,\n        md.createtime,\n        ROW_NUMBER() OVER (PARTITION BY md.retroid_id ORDER BY md.createtime DESC) as rn\n    FROM\n        mes.machine_data md\n    WHERE\n        md.procedure_detail_id = '81'\n        -- 【优化】使用范围查询代替类型转换，提高查询速度\n        AND md.createtime >= '2025-08-01' \n        AND md.createtime < '2025-10-20' \n)\nSELECT DISTINCT\n    j.joborder_number,\n    r.retroid,\n    pi.product_code,\n    rmd.createtime\nFROM\n    mes.retroid r\nJOIN\n    RecentMachineData rmd ON r.retroid_id = rmd.retroid_id AND rmd.rn = 1\nJOIN \n    mes.joborder j ON rmd.data->>'jobNumber' = j.joborder_number\nJOIN\n    mes.product_info pi ON j.product_id = pi.product_id\nWHERE\n    j.status = '1' \n    AND j.joborder_type = 'PACK'\n    AND r.status IN ('1','2');",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        16
+      ],
+      "id": "0a3a05c7-2efc-4a45-85b6-5ec3d3b9f32d",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26e87796-dea4-4dab-be0f-57e1e4f97e46",
+              "name": "workOrderNo",
+              "value": "={{ $json.joborder_number }}",
+              "type": "string"
+            },
+            {
+              "id": "7c38decf-b9e7-4d48-9fdb-b23e5cebef3d",
+              "name": "sn",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "7f8dbe44-66bc-4c8d-b7b4-97272585c4d1",
+              "name": "material",
+              "value": "={{ $json.product_code }}",
+              "type": "string"
+            },
+            {
+              "id": "b94b6218-1aef-4e13-8562-5b62ace83914",
+              "name": "inboundTime",
+              "value": "={{ new Date($json.createtime).getTime() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        -64
+      ],
+      "id": "e23d0038-cb37-4bd0-bd93-784bc6b38a2d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        -64
+      ],
+      "id": "626ac08b-60cc-4cb1-a00b-92067094cffb",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86807662-747c-4383-b0be-3625ce085c83",
+              "name": "list",
+              "value": "={{ $json.list }}",
+              "type": "array"
+            },
+            {
+              "id": "27fa3f07-1af3-4255-9e93-2aff3fcbf02e",
+              "name": "token",
+              "value": "REDACTED",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        -240
+      ],
+      "id": "87855306-cf63-49c6-a593-e0b4e41474b3",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://oa.mpnew.com/oms2/api/warehouse/inventory/MesSnInventoryHook",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"token\": \"ddaedde70b51a78ccbb2a23e808a0aeb\",\n    \"sapFactoryCode\": \"1050\", \n    \"sapBinCode\":\"8021\",\n    \"fix\":false,\n    \"list\": {{JSON.stringify($json.list)}}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        -16
+      ],
+      "id": "4edfb23b-7f47-41ad-bf90-2551cdc3509c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c91cf1d5-10a1-4514-9f27-7f7fd0387019",
+              "leftValue": "={{ $json.errCode }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1744,
+        -16
+      ],
+      "id": "89654a4c-2e60-4296-8a77-588df9518d42",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -OMS同步越南工单数据：数据库错误！",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "id": "49eb1e8d-acbd-4c31-82b2-0f700743c855",
+      "name": "同步错误发送错误信息",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        128
+      ],
+      "retryOnFail": false,
+      "webhookId": "f54cc5ad-4303-4c84-af36-155bb8e945af",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0a815556-e2ec-4830-9063-10fd5ee32d25",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f97a9d36-f22a-493d-a59d-3e1194b2a6fa",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "01e4b2a6-962e-4358-93ac-d2974e4a0dfb",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -  OMS同步越南工单信息",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data",
+          "ccEmail": "panzhijie@coros.com"
+        }
+      },
+      "id": "6801f097-a165-493b-a26a-8260984f446b",
+      "name": "同步错误发送错误",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1936,
+        96
+      ],
+      "retryOnFail": false,
+      "webhookId": "f54cc5ad-4303-4c84-af36-155bb8e945af",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        864,
+        160
+      ],
+      "id": "1719a5b7-3e61-4799-96ec-f1bb28e271d4",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "同步错误发送错误信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "同步错误发送错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-09-22T00:00:23.711+08:00",
+          "Readable date": "September 22nd 2025, 12:00:23 am",
+          "Readable time": "12:00:23 am",
+          "Day of week": "Monday",
+          "Year": "2025",
+          "Month": "September",
+          "Day of month": "22",
+          "Hour": "00",
+          "Minute": "00",
+          "Second": "23",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "HTTP Request": [
+      {
+        "json": {
+          "errCode": 100001,
+          "errMsg": "sn(W31AN00202,W31AN00204,W31AN00206,W31AN00217,W31AN00219,W31AN00226,W31AN00232,W31AN00233,W31AN00242,W31AN00245,W31AN00250,W31AN00259,W31AN00261,W31AN00268,W31AN00269,W31AN00271,W31AN00272,W31AN00276,W31AN00277,W31AN00278,W31AN00279,W31AN00280,W31AN00281,W31AN00282,W31AN00283,W31AN00284,W31AN00285,W31AN00286,W31AN00287,W31AN00290,W31AN00291,W31AN00294,W31AN00295,W31AN00299,W31AN00301,W31AN00308,W31AN00309,W31AN00310,W31AN00323,W31AN00325,W31AN00333,W31AN00334,W31AN00339,W31AN00342,W31AN00344,W31AN00347,W31AN00348,W31AN00349,W31AN00350,W31AN00351,W31AN00354,W31AN00358,W31AN00359,W31AN00360,W31AN00361,W31AN00367,W31AN00369,W31AN00371,W31AN00372,W31AN00373,W31AN00374,W31AN00378,W31AN00379,W31AN00380,W31AN00381,W31AN00382,W31AN00383,W31AN00384,W31AN00386,W31AN00390,W31AN00391,W31AN00401,W31AN00402,W31AN00404,W31AN00408,W31AN00410,W31AN00413,W31AN00414,W31AN00417,W31AN00421,W31AN00427,W31AN00429,W31AN00431,W31AN00432,W31AN00441,W31AN00448,W31AN00452,W31AN00453,W31AN00454,W31AN00456,W31AN00457,W31AN00459,W31AN00462,W31AN00463,W31AN00469,W31AN00472,W31AN00476,W31AN00500,W31AN00505,W31AN00506,W31AN00507,W31AN00512,W31AN00513,W31AN00515,W31AN00519,W31AN00523,W31AN00530,W31AN00532,W31AN00537,W31AN00541,W31AN00546,W31AN00551,W31AN00553,W31AN00556,W31AN00557,W31AN00558,W31AN00559,W31AN00560,W31AN00562,W31AN00564,W31AN00566,W31AN00568,W31AN00571,W31AN00573,W31AN00574,W31AN00575,W31AN00578,W31AN00579,W31AN00585,W31AN00589,W31AN00590,W31AN00591,W31AN00595,W31AN00597,W31AN00598,W31AN00599,W31AN00600,W31AN00601,W31AN00603,W31AN00604,W31AN00606,W31AN00607,W31AN00610,W31AN00614,W31AN00615,W31AN00620,W31AN00621,W31AN00622,W31AN00625,W31AN00626,W31AN00627,W31AN00629,W31AN00630,W31AN00631,W31AN00633,W31AN00637,W31AN00639,W31AN00640,W31AN00641,W31AN00642,W31AN00643,W31AN00647,W31AN00650,W31AN00651,W31AN00654,W31AN00655,W31AN00657,W31AN00662,W31AN00663,W31AN00666,W31AN00667,W31AN00669,W31AN00670,W31AN00671,W31AN00672,W31AN00673,W31AN00676,W31AN00679,W31AN00680,W31AN00682,W31AN00683,W31AN00686,W31AN00688,W31AN00690,W31AN00691,W31AN00692,W31AN00694,W31AN00695,W31AN00696,W31AN00698,W31AN00702,W31AN00703,W31AN00706,W31AN00708,W31AN00709,W31AN00710,W31AN00713,W31AN00714,W31AN00716,W31AN00720,W31AN00722,W31AN00725,W31AN00727,W31AN00730,W31AN00731,W31AN00734,W31AN00735,W31AN00743,W31AN00747,W31AN00748,W31AN00749,W31AN00753,W31AN00754,W31AN00755,W31AN00756,W31AN00757,W31AN00759,W31AN00760,W31AN00761,W31AN00764,W31AN00765,W31AN00768,W31AN00769,W31AN00770,W31AN00771,W31AN00773,W31AN00774,W31AN00775,W31AN00776,W31AN00777,W31AN00778,W31AN00781,W31AN00782,W31AN00788,W31AN00792,W31AN00795,W31AN00798,W31AN00800,W31AN00807,W31AN00808,W31AN00809,W31AN00811,W31AN00812,W31AN00813,W31AN00816,W31AN00820,W31AN00821,W31AN00823,W31AN00824,W31AN00827,W31AN00829,W31AN00831,W31AN00832,W31AN00833,W31AN00836,W31AN00841,W31AN00842,W31AN00844,W31AN00847,W31AN00849,W31AN00851,W31AN00854,W31AN00855,W31AN00856,W31AN00864,W31AN00868,W31AN00870,W31AN00874,W31AN00875,W31AN00878,W31AN00879,W31AN00880,W31AN00884,W31AN00885,W31AN00887,W31AN00888,W31AN00889,W31AN00892,W31AN00893,W31AN00896,W31AN00900,W31AN00901,W31AN00903,W31AN00904,W31AN00905,W31AN00906,W31AN00907,W31AN00908,W31AN00909,W31AN00910,W31AN00911,W31AN00912,W31AN00916,W31AN00917,W31AN00922,W31AN00923,W31AN00926,W31AN00928,W31AN00929,W31AN00931,W31AN00936,W31AN00939,W31AN00941,W31AN00942,W31AN00943,W31AN00944,W31AN00946,W31AN00947,W31AN00949,W31AN00950,W31AN00951,W31AN00953,W31AN00955,W31AN00960,W31AN00964,W31AN00968,W31AN00969,W31AN00971,W31AN00975,W31AN00976,W31AN00979,W31AN00980,W31AN00981,W31AN00982,W31AN00983,W31AN00985,W31AN00988,W31AN00989,W31AN00996,W31AN00997,W31AN01001,W31AN01005,W31AN01007,W31AN01008,W31AN01009,W31AN01010,W31AN01013,W31AN01017,W31AN01020,W31AN01022,W31AN01023,W31AN01024,W31AN01025,W31AN01026,W31AN01028,W31AN01029,W31AN01032,W31AN01033,W31AN01036,W31AN01037,W31AN01038,W31AN01039,W31AN01041,W31AN01048,W31AN01050,W31AN01054,W31AN01057,W31AN01059,W31AN01061,W31AN01062,W31AN01064,W31AN01065,W31AN01068,W31AN01070,W31AN01071,W31AN01072,W31AN01075,W31AN01076,W31AN01082,W31AN01083,W31AN01085,W31AN01086,W31AN01088,W31AN01089,W31AN01090,W31AN01092,W31AN01093,W31AN01094,W31AN01095,W31AN01097,W31AN01098,W31AN01099,W31AN01101,W31AN01103,W31AN01104,W31AN01105,W31AN01106,W31AN01107,W31AN01109,W31AN01110,W31AN01113,W31AN01115,W31AN01116,W31AN01119,W31AN01120,W31AN01121,W31AN01122,W31AN01123,W31AN01124,W31AN01126,W31AN01127,W31AN01129,W31AN01133,W31AN01136,W31AN01139,W31AN01140,W31AN01142,W31AN01145,W31AN01147,W31AN01148,W31AN01149,W31AN01151,W31AN01152,W31AN01154,W31AN01155,W31AN01156,W31AN01157,W31AN01159,W31AN01160,W31AN01161,W31AN01163,W31AN01164,W31AN01165,W31AN01166,W31AN01167,W31AN01168,W31AN01169,W31AN01170,W31AN01171,W31AN01172,W31AN01174,W31AN01175,W31AN01176,W31AN01177,W31AN01178,W31AN01182,W31AN01185,W31AN01187,W31AN01189,W31AN01190,W31AN01191,W31AN01194,W31AN01195,W31AN01197,W31AN01199,W31AN01200,W31AN01202,W31AN01203,W31AN01204,W31AN01205,W31AN01206,W31AN01207,W31AN01208,W31AN01209,W31AN01210,W31AN01211,W31AN01212,W31AN01213,W31AN01214,W31AN01215,W31AN01216,W31AN01217,W31AN01218,W31AN01219,W31AN01220,W31AN01221,W31AN01222,W31AN01223,W31AN01224,W31AN01225,W31AN01226,W31AN01227,W31AN01228,W31AN01229,W31AN01230)已有入库记录"
+        }
+      }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "snList": [
+            "W31AN00301",
+            "W31AN01218",
+            "W31AN00691",
+            "W31AN00530",
+            "W31AN00245",
+            "W31AN00217",
+            "W31AN01213",
+            "W31AN00344",
+            "W31AN00295",
+            "W31AN00770",
+            "W31AN01050",
+            "W31AN01222",
+            "W31AN00202",
+            "W31AN00472",
+            "W31AN00204",
+            "W31AN01164",
+            "W31AN00432",
+            "W31AN01148",
+            "W31AN00233",
+            "W31AN00250",
+            "W31AN00985",
+            "W31AN00590",
+            "W31AN00463",
+            "W31AN00564",
+            "W31AN01037",
+            "W31AN01110",
+            "W31AN00585",
+            "W31AN00647",
+            "W31AN01059",
+            "W31AN00372",
+            "W31AN00349",
+            "W31AN00951",
+            "W31AN00575",
+            "W31AN00371",
+            "W31AN01116",
+            "W31AN01106",
+            "W31AN00283",
+            "W31AN00916",
+            "W31AN00429",
+            "W31AN01062",
+            "W31AN01007",
+            "W31AN00778",
+            "W31AN01187",
+            "W31AN00944",
+            "W31AN01101",
+            "W31AN00232",
+            "W31AN00382",
+            "W31AN01005",
+            "W31AN00276",
+            "W31AN00259",
+            "W31AN00286",
+            "W31AN01115",
+            "W31AN01061",
+            "W31AN01090",
+            "W31AN01094",
+            "W31AN00854",
+            "W31AN00333",
+            "W31AN00284",
+            "W31AN00282",
+            "W31AN01147"
+          ]
+        }
+      }
+    ]
+  },
+  "versionId": "2e168195-7b9d-417a-895e-c978bb5dd796",
+  "activeVersionId": "2e168195-7b9d-417a-895e-c978bb5dd796",
+  "versionCounter": 44,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-12T08:24:08.562Z",
+      "createdAt": "2025-09-12T08:24:08.562Z",
+      "role": "workflow:owner",
+      "workflowId": "y1vPbVaqL4Lxxeoq",
+      "projectId": "W2w8tFYL8Ed6J49w",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:55.733Z",
+        "createdAt": "2025-01-28T16:53:34.840Z",
+        "id": "W2w8tFYL8Ed6J49w",
+        "name": "4.OMS_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

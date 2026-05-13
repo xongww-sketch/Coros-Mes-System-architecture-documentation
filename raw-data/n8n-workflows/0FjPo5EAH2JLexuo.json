@@ -1,0 +1,731 @@
+{
+  "updatedAt": "2024-12-20T03:52:28.065Z",
+  "createdAt": "2024-12-10T02:53:48.151Z",
+  "id": "0FjPo5EAH2JLexuo",
+  "name": "syncVisalVideo",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f8c7cc26-ca28-4d52-b67d-152ce83d049a",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "path": "/mes/Video"
+      },
+      "id": "d24c39a9-e755-4e7a-85d8-5d3abc3a6c40",
+      "name": "FTP",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        860,
+        300
+      ],
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f118c9a7-e76a-42ef-96bd-f08f895ae290",
+              "name": "path",
+              "value": "={{ $json.path }}",
+              "type": "string"
+            },
+            {
+              "id": "c94e6ae2-8b39-4776-9c97-933ac2246977",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7454317b-e2d7-4841-af31-dceb0e0cfa50",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "path": "={{ $json.path }}"
+      },
+      "id": "2b86bee6-c7f8-46f7-8fb7-a1071fb294e5",
+      "name": "FTP1",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        1720,
+        300
+      ],
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cbb71c71-4dd6-45f3-bc20-382ee816af16",
+              "name": "path",
+              "value": "={{ $json.path }}",
+              "type": "string"
+            },
+            {
+              "id": "b221ad98-716a-49df-a45d-3175b938f876",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "70850593-0ed3-4424-8465-c6c844bb7233",
+              "name": "type",
+              "value": "={{ $json.type }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c73fef43-f7e0-430c-89a0-e0e215f7aaf7",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2020,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e13f60c8-dd51-4b23-b035-3e03993a0daf",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "d",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fe6cea31-a3a0-4508-9c0f-36ffe1d0511a",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6489e9e-704b-45de-8eb1-f5e61652db34",
+              "name": "path",
+              "value": "={{ $json.path.substring(4) }}",
+              "type": "string"
+            },
+            {
+              "id": "fbe88ed8-77ea-460d-b706-bc71ccffabcf",
+              "name": "uuid_unique",
+              "value": "={{ $json.name.split(\"_\")[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f2dbff47-1d20-48a1-ba11-d570de3d5bd6",
+      "name": "Edit Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2340,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "video_info",
+          "mode": "list",
+          "cachedResultName": "video_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "procedure": 2,
+            "is_delete": 0,
+            "path": "={{ $json.path }}",
+            "create_time": "={{ $now.toMillis() }}",
+            "uuid_unique": "={{ $json.uuid_unique }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procedure",
+              "displayName": "procedure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "path",
+              "displayName": "path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e8e7a0cc-2834-4e94-9fe6-e8a1700ca6cf",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2600,
+        720
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "3c3d57a2-c79e-4596-b8cc-d4c9e28e3e9a",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "W331",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "4279c2f3-52db-4570-b5c3-88ce5f7f17e6",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "path": "={{ $json.path }}"
+      },
+      "id": "76ba9572-8bd0-452f-beb7-0806fc0be814",
+      "name": "FTP2",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        3160,
+        140
+      ],
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6489e9e-704b-45de-8eb1-f5e61652db34",
+              "name": "path",
+              "value": "={{ $json.path.substring(4) }}",
+              "type": "string"
+            },
+            {
+              "id": "fbe88ed8-77ea-460d-b706-bc71ccffabcf",
+              "name": "uuid_unique",
+              "value": "={{ $json.name.split(\"_\")[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a346f8ca-01ce-44d1-8113-e9b12509fe7e",
+      "name": "Edit Fields3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3360,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "video_info",
+          "mode": "list",
+          "cachedResultName": "video_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "procedure": 2,
+            "is_delete": 0,
+            "path": "={{ $json.path }}",
+            "create_time": "={{ $now.toMillis() }}",
+            "uuid_unique": "={{ $json.uuid_unique }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procedure",
+              "displayName": "procedure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "path",
+              "displayName": "path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ec5ccdd5-750c-4c30-afcb-0232d91e13db",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3180,
+        -40
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "28f32181-fea8-4205-9597-351940fcc94f",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "^\\d{4}-\\d{1,2}-\\d{2}$",
+              "operator": {
+                "type": "string",
+                "operation": "notRegex"
+              }
+            },
+            {
+              "id": "d6b894e5-1185-4559-9ab6-faa033e5b5ca",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "2024.11",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c1a0417c-0056-4a16-b509-07492a951bbb",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2540,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "702e3d27-4ff5-48f7-9196-4c922e7b9a55",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2820,
+        120
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "FTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FTP": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FTP1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "FTP1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FTP2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FTP2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 3600
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "23e8524d-e102-448c-8955-efea2fa855e5",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-12-10T02:53:48.151Z",
+      "createdAt": "2024-12-10T02:53:48.151Z",
+      "role": "workflow:owner",
+      "workflowId": "0FjPo5EAH2JLexuo",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

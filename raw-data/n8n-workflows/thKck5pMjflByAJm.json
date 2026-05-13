@@ -1,0 +1,2243 @@
+{
+  "updatedAt": "2026-02-10T06:38:44.278Z",
+  "createdAt": "2024-03-08T06:52:20.491Z",
+  "id": "thKck5pMjflByAJm",
+  "name": "Refunds_Warehouse",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "da8ab5cc-0c09-4401-9bbe-c2ad706d47a4",
+              "leftValue": "={{ $input.all().length}}",
+              "rightValue": "={{ $('Split Out').all().length}}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "fe1d48d7-529a-4cef-88a4-8dbf92b11c8c",
+              "leftValue": "={{ $input.all()[0].json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bac061d9-91cc-4d01-b609-adfb661e843c",
+      "name": "判断查询到的订单号数量是否等于上传的uuid数量",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3248,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "aad58910-acf0-4a7a-8faa-381e26085d7b",
+              "leftValue": "={{ $json.data.instance_code }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5462d608-cdb7-43c1-ae45-b7c50ede83bc",
+      "name": "判断审批是否成功发起",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        7120,
+        -496
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2009\",\n  \"msg\":\"退款审批发起失败！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2009\",\"msg\":\"退款审批发起失败\"}]\n}\n}",
+        "options": {}
+      },
+      "id": "62257cb3-cf73-447f-955e-d7744ce120a1",
+      "name": "退款申请发起失败",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        7376,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2001\",\n  \"msg\":\"uuid、sn、机型不能为空！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2001\",\"msg\":\"uuid、sn、机型不能为空!\"}]\n  }\n}",
+        "options": {}
+      },
+      "id": "45f64285-a518-4dd9-a6c7-95a67861e633",
+      "name": "数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet noFindIdList=[];\n//返回差集的方法\nfunction difference(arr1,arr2) {\n    return arr1.filter(element => !arr2.includes(element));\n}\n\n//能够查询到记录的数组\n let arr1=$input.all(); \n//上传ID数组\n let arr2=$('Split Out').all();\n\narr2.forEach(el=>{\n  console.log(arr1.some(e=>e.json.retroid===el.json.IdList.id)||arr1.some(e=>e.json.uuid===el.json.IdList.id))\n  if(!(arr1.some(e=>e.json.retroid===el.json.IdList.id)||arr1.some(e=>e.json.uuid===el.json.IdList.id))){\n    noFindIdList.push(el.json.IdList);\n  }\n})\n//返回没有查到数据的SN或者uuid\n\nreturn {\n  noFindIdList:noFindIdList\n};"
+      },
+      "id": "a6ae6e44-3e82-4432-9045-c24d5230e71d",
+      "name": "返回不在数据库中的uuid信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3504,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f6bd4d8b-90ab-4736-8f51-a98b0be4ea2f",
+              "leftValue": "= {{ $json.data }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c483218d-973c-4e6a-ad96-8a52bd006c5b",
+      "name": "空值判断",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        752,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfunction uniqueArray(arr) {\n  return arr.reduce((acc, curr) => {\n    if (!acc.hasOwnProperty(curr)) {\n      acc[curr] = true;\n    }\n    return acc;\n  }, {});\n}\nlet res=[];\nfor(item of $input.all()[0].json.body){\n  if(item.UUID){\n  res.push({\n    data:item.UUID,\n    dataType:\"uuid\",\n  });\n}\nif(item.SN){\n res.push({\n    data:item.SN,\n    dataType:\"sn\",\n  });\n}\n}\n\nreturn res;"
+      },
+      "id": "7ea63e85-5dab-4b22-9947-4220ffbfc996",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "IdList",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "productType",
+        "options": {}
+      },
+      "id": "36d7f04e-d106-4dbc-a587-6840892236a4",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v4/instances",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"approval_code\": \"D58A896D-3237-4F3D-B0B9-B3D91C7A460E\",\n  \"form\": \"{{ $json.form }}\",\n  \"user_id\": \"8cgb2f5b\"\n} ",
+        "options": {}
+      },
+      "id": "42d121d7-7bac-464e-80a8-0b7a5fcc4224",
+      "name": "创建飞书退款审批",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        6896,
+        -496
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYIcjGca4SCAD07L",
+          "name": "Lark Refund Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"退款审批发起成功！\"\n}",
+        "options": {}
+      },
+      "id": "79599171-b945-4141-b511-1bafcea81ab9",
+      "name": "退款审批发起成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        8352,
+        -816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let res={};\nIdList=[];\nlet errSN=[];\nfor(const item of $input.all()){\n  if(item.json.dataType==\"uuid\"){\n    //使用正则表达式获取到对应的uuid\nconst regex = /a=(.*?)(.{6})(?:&|$)*&b=([^&]*)&c=([^&]*)/;\nconst matches = item.json.data.match(regex);\n\nif (matches) {\n  IdList.push({\n    id:[matches[2],matches[3],matches[4]].join('').toUpperCase(),\n    uuid_unique:[ matches[2], matches[4]].join('').toUpperCase(),\n    type:\"uuid\"\n  })\n} else {\n    errSN.push({\n      url:item.json.data\n    })\n}\n\n  \n}else{\n  const snList=item.json.data.split(/\\r?\\n?\\s/).filter(el=>el!=='').map(el=>{\n  if(el.length!==10){\n    errSN.push(el);\n  }else{\n    IdList.push({\n      id:el,\n      type:\"sn\"\n    })\n  }\n    \n});\n}\n}\nres.IdList=IdList;\nres.productType=$input.all()[0].json.productType;\nres.errSN=errSN;\nreturn res;"
+      },
+      "id": "d4fd0290-e0ab-4090-8e6b-21abb887c1be",
+      "name": "解析上传的uuid，或者sn,并且进行去重操作",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "010d0a16-900b-4948-925f-feec83254abc",
+              "leftValue": "={{ $json.IdList.type }}",
+              "rightValue": "=uuid",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "591c9436-4820-421e-be2c-c711b35a56fc",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_watch_info",
+          "mode": "list",
+          "cachedResultName": "delivery_watch_info"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "uuid",
+              "value": "={{ $json.IdList.id }}"
+            },
+            {
+              "column": "uuid_unique",
+              "value": "={{ $json.IdList.uuid_unique }}"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "options": {}
+      },
+      "id": "059410a3-4883-477a-8617-e12a692aeda6",
+      "name": "根据uuid查找对应订单号和货物信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2048,
+        -480
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a5c5fb08-5b50-423f-a718-0a56af9d496c",
+              "leftValue": "={{ $json.errSN }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c70991de-1c1c-4d62-ab6c-1d43902e0894",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": " order_number",
+        "options": {}
+      },
+      "id": "7b121ee3-2d8c-4b22-83b5-7fee1e2c6550",
+      "name": "将订单号数组拆分进行运算",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        4752,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "order_number",
+        "options": {}
+      },
+      "id": "0c595794-c2aa-4992-a320-9b9e8643c512",
+      "name": "订单号去重1",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1,
+      "position": [
+        4528,
+        -288
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "ca814cf4-7487-4c0d-afe2-8eb748545a24",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2464,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//将数字转换成中文金额\nfunction convertToChineseCurrency(num) {\n  const strOutputDigits = '零壹贰叁肆伍陆柒捌玖';\n  const strOutputUnits = '个拾佰仟万拾佰仟亿拾佰仟万';\n  const strUnits = '角分';\n  const strRegex = /^\\d+(\\.\\d+)?$/;\n  let leftNum = Math.floor(num);\n  let rightNum = Math.round((num - leftNum) * 100); // 处理小数部分，乘以100四舍五入\n  let output = '';\n\n  if (num < 1) {\n    output = '零';\n  }\n\n  // 处理整数部分\n  let strOutput = '';\n  for (let i = 0; i < strOutputUnits.length && leftNum > 0; i++) {\n    output = strOutputDigits.charAt(leftNum % 10) + output;\n    if(i > 0 && output !== '零'){\n      output = strOutputUnits.charAt(i) + output;\n    }\n    leftNum = Math.floor(leftNum / 10);\n  }\n\n  output = output.replace(/零(仟|佰|拾|角)/g, '零').replace(/(零)+/g, '零').replace(/零(万|亿|个)/g, '$1');\n  output = output.replace(/^个/, '');\n  \n  // 处理小数部分\n  if (rightNum > 0) {\n    output += output ? '元' : '';\n    if (rightNum < 10) {\n      output += '零';\n    }\n    strOutput = '';\n    for (let i = 0; i < strUnits.length && rightNum > 0; i++) {\n      strOutput = strOutputDigits.charAt(rightNum % 10) + strOutput;\n      if(i > 0 || strOutput !== '零'){\n        strOutput = strUnits.charAt(i) + strOutput;\n      }\n      rightNum = Math.floor(rightNum / 10);\n    }\n    output += strOutput;\n  } else {\n    output += output ? '元整' : '';\n  }\n\n  return output.replace(/^\\s+|\\s+$/g, '').replace(/零分$/, '整');\n}\n\n//表单对象\nconst orderObj=[\n        {\n          id: \"widget17108278187270001\",\n          name: \"有赞退款单号\",\n          type: \"input\",\n          ext: null,\n          value: \"\",\n        },\n        {\n          id: \"widget17115189627540001\",\n          name: \"物料编码\",\n          type: \"input\",\n          ext: null,\n          value: \"\",\n        },\n      {\n        id:\"widget17119369619410001\",\n        name:\"ID\",\n        type:\"input\",\n        ext:null,\n        value:\"1\"\n        },\n        {\n          id: \"widget17108273805670001\",\n          name: \"退款金额\",\n          type: \"amount\",\n          ext: {\n            capitalValue: \"叁拾贰元整\",\n            currency: \"CNY\",\n            currencyRange: [\"CNY\"],\n            maxValue: \"\",\n            minValue: \"\",\n          },\n          value: 32,\n        },\n        \n      ]\nconst orderArr=[];\nconst order=JSON.stringify(orderObj);\nconst errOrder=[];\nfor(const item of $('Merge').all()){\n  let temp = JSON.parse(order);\n  const refundOrderObject = temp.find(obj => obj.name === \"有赞退款单号\");\n  if (refundOrderObject&&item.json['order_number']) {\n    refundOrderObject.value = item.json['order_number'];\n  }\n  const refundMatnrObject = temp.find(obj => obj.name === \"物料编码\");\n  if (refundOrderObject&&item.json['sku_code']) {\n    refundMatnrObject.value = item.json['sku_code'];\n  }\n  const SNObject = temp.find(obj => obj.name === \"ID\");\n  if (SNObject&&item.json['retroid']) {\n    SNObject.value = item.json['retroid'];\n  }\n  const refundAmountObject = temp.find(obj => obj.name === \"退款金额\");\n  if (refundAmountObject&&item.json['price']) {\n    refundAmountObject.ext.capitalValue=convertToChineseCurrency(item.json['price']);\n    refundAmountObject.value = item.json['price'];\n  }else{\n    errOrder.push(item.json['order_number'])\n  }\n \n  orderArr.push(temp);\n}\nconst form = [\n   {\n    id: \"widget17108273722900001\",\n    name: \"明细\",\n    type: \"fieldList\",\n    ext: [\n      {\n        capitalValue: \"\",\n        id: \"widget17108273805670001\",\n        sumItems: '[{\"currency\":\"CNY\",\"value\":\"34\"}]',\n        type: \"amount\",\n        value: \"\",\n      },\n      {\n        capitalValue: \"\",\n        id: \"widget17108280636650001\",\n        sumItems: '[{\"currency\":\"CNY\",\"value\":\"34\"}]',\n        type: \"amount\",\n        value: \"\",\n      },\n    ],\n    value: orderArr,\n    option: {\n      input_type: \"FORM\",\n      mobile_detail_type: \"CARD\",\n      print_type: \"FORM\",\n    },\n  },\n];\nreturn {\n  form:JSON.stringify(form).replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"'),\n  errOrder:errOrder\n};"
+      },
+      "id": "b3198160-e072-44f1-af5d-cdaaa4312da3",
+      "name": "生成飞书审批表单信息1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6656,
+        -496
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2001\",\n  \"msg\":\"uuid或sn存在错误！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2001\",\"msg\":\"uuid或sn存在错误!\"}]\n  }\n}",
+        "options": {}
+      },
+      "id": "41cde7f7-804b-414c-b426-d7b2e3a93c22",
+      "name": "uuid、sn存在错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet errOrderNumber=[];\nconst orderMap=new Map();\nfor (const item of $('Merge').all()) {\n   if(orderMap.has(item.json.order_number)){\norderMap.set(item.json.order_number,orderMap.get(item.json.order_number)+Number(item.price));\n   }else{\n     orderMap.set(item.json.order_number,Number(item.json.price));\n   }\n}\nfor(const e of $input.all()){\n  if(orderMap.get(e.json.order_number)>e.json.payment_amount){\n    errOrderNumber.push(e.json.order_number);\n  }\n}\n if(errOrderNumber.length!==0){\n   return {\n     errOrderNumber:errOrderNumber\n   }\n }else{\n   const arrayObjects = Array.from(orderMap, ([key, value]) => ({ order_number: key, sum: value }));\n   return arrayObjects;\n }\n"
+      },
+      "id": "38c57977-c2d9-4adb-887a-f5ebf4655c53",
+      "name": "计算不同订单的退款总金额",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6192,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2002\",\n  \"msg\":\"该SN对应的订单号不存在\",\n  \"data\":{\n   \"noFindList\":[{\"code\":\"2002\",\"msg\":\"该SN对应的订单号不存在\"}]\n  }\n}\n",
+        "options": {}
+      },
+      "id": "b9baf6ba-615d-4ddd-99a0-c245697a5d17",
+      "name": "该SN对应的订单号不存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        6032,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet temp=$('将订单号数组拆分进行运算').all().map(el=>{\n  return el.json.order_number;\n})\nfor (const item of $input.all()) {\n   if(temp.findIndex(el=>el==item.json.order_number)!==-1){\n     temp.splice(temp.findIndex(el=>el==item.json.order_number),1)\n   }\n   \n}\nif(temp.length!==0){\n  return {\n    nofindOrder:temp\n  }\n}else{\n  return $input.all()\n}\n"
+      },
+      "id": "a3dc1f56-9907-4439-93ea-bf939dc4ea4d",
+      "name": "查询这个订单号的总价格",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2002\",\n  \"msg\":\"退款的金额数大于订单金额数！\",\n  \"data\":{\n    \"snList\":\"{{ $json.nofindOrder}}\",\n    \"noFindList\":[{\"code\":\"2002\",\"msg\":\"退款的金额数大于订单金额数!\"}]\n\n  }\n  }\n  \n} ",
+        "options": {}
+      },
+      "id": "c6cf82ae-3110-40e0-975b-49f46058fc6e",
+      "name": "退款的金额数大于订单金额数",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        6656,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "da8ab5cc-0c09-4401-9bbe-c2ad706d47a4",
+              "leftValue": "={{ $json.errOrderNumber }}",
+              "rightValue": "={{ $('Split Out').all().length}}",
+              "operator": {
+                "type": "array",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "20e1e84a-9080-4f60-b11a-1bb88414ebdf",
+      "name": "判断退款总金哥是否小于订单总金额",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        6400,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c137edd3-536f-4981-8230-a98397e9352d",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4544,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "4cdb8155-a67f-43ea-9e04-0d47954e29e0",
+              "leftValue": "={{$json.nofindOrder}}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fd24e6af-03b3-4a5c-b752-54941fd1cd3b",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5552,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT wo.order_number, wo.payment_amount\nFROM delivery_order wo WHERE wo.order_number='{{$json.order_number}}'\n",
+        "options": {}
+      },
+      "id": "df53ef75-1a06-48db-adf3-7a70f7f154c5",
+      "name": "根据订单号查询订单总价和订单的信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        5008,
+        -288
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2002\",\"msg\":\"数据库错误!\"}]\n}\n}",
+        "options": {}
+      },
+      "id": "d7fd5b0e-44cb-42a5-ab19-4436cec42b04",
+      "name": "数据库错误2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        5392,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2001\",\n  \"msg\":\"uuid、sn、机型不能为空！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2001\",\"msg\":\"uuid、sn、机型不能为空!\"}]\n  }\n}",
+        "options": {}
+      },
+      "id": "115984ab-4e14-4eec-aec4-409a495cca8b",
+      "name": "uuid、sn、机型不能为空",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        944,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2001\",\n  \"msg\":\"uuid、sn、机型不能为空！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2001\",\"msg\":\"uuid、sn、机型不能为空!\"}]\n  }\n}",
+        "options": {}
+      },
+      "id": "c336bd74-4b86-427d-a446-7227a4cce83a",
+      "name": "数据库错误1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2002\",\n  \"msg\":\"sn或uuid未在数据库中找到！\",\n  \"data\":{\n    \"snList\":{{JSON.stringify($json.noFindIdList) }},\n    \"noFindList\":[{\"code\":\"2002\",\"msg\":\"sn或uuid未在数据库中找到\"}]\n  }\n  \n} ",
+        "options": {}
+      },
+      "id": "a14db110-6e63-4f68-af43-69198b3b9cbc",
+      "name": "上传的uuid或sn不在订单表中",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3712,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "6b1fd471-1d27-4b9e-828e-00784c508e5d",
+              "leftValue": "={{ $json.sn.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a4bd6690-1159-4a9e-9fdf-bcdca0c3332d",
+      "name": "If3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3920,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "sn"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1d5b6f26-d09c-4e2b-9f00-49692bcd2e96",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3664,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2005\",\n  \"msg\":\"存在退款记录！\",\n  \"data\":{\n    \"snList\":\"{{ $json.sn }}\",\n\"noFindList\":[{\"code\":\"2005\",\"msg\":\"存在退款记录\"}]\n  }\n} ",
+        "options": {}
+      },
+      "id": "8053c60a-2086-45bd-a027-9d5c2022273b",
+      "name": "数据库错误4",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        4144,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "708e5a8b-cb8e-451d-84b0-d3d3085bd9ba",
+      "name": "退款之前需要循环判断是否存在退款单记录",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3600,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "refund",
+          "mode": "list",
+          "cachedResultName": "refund"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "=retroid",
+              "value": "={{ $json.retroid }}"
+            },
+            {
+              "column": "refund_status",
+              "value": "1"
+            },
+            {
+              "column": "order_number",
+              "value": "={{ $json.order_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "500812b1-cc37-4f97-8018-58fa3d54fb8e",
+      "name": "判断是否存在该sn的退款记录，一个订单只能与一个SN绑定",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        3488,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('Merge').all();"
+      },
+      "id": "ad64dafe-6c50-459f-b589-9d8efc21a0da",
+      "name": "统计需要退款的订单号",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4240,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2002\",\"msg\":\"数据库错误\"}]\n}\n}",
+        "options": {}
+      },
+      "id": "0c139a7a-a7ab-49d5-9db2-aab208951fbe",
+      "name": "数据库错误3",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        8736,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\",\n  \"data\":{\n    \"noFindList\":[{\"code\":\"2002\",\"msg\":\"数据库错误!\"}]\n}\n}",
+        "options": {}
+      },
+      "id": "2de08933-dcd2-4634-b568-3dede9bb2eb5",
+      "name": "数据库错误5",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        7920,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\n\nreturn $('Merge').all();"
+      },
+      "id": "ace75e0a-c178-4eda-a212-f860dd089f6e",
+      "name": "获取到需要修改出库状态的SN",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7376,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\n\nreturn $('Merge').all();"
+      },
+      "id": "ecc3b426-d5e1-4b68-8cc6-bb2228db28a7",
+      "name": "获取到需要修改出库状态的SN1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8336,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_number": "={{ $json.order_number}}",
+            "retroid": "={{ $json.retroid }}",
+            "watch_status": 1
+          },
+          "matchingColumns": [
+            "retroid",
+            "order_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "watchtype",
+              "displayName": "watchtype",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "watch_status",
+              "displayName": "watch_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "40e62c17-eb27-4013-bcbb-b90cec16c0d9",
+      "name": "将收货状态修改为原状态",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        8528,
+        -400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "refund",
+          "mode": "list",
+          "cachedResultName": "refund"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "create_time": "={{ new Date() }}",
+            "order_number": "={{ $json.order_number }}",
+            "retroid": "={{ $json.retroid }}",
+            "uuid": "={{ $json.uuid }}",
+            "refund_price": "={{$json.price}}",
+            "refund_status": 1
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refund_price",
+              "displayName": "refund_price",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refund_status",
+              "displayName": "refund_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9028eaa9-73c9-4f31-b680-5c8ac8b26301",
+      "name": "生产退款单记录",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        7120,
+        688
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $('判断查询到的订单号数量是否等于上传的uuid数量').all();"
+      },
+      "id": "3b310fe1-c7f2-4f62-8b3e-ddec3f6fd76e",
+      "name": "从手表出货记录表中获取到需要入库的所有信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7920,
+        -688
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from delivery_order_details WHERE (uuid='{{ $json.IdList.id }}' or uuid_unique='{{ $json.IdList.uuid_unique }}') AND watch_status=1",
+        "options": {}
+      },
+      "id": "ae8bfc01-ab36-4071-8010-d322ce975c16",
+      "name": "根据uuid或者uuid_unique查询出库信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1888,
+        160
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "refunds",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4b1e3ccb-af6b-4115-89cd-01c405b161aa",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        384
+      ],
+      "webhookId": "0d92f1a0-da04-4c98-9ca3-fd4c331b34e5"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "watch_status": 2,
+            "order_number": "={{ $json.order_number}}"
+          },
+          "matchingColumns": [
+            "retroid",
+            "order_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "watchtype",
+              "displayName": "watchtype",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "watch_status",
+              "displayName": "watch_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "trial_times",
+              "displayName": "trial_times",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7866b6f-87bc-4d68-8ccb-1090311354a0",
+      "name": "修改仓库出货订单详情中的SN状态为已收货",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        7712,
+        -656
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "refund",
+          "mode": "list",
+          "cachedResultName": "refund"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_number": "={{ $json.order_number }}",
+            "refund_price": "={{ Number($json.price) }}",
+            "retroid": "={{ $json.retroid }}",
+            "uuid": "={{ $json.uuid }}",
+            "refund_status": 1,
+            "sku_code": "={{ $json.sku_code }}",
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refund_price",
+              "displayName": "refund_price",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refund_status",
+              "displayName": "refund_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refund_time",
+              "displayName": "refund_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "742f5b34-b0f9-4c7e-999a-0b5272abcd70",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        8176,
+        -656
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.IdList.id }}"
+            },
+            {
+              "column": "watch_status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee8c0155-00a8-42a1-8177-42f7543ce9bf",
+      "name": "根据sn码查找对应订单号和货物信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1888,
+        464
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "retroid",
+        "options": {}
+      },
+      "id": "dc36fdcc-8935-4939-8516-8ef1549c1abf",
+      "name": "Remove Duplicates",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1,
+      "position": [
+        2992,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d4e2f827-f8d1-4cf6-b251-0854549da740",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "992ccada-30b2-4e51-981a-bce105817949",
+      "name": "If4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2002\",\n  \"msg\":\"sn或uuid未在数据库中找到！\"\n} ",
+        "options": {}
+      },
+      "id": "663463fc-1171-412f-9c03-e6ebbc6f2dac",
+      "name": "上传的uuid或sn不在订单表中1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2992,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"code\": \"2002\",\n  \"msg\": \"该SN对应的订单号不存在\",\n  \"noFindIdList\": {{ $json.nofindOrder }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5728,
+        -192
+      ],
+      "id": "6cc1c2c1-f5ac-43db-8615-5d0696b0cd3c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "/// 在 Webhook 节点前添加 Function 节点\nconst response = {\n  data: $input.all()[0].json\n};\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5888,
+        -192
+      ],
+      "id": "c58e0161-45ae-414e-bb95-bcd14888709d",
+      "name": "Code1"
+    }
+  ],
+  "connections": {
+    "判断查询到的订单号数量是否等于上传的uuid数量": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在该sn的退款记录，一个订单只能与一个SN绑定",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回不在数据库中的uuid信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断审批是否成功发起": {
+      "main": [
+        [
+          {
+            "node": "获取到需要修改出库状态的SN",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "退款申请发起失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回不在数据库中的uuid信息": {
+      "main": [
+        [
+          {
+            "node": "上传的uuid或sn不在订单表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "空值判断": {
+      "main": [
+        [
+          {
+            "node": "解析上传的uuid，或者sn,并且进行去重操作",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uuid、sn、机型不能为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "空值判断",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创建飞书退款审批": {
+      "main": [
+        [
+          {
+            "node": "判断审批是否成功发起",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析上传的uuid，或者sn,并且进行去重操作": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "根据uuid或者uuid_unique查询出库信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "根据sn码查找对应订单号和货物信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uuid、sn存在错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将订单号数组拆分进行运算": {
+      "main": [
+        [
+          {
+            "node": "根据订单号查询订单总价和订单的信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "订单号去重1": {
+      "main": [
+        [
+          {
+            "node": "将订单号数组拆分进行运算",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成飞书审批表单信息1": {
+      "main": [
+        [
+          {
+            "node": "创建飞书退款审批",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "计算不同订单的退款总金额": {
+      "main": [
+        [
+          {
+            "node": "判断退款总金哥是否小于订单总金额",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询这个订单号的总价格": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断退款总金哥是否小于订单总金额": {
+      "main": [
+        [
+          {
+            "node": "生成飞书审批表单信息1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "退款的金额数大于订单金额数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "计算不同订单的退款总金额",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据订单号查询订单总价和订单的信息": {
+      "main": [
+        [
+          {
+            "node": "查询这个订单号的总价格",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "统计需要退款的订单号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在该sn的退款记录，一个订单只能与一个SN绑定": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统计需要退款的订单号": {
+      "main": [
+        [
+          {
+            "node": "订单号去重1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到需要修改出库状态的SN": {
+      "main": [
+        [
+          {
+            "node": "修改仓库出货订单详情中的SN状态为已收货",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到需要修改出库状态的SN1": {
+      "main": [
+        [
+          {
+            "node": "将收货状态修改为原状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将收货状态修改为原状态": {
+      "main": [
+        [
+          {
+            "node": "数据库错误3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从手表出货记录表中获取到需要入库的所有信息": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据uuid或者uuid_unique查询出库信息": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "修改仓库出货订单详情中的SN状态为已收货": {
+      "main": [
+        [
+          {
+            "node": "从手表出货记录表中获取到需要入库的所有信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "退款审批发起成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取到需要修改出库状态的SN1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据sn码查找对应订单号和货物信息": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "数据库错误1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "判断查询到的订单号数量是否等于上传的uuid数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "上传的uuid或sn不在订单表中1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "该SN对应的订单号不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "885",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": [
+            {
+              "index": 1764213489762,
+              "UUID": "",
+              "SN": "M18BJ27673"
+            },
+            {
+              "index": 1764213498247,
+              "UUID": "",
+              "SN": "M18BV06369"
+            },
+            {
+              "index": 1764213505396,
+              "UUID": "",
+              "SN": "M18BV51756"
+            },
+            {
+              "index": 1764213510981,
+              "UUID": "",
+              "SN": "M18BJ21817"
+            },
+            {
+              "index": 1764213517376,
+              "UUID": "",
+              "SN": "M18BJ23591"
+            },
+            {
+              "index": 1764213525113,
+              "UUID": "",
+              "SN": "M18BG02311"
+            },
+            {
+              "index": 1764213530348,
+              "UUID": "",
+              "SN": "M18BJ34557"
+            },
+            {
+              "index": 1764213535879,
+              "UUID": "",
+              "SN": "M18BJ10784"
+            },
+            {
+              "index": 1764213543862,
+              "UUID": "",
+              "SN": "M18BG03692"
+            },
+            {
+              "index": 1764213550155,
+              "UUID": "",
+              "SN": "M18BG01250"
+            },
+            {
+              "index": 1764213558666,
+              "UUID": "",
+              "SN": "M18BV12223"
+            },
+            {
+              "index": 1764213563871,
+              "UUID": "",
+              "SN": "M18BG07860"
+            },
+            {
+              "index": 1764213573844,
+              "UUID": "",
+              "SN": "M18BG12968"
+            },
+            {
+              "index": 1764213581147,
+              "UUID": "",
+              "SN": "M18BL01979"
+            },
+            {
+              "index": 1764213589822,
+              "UUID": "",
+              "SN": "M18BL02196"
+            },
+            {
+              "index": 1764213596789,
+              "UUID": "",
+              "SN": "M18BG11750"
+            },
+            {
+              "index": 1764213606704,
+              "UUID": "",
+              "SN": "M18BV29370"
+            }
+          ],
+          "webhookUrl": "https://n8n.mes.coros.team/prod/refunds",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "9eca98c7-2956-4889-ae93-394fb5311dcf",
+  "activeVersionId": "9eca98c7-2956-4889-ae93-394fb5311dcf",
+  "versionCounter": 42,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:12:55.284Z",
+      "createdAt": "2024-04-24T09:12:55.284Z",
+      "id": "I6FeqDLYYpIOV1kH",
+      "name": "样机试用申请API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-08T06:52:20.495Z",
+      "createdAt": "2024-03-08T06:52:20.495Z",
+      "role": "workflow:owner",
+      "workflowId": "thKck5pMjflByAJm",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    },
+    {
+      "updatedAt": "2025-11-04T02:51:36.015Z",
+      "createdAt": "2025-11-04T02:51:36.015Z",
+      "role": "workflow:editor",
+      "workflowId": "thKck5pMjflByAJm",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

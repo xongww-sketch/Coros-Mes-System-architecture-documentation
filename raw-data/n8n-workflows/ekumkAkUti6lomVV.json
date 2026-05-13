@@ -1,0 +1,294 @@
+{
+  "updatedAt": "2025-04-24T06:33:29.703Z",
+  "createdAt": "2025-04-22T07:10:39.893Z",
+  "id": "ekumkAkUti6lomVV",
+  "name": "retroid-generate_list",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "retroid-generate_list",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        0
+      ],
+      "id": "e6a8a52d-a103-4aaf-bd19-b80e8d146c2f",
+      "name": "Webhook",
+      "webhookId": "0e57a760-f3b2-4d28-a40c-78dd89278d20"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ab039a93-b4d8-4f61-bdd0-00135f03919f",
+              "leftValue": "={{ $json.query.joborder }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        380,
+        0
+      ],
+      "id": "a4863769-af0b-45c3-8e2b-e514e1040920",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const joborder = $('Webhook').first().json.query.joborder;\n\nconst cleanJoborder =joborder.replace(/\\s/g, '')\n\nreturn{json:{\n        query:{\n          joborder:cleanJoborder\n}\n}\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        0
+      ],
+      "id": "99f38ba0-f12d-48ec-a672-9897dc3fb974",
+      "name": "去除空格和换行字符"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"工单号未填写\",\n  \"data\":{\n    \"list\":[]\n   }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        140
+      ],
+      "id": "e028205f-4b79-476a-895b-6b0dd24cc7ce",
+      "name": "工单号未填写"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select rg.retroid_generate_id,j.joborder_number, rg.product_series, rg.product_model, rg.product_phase\n, rg.beginseries, rg.endseries,\nrg.createtime\nfrom mes.joborder j \njoin mes.retroid_generate rg on rg.joborder_id = j.joborder_id\nwhere j.joborder_number ='{{ $('去除空格和换行字符').item.json.query.joborder }}' and rg.status = 0\nlimit 20000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        600,
+        -100
+      ],
+      "id": "643578e5-4c4f-4365-aeaf-e7802630a1d9",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库执行错误\",\n  \"data\":{\n    \"list\":[]\n   }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        140
+      ],
+      "id": "93af00d8-439c-4f3a-9186-e5fb42c6d106",
+      "name": "数据库执行出错"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 PostgreSQL 查询结果\nconst dbResults = $input.all();\n\n// 处理结果为空的情况\nif (!dbResults || dbResults.length === 0) {\n  return {\n    json: {\n      code: 200,\n      data: {\n        list: []  // 明确返回空数组\n      }\n    }\n  };\n}\n\n// 映射数据到所需格式\nconst formattedList = dbResults.map(item => ({\n  retroid_generate_id: item.json.retroid_generate_id,  // 确保转换为字符串\n  joborder_number: item.json.joborder_number || \"\",\n  product_series: item.json.product_series || \"\",\n  product_model: item.json.product_model || \"\",\n  product_phase: item.json.product_phase || \"\",\n  beginseries: item.json.beginseries,  \n  endseries: item.json.endseries,\n  createtime:\n  item.json.createtime\n}));\n\n// 返回标准格式响应\nreturn {\n  json: {\n    code: 200,\n    data: {\n      list: formattedList\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        -200
+      ],
+      "id": "f084903f-3fde-45b5-9d16-caebf1ef7755",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1060,
+        -200
+      ],
+      "id": "b01bced3-9df6-4b00-bc56-a9f9184f85df",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "去除空格和换行字符",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "去除空格和换行字符": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工单号未填写",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行出错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.29.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "joborder": "5000000265"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/retroid-generate_list",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "d0ea1a24-d403-4c42-9f14-c22f967fea29",
+  "activeVersionId": "d0ea1a24-d403-4c42-9f14-c22f967fea29",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:22:00.476Z",
+      "createdAt": "2025-04-24T03:22:00.476Z",
+      "role": "workflow:owner",
+      "workflowId": "ekumkAkUti6lomVV",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

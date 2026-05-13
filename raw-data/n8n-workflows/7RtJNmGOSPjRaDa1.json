@@ -1,0 +1,1950 @@
+{
+  "updatedAt": "2026-03-04T12:40:17.207Z",
+  "createdAt": "2025-08-22T03:17:41.324Z",
+  "id": "7RtJNmGOSPjRaDa1",
+  "name": "binding_materials_before_processing",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "binding_before_api_test",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        128
+      ],
+      "id": "9a950fed-5173-416c-971f-0ad2d48f5726",
+      "name": "Webhook",
+      "webhookId": "b7844b6d-d64e-42e4-a941-fa0e0992c562"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52bd4df9-4b2e-4b77-8865-7d4769273a47",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        112
+      ],
+      "id": "2dcf33e1-0388-4f7c-84ee-35348b0e7a76",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — 工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -528,
+        112
+      ],
+      "id": "5424a193-3452-462d-bb81-83f1d1a349e0",
+      "name": "工序查询通用接口"
+    },
+    {
+      "parameters": {
+        "jsCode": "// // 取 IF 节点的输出（是一个数组）\n// const ifArray =$('If').first().json.data || [];\n\n// 构造目标格式\nconst result = {\n  body: {\n    procedure_name: $input.first().json.data[0].procedure_name || \"\",\n    joborder_id: $('Webhook').first().json.body.joborder_id,          // IF 没有，留空\n    procedure_detail_id: String($('工序查询通用接口').first().json.data[0].procedure_detail_id || \"\"),\n    bind_data:$('Webhook').first().json.body.bind_id,\n    material:$('Webhook').first().json.body.material\n  }\n};\n\n// 返回给后续节点\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        112
+      ],
+      "id": "7cba4001-a01a-44ba-b412-97f387cf2cf0",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"未填写所有必填项或屏id长度不正确\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -384,
+        480
+      ],
+      "id": "9a3d382e-49c5-493b-b473-cac1f482666e",
+      "name": "未填写所有必填项"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8cae011e-f660-42f2-b16d-7ea8b3cfc16f",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        -288
+      ],
+      "id": "6cbf1561-8da0-4eb2-9843-cc64d1eeaf7f",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2021f395-13f2-40cd-82a2-930b02d6580f",
+              "leftValue": "={{ $json.retroid_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e73b2dfa-a5e0-4da3-986f-cece04666668",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 62,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        -464
+      ],
+      "id": "ab5929c6-92f5-4662-a014-ed493daf5768",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH matched_rows AS ( \n    -- 1. 查找 bind_id 匹配的数据\n    SELECT * \n    FROM mes.machine_data \n    WHERE data ->> 'bind_id' = '{{ $('判断所有必填项是否已填写-LCD与TP绑定').first().json.body.material }}' \n\n    UNION ALL\n\n    -- 2. 查找 unbind_id 匹配的数据\n    SELECT * \n    FROM mes.machine_data \n    WHERE data ->> 'unbind_id' = '{{ $('判断所有必填项是否已填写-LCD与TP绑定').first().json.body.material }}' \n),\nfinal_data AS (\n    -- 将原来的查询、筛选、Limit 逻辑封装在这里\n    SELECT * \n    FROM matched_rows\n    WHERE procedure_detail_id IN ({{ $('工序查询通用接口').first().json.data[0].procedure_detail_id }}, 62) \n    ORDER BY createtime DESC\n    LIMIT 1\n)\n-- 核心逻辑：\n-- 1. 使用 (SELECT 1) 创建一个必定存在的“桩”(dummy)。\n-- 2. 左连接你的数据。\n-- 3. 结果：没有任何嵌套 Key。\n--    如果没查到，会返回一行 { \"id\": null, \"data\": null, ... }\nSELECT t.*\nFROM (SELECT 1) AS dummy\nLEFT JOIN final_data t ON true;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1152,
+        -448
+      ],
+      "id": "7769c1e5-f48e-4874-9430-1bc03787b401",
+      "name": "判断是否存在绑定数据或者已经解绑",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id = {{ $('If').first().json.data[0].procedure_detail_id }}\nand md.data ->>'material'='{{ $('Webhook').first().json.body.material }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1632,
+        -480
+      ],
+      "id": "b571f04a-8350-4570-bfbc-4290c3026cee",
+      "name": "查询物料和辅料绑定信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6d51509e-a0aa-412f-9682-403c09076072",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        -496
+      ],
+      "id": "4ea4ebfc-21ec-44f1-b30e-ed08c16dbac5",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "procedure_detail_id": "={{ $('If').first().json.data[0].procedure_detail_id }}",
+            "user_id": 1,
+            "machine_id": 0,
+            "createtime": "={{ $now }}",
+            "data": "={{ $('Webhook').item.json.body }}",
+            "retroid_id": 0,
+            "history_procedure_id": "={{ $('If').first().json.data[0].history_procedure_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2080,
+        -320
+      ],
+      "id": "a8c8d9bb-1e12-491d-bf3c-9f7051bcd177",
+      "name": "插入物料和辅料绑定数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"该物料已和sn有绑定记录，请先解除和sn的绑定关系\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1808,
+        -208
+      ],
+      "id": "94aaa4b5-d39d-4928-b274-be493b65acfe",
+      "name": "与sn有绑定记录"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a6a11559-b9c6-4a34-a831-2db616ff541a",
+              "leftValue": "={{ $('If6').item.json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2528,
+        -192
+      ],
+      "id": "a243b8ae-e965-43d0-8c9c-f37eaf30a1c6",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\": \"物料与辅料已重新绑定成功\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2832,
+        -144
+      ],
+      "id": "fb08676e-690a-41b3-baf2-4807736afea4",
+      "name": "重复绑定成功"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\": \"物料和辅料绑定成功\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3040,
+        16
+      ],
+      "id": "51494ef0-7658-4212-ab1a-1113b07f656e",
+      "name": "物料和辅料绑定成功"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"500\",\n  \"msg\": \"数据库错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3136,
+        1648
+      ],
+      "id": "849974ec-3c85-44bb-aee5-dda1ee612515",
+      "name": "数据库错误"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "material",
+          "mode": "list",
+          "cachedResultName": "material"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "material",
+              "value": "={{ $('Webhook').first().json.body.material }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        -208
+      ],
+      "id": "b4894cd8-2e1c-4b80-be89-1c73a276d840",
+      "name": "查询物料是否在material中已经记录",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\": \"未在工艺流程中找到该工序\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -112,
+        304
+      ],
+      "id": "5acb8071-ce14-4199-a2b2-7bc1c70a1204",
+      "name": "未在工艺流程中找到该工序"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "27eafb28-f6c7-4ce6-8c36-85429cb13b9f",
+              "leftValue": "={{ $json.body.procedure_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "07332dde-a3d4-4c71-9953-82b42c76ce48",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9e562297-4df7-4565-8cf1-2d2b093689a1",
+              "leftValue": "={{ $json.body.material.length }}",
+              "rightValue": 19,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "928e0dd4-e531-44e2-9d51-6f4cfeb41ad5",
+              "leftValue": "={{ $json.body.bind_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b62a818f-bd8b-4e0e-a70e-8ab3e73baf59",
+              "leftValue": "={{ $json.query.procedure_name }}",
+              "rightValue": "LCD与TP绑定",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -928,
+        128
+      ],
+      "id": "9b831ce3-73c7-4203-a233-8b7d5497bb37",
+      "name": "判断所有必填项是否已填写-LCD与TP绑定"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a4a2aa30-1f65-4cdd-ac02-5887a039490f",
+              "leftValue": "={{ $json.query.material }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1c919951-ee1c-40a3-a251-08603233fba7",
+              "leftValue": "={{ $json.query.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4a07066e-31bd-4a50-b009-09df0436367e",
+              "leftValue": "={{ $json.query.bind_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3940b854-71a2-4abf-aaf3-1b67bdac7ec8",
+              "leftValue": "={{ $json.query.material.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "5519f3f8-efac-428a-ae2f-7c0332d53278",
+              "leftValue": "={{ $json.body.timelimit }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "7351d99c-daf3-4f48-8606-5df8458fe0ac",
+              "leftValue": "={{ $json.body.timelimit }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        256
+      ],
+      "id": "0255d03f-f468-4a25-a178-42f0012ee439",
+      "name": "判断所有必填项是否已填写-PPG点胶-保压起始"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "material",
+          "mode": "list",
+          "cachedResultName": "material"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "material": "={{ $('Webhook').item.json.body.material }}",
+            "status": 1,
+            "createtime": "={{ $now }}",
+            "joborder_id": "={{ $('Webhook').item.json.body.joborder_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "material_id",
+              "displayName": "material_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "joborder_id",
+              "displayName": "joborder_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "material",
+              "displayName": "material",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        784,
+        -416
+      ],
+      "id": "11d5dd01-3bc8-4e96-acaa-fddaeab55dfd",
+      "name": "唯一码无重复存material-插入material表",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bc363a80-2321-4c78-9aca-5acb5b768719",
+              "leftValue": "={{ $json.body.procedure_name }}",
+              "rightValue": "PPG点胶-保压起始",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        112
+      ],
+      "id": "8a080df8-71d7-4990-9bd9-f1ee02a77cfe",
+      "name": "判断是否属于PPG点胶-保压起始"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8cae011e-f660-42f2-b16d-7ea8b3cfc16f",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        80
+      ],
+      "id": "88aa443d-ec74-497c-9f00-8ce7f115e5cf",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "material",
+          "mode": "list",
+          "cachedResultName": "material"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "material": "={{ $('Webhook').item.json.body.material }}",
+            "status": 1,
+            "createtime": "={{ $now }}",
+            "joborder_id": "={{ $('Webhook').item.json.body.joborder_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "material_id",
+              "displayName": "material_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "joborder_id",
+              "displayName": "joborder_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "material",
+              "displayName": "material",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        16
+      ],
+      "id": "f08518c5-529f-4435-a2af-dd24df068796",
+      "name": "唯一码无重复存material-插入material表1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "590d8718-0a1d-4ac8-bf23-4cd834837791",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        192
+      ],
+      "id": "8d3c2afb-39a9-4393-bfc2-17f1627ae466",
+      "name": "判断保压盒是否已经和sn绑定"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "material",
+          "mode": "list",
+          "cachedResultName": "material"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "material",
+              "value": "={{ $json.material }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        320,
+        192
+      ],
+      "id": "03d890d1-c77f-4cbd-9f65-b1aa7619b4d1",
+      "name": "查询物料是否在material中已经记录-保压盒",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "356ebb0e-0930-484e-b9c7-3e3dcce72617",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2352,
+        -192
+      ],
+      "id": "34c9a62f-f5aa-4798-80f9-b845f88d0012",
+      "name": "判断是否插入成功"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"该保压盒还未与sn绑定\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1024,
+        288
+      ],
+      "id": "746d65d9-689e-4123-a84d-d38936e9edb5",
+      "name": "该保压盒还未与sn绑定"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "procedure_detail_id": "={{ $('If').first().json.data[0].procedure_detail_id }}",
+            "user_id": 1,
+            "machine_id": 0,
+            "createtime": "={{ $now }}",
+            "retroid_id": 0,
+            "history_procedure_id": "={{ $('If').first().json.data[0].history_procedure_id }}",
+            "data": "={{ $('整理数据').item.json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1088,
+        64
+      ],
+      "id": "27f2a216-2c02-4582-b25c-c85ff0ef953e",
+      "name": "插入物料和辅料绑定数据1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "function processData() {\n  const inputArray = $input.all();\n  \n  return inputArray\n    .filter(entry => entry.json && entry.json.body && entry.json.body.bind_data)\n    .map(entry => {\n      const item = entry.json.body;\n      let bindData = item.bind_data;\n      const parts = bindData.split(',');\n      if (parts.length > 1) {\n        bindData = parts[1];\n      } else {\n        bindData = parts[0];\n      }\n      bindData = bindData.replace(/-/g, '');\n\n      // 放到json里\n      return {\n        json: {\n          ...item,\n          bind_id: bindData,\n          timelimit:$('Webhook').first().json.body.timelimit\n        }\n      };\n    });\n}\n\nreturn processData();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        192
+      ],
+      "id": "aaef10e8-0210-4bc3-b5c3-c3a96aa9ec96",
+      "name": "整理数据"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "356ebb0e-0930-484e-b9c7-3e3dcce72617",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        64
+      ],
+      "id": "54fd0d49-b13f-46d8-82f4-206434f7eb7e",
+      "name": "判断是否插入成功1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "material",
+          "mode": "list",
+          "cachedResultName": "material"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "material": "={{ $json.data.material }}",
+            "status": 2
+          },
+          "matchingColumns": [
+            "material"
+          ],
+          "schema": [
+            {
+              "id": "material_id",
+              "displayName": "material_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "joborder_id",
+              "displayName": "joborder_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "material",
+              "displayName": "material",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1888,
+        64
+      ],
+      "id": "03c97d59-d8eb-43a8-93e2-f5eb1a4cd488",
+      "name": "更改material状态",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "27eafb28-f6c7-4ce6-8c36-85429cb13b9f",
+              "leftValue": "={{ $json.body.procedure_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "07332dde-a3d4-4c71-9953-82b42c76ce48",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9e562297-4df7-4565-8cf1-2d2b093689a1",
+              "leftValue": "={{ $json.body.bind_id.length }}",
+              "rightValue": 24,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "928e0dd4-e531-44e2-9d51-6f4cfeb41ad5",
+              "leftValue": "={{ $json.body.material }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b62a818f-bd8b-4e0e-a70e-8ab3e73baf59",
+              "leftValue": "={{ $json.query.procedure_name }}",
+              "rightValue": "屏ID与面圈批次绑定",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        320
+      ],
+      "id": "d61b0c21-2c2e-4d95-b95f-811ebfe688ef",
+      "name": "判断所有必填项是否已填写-屏ID与面圈批次绑定"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断所有必填项是否已填写-LCD与TP绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "未在工艺流程中找到该工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "工序查询通用接口": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "判断是否属于PPG点胶-保压起始",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "唯一码无重复存material-插入material表",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断是否存在绑定数据或者已经解绑",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "查询物料和辅料绑定信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "与sn有绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在绑定数据或者已经解绑": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询物料和辅料绑定信息": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "插入物料和辅料绑定数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "插入物料和辅料绑定数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入物料和辅料绑定数据": {
+      "main": [
+        [
+          {
+            "node": "判断是否插入成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "重复绑定成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "物料和辅料绑定成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询物料是否在material中已经记录": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断所有必填项是否已填写-LCD与TP绑定": {
+      "main": [
+        [
+          {
+            "node": "工序查询通用接口",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断所有必填项是否已填写-PPG点胶-保压起始",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断所有必填项是否已填写-PPG点胶-保压起始": {
+      "main": [
+        [
+          {
+            "node": "工序查询通用接口",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断所有必填项是否已填写-屏ID与面圈批次绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "唯一码无重复存material-插入material表": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在绑定数据或者已经解绑",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否属于PPG点胶-保压起始": {
+      "main": [
+        [
+          {
+            "node": "查询物料是否在material中已经记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "整理数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "唯一码无重复存material-插入material表1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断保压盒是否已经和sn绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询物料是否在material中已经记录-保压盒": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否插入成功": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断保压盒是否已经和sn绑定": {
+      "main": [
+        [
+          {
+            "node": "插入物料和辅料绑定数据1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该保压盒还未与sn绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "唯一码无重复存material-插入material表1": {
+      "main": [
+        [
+          {
+            "node": "插入物料和辅料绑定数据1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据": {
+      "main": [
+        [
+          {
+            "node": "查询物料是否在material中已经记录-保压盒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入物料和辅料绑定数据1": {
+      "main": [
+        [
+          {
+            "node": "判断是否插入成功1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否插入成功1": {
+      "main": [
+        [
+          {
+            "node": "更改material状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更改material状态": {
+      "main": [
+        [
+          {
+            "node": "物料和辅料绑定成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断所有必填项是否已填写-屏ID与面圈批次绑定": {
+      "main": [
+        [
+          {
+            "node": "工序查询通用接口",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "未填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "126",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {
+            "joborder_id": "1987",
+            "material": "LS013B7DD08A55901FP",
+            "procedure_name": "LCD与TP绑定",
+            "bind_id": "REDACTED"
+          },
+          "body": {
+            "procedure_name": "LCD与TP绑定",
+            "joborder_id": "1987",
+            "material": "LS013B7DD08A55901FP",
+            "bind_id": "REDACTED"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/binding_before_api_test",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "8359c4ea-517a-4ced-86d2-50dcb01ea9a7",
+  "activeVersionId": "8359c4ea-517a-4ced-86d2-50dcb01ea9a7",
+  "versionCounter": 54,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-08-22T03:17:41.324Z",
+      "createdAt": "2025-08-22T03:17:41.324Z",
+      "role": "workflow:owner",
+      "workflowId": "7RtJNmGOSPjRaDa1",
+      "projectId": "nibbXVSPf8J6itYk",
+      "project": {
+        "updatedAt": "2025-07-02T06:42:38.028Z",
+        "createdAt": "2025-07-02T06:40:56.794Z",
+        "id": "nibbXVSPf8J6itYk",
+        "name": "Huali Lei <leihuali@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "780e7333-0684-45a2-be3f-59aeedfdd9af"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

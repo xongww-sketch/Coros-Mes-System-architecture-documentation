@@ -1,0 +1,403 @@
+{
+  "updatedAt": "2025-04-24T06:53:50.905Z",
+  "createdAt": "2024-08-01T02:19:05.481Z",
+  "id": "moZxAwDT6fPaXEHj",
+  "name": "deletePackage",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "108ef34d-4a2a-493b-ae03-238b81053eac",
+              "leftValue": "={{ $json.query.package_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e8c16618-e0be-4746-98f8-3769dfa66f1a",
+      "name": "check id is not null",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"id不存在！\"\n}",
+        "options": {}
+      },
+      "id": "ad470abb-9e43-4b1a-904b-4cc6b9197551",
+      "name": "package_id is null",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1020,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "3dde31e4-be61-4ccb-85e0-13c9df629209",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "installation_package",
+          "mode": "list",
+          "cachedResultName": "installation_package"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "package_id": "={{ $json.query.package_id }}",
+            "is_delete": 1
+          },
+          "matchingColumns": [
+            "package_id"
+          ],
+          "schema": [
+            {
+              "id": "package_id",
+              "displayName": "package_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "package_name",
+              "displayName": "package_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "package_version",
+              "displayName": "package_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "package_remarks",
+              "displayName": "package_remarks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "package_path",
+              "displayName": "package_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f0e654e8-2c9a-4771-966e-2eb3fb60853b",
+      "name": "delete package",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1020,
+        160
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"删除成功！\"\n}",
+        "options": {}
+      },
+      "id": "ff2f015e-d9ab-414b-aaad-854511cb437d",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d16607d8-419a-4165-b9a9-238e0c61d939",
+              "leftValue": "={{ $json.package_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f06bf230-413b-4dee-a48d-e4161f34ff62",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "01d33c4c-a7c0-4f27-8296-a3f28e6c1a3a",
+      "name": "database error1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "path": "deletePackage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "213c9b69-7833-4f42-a2ee-f4dd39b6d228",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        440,
+        240
+      ],
+      "webhookId": "399793d0-0bbe-42df-8d56-0906eb03e6eb"
+    }
+  ],
+  "connections": {
+    "check id is not null": {
+      "main": [
+        [
+          {
+            "node": "delete package",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "package_id is null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete package": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check id is not null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "pakcage_id": "31"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/deletePackage",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "1ae8ebec-42c4-4650-b026-e894284f7715",
+  "activeVersionId": "1ae8ebec-42c4-4650-b026-e894284f7715",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T06:50:34.839Z",
+      "createdAt": "2025-04-24T06:50:34.839Z",
+      "role": "workflow:owner",
+      "workflowId": "moZxAwDT6fPaXEHj",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,316 @@
+{
+  "updatedAt": "2025-11-26T07:29:09.767Z",
+  "createdAt": "2024-08-07T01:29:28.487Z",
+  "id": "vkEmVCCnwX7lexG7",
+  "name": "getprocess_detail_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1bf175a4-2c72-49db-9eb4-7f8bac91ba54",
+              "leftValue": "={{ $json.body.procedure_list_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d3528f89-fb11-43c2-9989-b3eb2b3de101",
+      "name": "If5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        608,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请先选择对应的工艺流程\"\n}",
+        "options": {}
+      },
+      "id": "f9d451df-7c14-4141-a312-53c0c59d1f71",
+      "name": "Respond to Webhook5",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n    let itemJson = item.json;\n\n    // 转换 procedure_scheduling 为对应的字符串描述\n    switch (itemJson.procedure_scheduling) {\n        case 1:\n            itemJson.scheduling_description = \"前加工\";\n            break;\n        case 2:\n            itemJson.scheduling_description = \"组装测试\";\n            break;\n        case 3:\n            itemJson.scheduling_description = \"成品测试\";\n            break;\n        case 4:\n            itemJson.scheduling_description = \"包装\";\n            break;\n        case 5:\n            itemJson.scheduling_description = \"维修\";\n            break;\n        default:\n            itemJson.scheduling_description = \"未知\";\n    }\n\n    // procedure_dataupload 2为true，1为false\n    itemJson.procedure_dataupload_bool = itemJson.procedure_dataupload === 2;\n\n    // 转换 procedure_type 字段（假设你有这个字段）\n    if (itemJson.procedure_type !== undefined) {\n        switch (itemJson.procedure_type) {\n            case 1:\n                itemJson.procedure_type_desc = \"无需上传数据\";\n                break;\n            case 2:\n                itemJson.procedure_type_desc = \"需要上传数据\";\n                break;\n            default:\n                itemJson.procedure_type_desc = \"未知\";\n        }\n    }\n\n    res.push(itemJson);\n}\n\nreturn {\n    result: res\n};"
+      },
+      "id": "2fac854c-e4bf-4bec-b54c-4059007aaa54",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "70b3b642-bb35-4c99-a5f5-0f8e8eb5ec8c",
+              "leftValue": "={{ $json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d94fe2a7-9bdf-4fe3-8a66-c308bbc3116f",
+      "name": "判断查询结果1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        464
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"查询成功\",\n  \"result\":{{JSON.stringify($json.result)}}\n}",
+        "options": {}
+      },
+      "id": "3497be22-6f35-47e1-907a-6a0ad1bcdff9",
+      "name": "Respond to Webhook6",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"无法查询对应的工艺流程\"\n}",
+        "options": {}
+      },
+      "id": "049bc4f7-7e32-4430-9543-66d93fa3b6d0",
+      "name": "Respond to Webhook7",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "getprocess_detail_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6ee5c5dc-079c-4f41-be73-0ad02ca64086",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        384,
+        528
+      ],
+      "webhookId": "a53091c4-5886-4a26-bbfb-0496d33d5db4"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH target_record AS (\n    -- 第一步：锁定唯一的一条历史清单记录\n    -- 解决了 \"6条数据重复\" 的问题\n    SELECT \n        procedure_list_id,\n        product_model_id,\n        -- 将 text/json 类型的字段转为 jsonb 方便处理\n        procedure_detail_id::jsonb AS p_full_json,\n        history_procedure_detail_id::jsonb AS h_full_json\n    FROM \n        mes.history_procedure_list\n    WHERE \n        procedure_list_id = {{ $json.body.procedure_list_id }}\n        AND status = 1  -- 表定义是 int4，所以这里用数字 1\n    ORDER BY \n        createtime DESC \n    LIMIT 1\n),\nzipped_list AS (\n    -- 第二步：将两个数组“拉链式”缝合\n    -- 解决了 \"只能查最新数据，无法还原历史版本\" 的问题\n    SELECT \n        t.procedure_list_id,\n        t.product_model_id,\n        p_elem.value::int AS procedure_detail_id,\n        h_elem.value::bigint AS history_procedure_id, -- 表定义是 int8，这里转 bigint\n        p_elem.ordinality AS order_num\n    FROM \n        target_record t,\n        -- 提取 procedure_detail_id 数组并展开，生成序号\n        jsonb_array_elements_text(t.p_full_json -> 'procedure_detail_id') WITH ORDINALITY AS p_elem(value, ordinality)\n    JOIN \n        -- 提取 history_procedure_detail_id 数组并展开，生成序号\n        jsonb_array_elements_text(t.h_full_json -> 'history_procedure_detail_id') WITH ORDINALITY AS h_elem(value, ordinality)\n        -- *** 核心：通过序号相等 (index相同) 进行匹配 ***\n        ON p_elem.ordinality = h_elem.ordinality\n)\nSELECT\n    list.procedure_list_id,\n    m.product_model_name,\n    pd.procedure_detail_id,\n    pd.procedure_name,\n    pd.current_version,\n    pd.common_proocedure,\n    \n    -- 具体的历史快照 ID\n    hpd.history_procedure_id,\n    \n    -- 从历史详情表中读取当时的参数\n    hpd.checkrule,\n    hpd.procedure_dataupload,\n    hpd.procedure_scheduling,\n    \n    -- 【转换逻辑】解决了 \"column does not exist\" 报错\n    -- 根据 int4 类型的值，手动转换为中文描述\n    CASE hpd.procedure_scheduling\n        WHEN 0 THEN '未知'\n        WHEN 2 THEN '组装测试'\n        WHEN 3 THEN '成品测试'\n        ELSE '其他'\n    END AS scheduling_description,\n    \n    -- 【转换逻辑】前端需要的布尔值\n    CASE \n        WHEN hpd.procedure_dataupload = 2 THEN true \n        ELSE false \n    END as procedure_dataupload_bool\n\nFROM \n    zipped_list list\n-- 关联数据模型表\nLEFT JOIN \n    mes.product_model m ON list.product_model_id = m.product_model_id\n-- 关联工序主表（获取工序名称等通用信息）\nJOIN \n    mes.procedure_detail pd ON list.procedure_detail_id = pd.procedure_detail_id\n-- 关联历史详情表（获取当时保存的 checkrule, scheduling 等特定参数）\nJOIN \n    mes.history_procedure_detail hpd ON list.history_procedure_id = hpd.history_procedure_id\n\nORDER BY\n    list.order_num;",
+        "options": {}
+      },
+      "id": "6b40f2be-74cc-4c48-8e30-3a2cbdf59783",
+      "name": "Execute a SQL query",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        784,
+        464
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询结果1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "判断查询结果1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook1": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "20",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_list_id": "31"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getprocess_detail_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "0fa18304-664b-461e-bf51-ca473673bfcf",
+  "activeVersionId": "0fa18304-664b-461e-bf51-ca473673bfcf",
+  "versionCounter": 40,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:50:05.914Z",
+      "createdAt": "2025-04-24T05:50:05.914Z",
+      "role": "workflow:owner",
+      "workflowId": "vkEmVCCnwX7lexG7",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

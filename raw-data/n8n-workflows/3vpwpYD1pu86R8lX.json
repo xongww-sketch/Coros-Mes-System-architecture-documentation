@@ -1,0 +1,233 @@
+{
+  "updatedAt": "2025-04-24T06:29:16.980Z",
+  "createdAt": "2024-07-31T03:32:54.454Z",
+  "id": "3vpwpYD1pu86R8lX",
+  "name": "getPackageList",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//判断查询的条件是否存在\n//构建查询的SQL语句\nconst sqlParams={};\nfor (const item of $input.all()) {\n  const packageName = item.json.query.packageName;\nconst packageVersion = item.json.query.packageVersion;\nlet conditions = [];\n\nif (packageName) {\n  conditions.push(`package_name ='${packageName}'`);\n}\nif (packageVersion) {\n  conditions.push(`package_version='${packageVersion}'`);\n}\n\nsqlParams.sqlStr = conditions.length ? `and ${conditions.join(' and ')}` : '';\nconst offset=(item.json.query.pageNo-1)*item.json.query.pageSize;\nsqlParams.offset=offset;\nsqlParams.pageSize=item.json.query.pageSize;\n}\n\nreturn sqlParams;"
+      },
+      "id": "05eef683-e139-47ff-930b-6ab7b0876a53",
+      "name": "check params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT package_id, package_name, package_version, package_remarks, package_path, create_time,COUNT(*) OVER() AS total_count FROM mes.installation_package where is_delete=0 {{ $json.sqlStr }} order by create_time DESC limit {{$json.pageSize}} OFFSET {{ $json.offset }};",
+        "options": {}
+      },
+      "id": "6cdb5b20-b727-4b71-b15a-e14f3fd61904",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1020,
+        260
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "f76d7799-1134-421c-984b-a80fbff35494",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1240,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{\n    \"packageList\":{{ JSON.stringify($json.data) }},\n\"total_count\":{{ $('Postgres').first().json.total_count ? $('Postgres').first().json.total_count :0}}\n  }\n}",
+        "options": {}
+      },
+      "id": "8bfe00d8-c3cb-4d75-9e17-dd8b774af915",
+      "name": "Respond package List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "path": "getPackageList",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e4514ab7-c1be-4ba7-96ce-dee12b1e7522",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        580,
+        260
+      ],
+      "webhookId": "966b21f6-985f-468a-a0d6-20b804f22117"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "allFieldsExcept",
+        "fieldsToExclude": "total_count",
+        "options": {}
+      },
+      "id": "39835b36-656c-460a-a154-072bfb2851fe",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1240,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "check params": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond package List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "pageSize": "10",
+            "pageNo": "1",
+            "packageName": "称重",
+            "packageVersion": ""
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getPackageList",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "e28461b0-41dd-43f7-9114-e5b26bd37e4e",
+  "activeVersionId": "e28461b0-41dd-43f7-9114-e5b26bd37e4e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:49:14.638Z",
+      "createdAt": "2025-04-24T05:49:14.638Z",
+      "role": "workflow:owner",
+      "workflowId": "3vpwpYD1pu86R8lX",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

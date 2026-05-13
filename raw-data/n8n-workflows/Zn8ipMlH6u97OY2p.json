@@ -1,0 +1,273 @@
+{
+  "updatedAt": "2025-11-29T08:05:44.891Z",
+  "createdAt": "2024-06-20T09:17:38.844Z",
+  "id": "Zn8ipMlH6u97OY2p",
+  "name": "Defectiverange_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{  {\n  \"code\":\"200\",\n  \"searchList\":$json.result,\n  \"categoriesData\":$json.categoriesData\n}  \n}}",
+        "options": {}
+      },
+      "id": "22496980-af5c-4916-971b-23e0103704fb",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假定获取输入的query对象\nlet query = $input.all()[0].json.query;\n\n// 解析Country和firmware_type字段\nlet countries = query.Country !== \"[]\" ? JSON.parse(query.Country) : [];\nlet firmwareTypes = query.firmware_type !== \"[]\" ? JSON.parse(query.firmware_type) : [];\n\n// 把\"Overseas\"替换成\"EU\"和\"US\"\ncountries = countries.flatMap(country => country === \"Overseas\" ? [\"EU\", \"US\"] : country);\n\n// 初始化SQL语句\nlet sql = `\n  SELECT\n    (SELECT COUNT(*) FROM public.activation_records WHERE `;\n\n// 条件列表\nlet conditions = [];\n\n// 根据是否有数据添加条件\nif (countries.length > 0) {\n    conditions.push(`country_code IN ('${countries.join(\"', '\")}')`);\n}\n\nif (firmwareTypes.length > 0) {\n    conditions.push(`firmware_type IN ('${firmwareTypes.join(\"', '\")}')`);\n}\n\nif (query.ActiveDate_Start !== \"1970-01-01\" || query.ActiveDate_End !== \"1970-01-01\") {\n    conditions.push(`to_timestamp(activatetime::bigint) >= '${query.ActiveDate_Start}'::timestamp`);\n    conditions.push(`to_timestamp(activatetime::bigint) <= '${query.ActiveDate_End}'::timestamp + interval '1 day' - interval '1 second'`);\n}\n\n// 如果有条件，添加到SQL语句中\nif (conditions.length > 0) {\n    sql += conditions.join(\" AND \") + `) AS total_count,`;\n} else {\n    sql += `true) AS total_count,`;\n}\n\nsql += `\n    A.defective_duration_days\n  FROM\n    public.defective_records AS A\n  INNER JOIN\n    public.activation_records AS B\n  ON\n    A.active_id = B.id\n`;\n\n// 清空条件列表\nconditions = [];\n\n// 重新添加条件列表\nif (countries.length > 0) {\n    conditions.push(`B.country_code IN ('${countries.join(\"', '\")}')`);\n}\n\nif (firmwareTypes.length > 0) {\n    conditions.push(`B.firmware_type IN ('${firmwareTypes.join(\"', '\")}')`);\n}\n\nif (query.ActiveDate_Start !== \"1970-01-01\" || query.ActiveDate_End !== \"1970-01-01\") {\n    conditions.push(`to_timestamp(B.activatetime::bigint) >= '${query.ActiveDate_Start}'::timestamp`);\n    conditions.push(`to_timestamp(B.activatetime::bigint) <= '${query.ActiveDate_End}'::timestamp + interval '1 day' - interval '1 second'`);\n}\n\n// 如果有条件，添加到SQL语句中\nif (conditions.length > 0) {\n    sql += \" WHERE \" + conditions.join(\" AND \");\n}\n\nsql += `\nGROUP BY\n  A.defective_duration_days;\n`;\n\n// 输出结果\nreturn {sql: sql};\n\n\n\n\n\n"
+      },
+      "id": "4aa7bb3d-7d2e-41a1-ac38-66f45d7fffc5",
+      "name": "划分时间区间",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sql }}\n\n\n\n\n",
+        "options": {
+          "queryReplacement": "="
+        }
+      },
+      "id": "a058585d-0a76-4dbd-99f0-fc6e1dfee842",
+      "name": "查询该时间段的激活设备条数",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        240
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f12927b7-c6e8-4e92-9a70-2e6d25f1b144",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "accf04e8-0d7a-4f03-9706-ff33feb375d4",
+      "name": "判断查询结果",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"402\",\n  \"msg\":\"该激活时段无激活设备\"\n}",
+        "options": {}
+      },
+      "id": "a7da4bdc-6871-4a01-b2d2-b4e636f03624",
+      "name": "该激活时段无激活设备",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "path": "Defectiverange_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "2fee816b-0dfc-468d-a0e8-e31e295e386b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1296,
+        240
+      ],
+      "webhookId": "b9f07ba6-1744-4566-9927-ba594dcbdf77"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 输入数据\nconst input = $input.all();\n\n// 检查输入数据是否为空\nif (input.length === 0) {\n    return [];\n}\n\n// 初始化数据结构\nlet resultData = {\n  total_count: null,\n  count: []\n};\nlet categoriesData = [];\nlet categoryMap = {};\nlet totalCountSet = new Set(); \n\n// 1. 遍历输入数据进行分类统计\ninput.forEach(item => {\n  const totalCount = item.json.total_count;\n  const defectiveDurationDays = parseFloat(item.json.defective_duration_days);\n\n  let category;\n\n  // 确定分类\n  if (defectiveDurationDays < 0) {\n    category = \"异常数据\";\n  } else if (defectiveDurationDays > 24 * 30) {\n    category = \"超过2年\";\n  } else {\n    const monthCategoryNumber = Math.floor(defectiveDurationDays / 30) + 1;\n    category = `${monthCategoryNumber}个月`;\n  }\n\n  // 确保分类只出现一次，每个分类对应一个位置\n  if (!(category in categoryMap)) {\n    categoryMap[category] = categoriesData.length; // 保存分类索引\n    categoriesData.push(category);\n    resultData.count.push(0);\n  }\n\n  // 增加对应分类的计数\n  const categoryIndex = categoryMap[category];\n  resultData.count[categoryIndex]++;\n\n  // 收集所有的total_count确保它们都是一致的\n  totalCountSet.add(totalCount); \n});\n\n// 2. ============== 新增逻辑：计算累积总数 ==============\nlet accumulatedList = [];\nlet runningTotal = 0;\n\nresultData.count.forEach(num => {\n    runningTotal += num; // 累加当前数量\n    accumulatedList.push(runningTotal); // 放入新数组\n});\n\n// 将累积数组放入 resultData\nresultData.accumulated_count = accumulatedList;\n// ======================================================\n\n// 检查 totalCountSet是否只包含一个唯一的值\nif (totalCountSet.size === 1) {\n  resultData.total_count = totalCountSet.values().next().value;\n} else {\n  resultData.total_count = \"数据不一致\";\n}\n\n// 构建最终输出\nconst output = [\n  {\n    result: resultData,\n    categoriesData: categoriesData\n  }\n];\n\nreturn output;"
+      },
+      "id": "bd31e56b-051f-494b-84e5-0e4c2ae0f8c2",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "查询该时间段的激活设备条数": {
+      "main": [
+        [
+          {
+            "node": "判断查询结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询结果": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该激活时段无激活设备",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "划分时间区间": {
+      "main": [
+        [
+          {
+            "node": "查询该时间段的激活设备条数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "划分时间区间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "ActiveDate_Start": "2025-05-01",
+            "ActiveDate_End": "2025-06-30",
+            "firmware_type": "[\"COROS W331\"]",
+            "Country": "[\"CN\",\"Overseas\"]"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/Defectiverange_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "75b3112f-a8f0-48f4-8683-b5eca352e2e4",
+  "activeVersionId": "75b3112f-a8f0-48f4-8683-b5eca352e2e4",
+  "versionCounter": 34,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:56.804Z",
+      "createdAt": "2024-01-26T07:49:15.286Z",
+      "id": "nTeYqAfpKKoeAJjH",
+      "name": "品质部门应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-06-20T09:17:38.844Z",
+      "createdAt": "2024-06-20T09:17:38.844Z",
+      "role": "workflow:owner",
+      "workflowId": "Zn8ipMlH6u97OY2p",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

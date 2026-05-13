@@ -1,0 +1,316 @@
+{
+  "updatedAt": "2026-03-14T08:19:16.819Z",
+  "createdAt": "2026-01-15T06:40:07.657Z",
+  "id": "pRp9VLgXHwVFv1Kz",
+  "name": "Redis分布式锁-MES",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        0
+      ],
+      "id": "6519a938-6d86-4940-b18a-60ec721ad6fa",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "= python3 redis_lock.py {{ $json.sn }} {{ $json.ticketNo }}",
+        "cwd": "/home"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "4dd6f0ed-d2b7-496c-813a-28b40fe7ca99",
+      "name": "Execute a command",
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "Q7v8IjunkfcNBrdw",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cdcfb350-191f-4dae-ae95-67e5fcec63df",
+              "name": "sn",
+              "value": "={{ $json.body.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "1dfb1e3d-f0d7-4e74-8a95-773e062edd93",
+              "name": "ticketNo",
+              "value": "={{ $json.body.config.ticketNo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        0
+      ],
+      "id": "051eda5c-48c1-4f41-9eb4-d244b1e36329",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "119a9ff3-54d9-4367-b5ca-b77f160b7b9b",
+              "name": "stdout",
+              "value": "={{ $json.stdout }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "9166b789-7e24-434a-9407-fd300b0b583e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "491947e3-5224-48ca-9e9e-0915428cbf55",
+              "leftValue": "={{ $json.stdout.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "988a502c-f5a6-4330-93d4-eb26fd21cf59",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9533e14e-f26c-476d-9052-e3e00749ff3d",
+              "name": "code",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        -176
+      ],
+      "id": "d1a518f0-d698-4cdc-92b4-af38eb67a4f3",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8a649afb-0817-468c-8b2f-94c984ab6a42",
+              "name": "code",
+              "value": 0,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        144
+      ],
+      "id": "3af6f966-bfc9-4518-a22d-7944a41e16cd",
+      "name": "Edit Fields3"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Execute a command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a command": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "any",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.53",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "232",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "user_id": 12,
+            "machine_id": 244,
+            "data": {
+              "box_id": "40/1000005821"
+            },
+            "retroid": "1000005821A02059",
+            "config": {
+              "orderNumber": "1000005821",
+              "ticketNo": "1000005821",
+              "boxId": 40,
+              "quantity": "36",
+              "watchWeight": "0.052",
+              "type": "watch",
+              "print": "2"
+            }
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/machine/uploadBoxInfo",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "82625070-4b30-4beb-b529-396e384320c7",
+  "activeVersionId": "82625070-4b30-4beb-b529-396e384320c7",
+  "versionCounter": 25,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-01-15T06:40:07.657Z",
+      "createdAt": "2026-01-15T06:40:07.657Z",
+      "role": "workflow:owner",
+      "workflowId": "pRp9VLgXHwVFv1Kz",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

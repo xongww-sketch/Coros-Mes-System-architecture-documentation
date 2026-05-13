@@ -1,0 +1,1759 @@
+{
+  "updatedAt": "2025-07-28T11:10:21.004Z",
+  "createdAt": "2024-04-17T12:09:08.824Z",
+  "id": "SNSHAKOocwUCNtPw",
+  "name": "testMachinesearch_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52f7770b-7739-4670-83ca-492a99f64444",
+              "name": "SearchList",
+              "value": "={{JSON.parse($json[\"query\"][\"Status\"]).map(e=>{\n  return {\n    ActiveDate_Start:$json[\"query\"][\"ActiveDate_Start\"],\n    ActiveDate_End:$json[\"query\"][\"ActiveDate_End\"],\n    InboundDate_End:$json[\"query\"][\"InboundDate_End\"],\n    InboundDate_Start:$json[\"query\"][\"InboundDate_Start\"],\n    order_number:$json[\"query\"][\"order_number\"],\n    retroid:$json[\"query\"][\"retroid\"],\n    Status:e\n  }\n})}}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": "=",
+        "options": {}
+      },
+      "id": "33cad9b3-5e6d-446b-a061-5548aa2dbdac",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -288,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c0ccf4b9-4a54-496d-a1f4-09d297a2a7bc",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        64,
+        112
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "049fa9ea-eebc-44a5-9900-812e37992c57",
+              "name": "=SearchData",
+              "value": "={{ JSON.stringify($json.SearchData.filter(item => Object.keys(item).length > 0)) }}\n",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8024f37c-ed32-4226-9abc-fc24edef95b9",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1824,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "SearchData",
+        "options": {}
+      },
+      "id": "78f4ad72-a3f3-480c-b27e-8d6dca08b03b",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写必填项-试用机状态\"\n}",
+        "options": {}
+      },
+      "id": "fb800bd8-2940-422d-8576-2149a795fc95",
+      "name": "报错信息：请填写所有必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "42111964-bd45-4533-beb0-5cb99aac67e3",
+              "leftValue": "={{ $json.query.Status }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "802c41bb-1235-4f45-a515-d16011a0d720",
+      "name": "判断必填项是否填写",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "SearchList",
+        "options": {}
+      },
+      "id": "ed2cfc40-d5f2-44ec-bb82-b20475e9c3b3",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlQuery }}",
+        "options": {}
+      },
+      "id": "9641724c-cd12-4864-acca-edacb24cbee0",
+      "name": "查询已发货未到期",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        112
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "API_testMachinesearch",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1161c1cf-6468-4284-94fd-70619617197b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        304
+      ],
+      "webhookId": "721e42e7-b4fb-492f-a19b-90990bbc10b3"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlQuery }}\n",
+        "options": {}
+      },
+      "id": "161ad853-fe1b-4970-9f76-194d4f4d42eb",
+      "name": "查询已退货退款",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlQuery }}",
+        "options": {}
+      },
+      "id": "d5731c88-2bb5-47ec-ad1c-c23116022c72",
+      "name": "查询已到期未退货",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1376,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = $input.all().map(item => {\n  // 获取实际数据\n  let actualData = item.json;\n\n  // 根据入参判断是否返回空值\n  if (actualData.success === true) {\n    return {}; // 或者返回 null 或者其他表示空的值，依据你的需要\n  }\n\n  // 添加新的键 status 并设置值为 '已发货未到期'\n  return {\n    ...actualData,\n    status: '已发货未到期'\n  };\n});\n\nreturn result;\n"
+      },
+      "id": "823c8970-7794-490c-8c15-0e272535d0b5",
+      "name": "状态赋值—已发货未到期",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = $input.all().map(item => {\n  // 获取实际数据\n  let actualData = item.json;\n  // 根据入参判断是否返回空值\n  if (actualData.success === true) {\n    return {}; // 或者返回 null 或者其他表示空的值，依据你的需要\n  }\n\n  // 添加新的键 status 并设置值为 'done'\n  return {\n    ...actualData,\n    status: '已退货退款'\n  };\n});\nreturn result;\n"
+      },
+      "id": "c633c046-0526-4a25-8260-e472c1ea7727",
+      "name": "状态赋值—已退货退款",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all(); // 获取所有输入\nlet whereConditions = ['dod.watch_status = \\'1\\'']; // 默认添加watch_status条件\n\n// 如果inputData数组中至少有一个元素，并且第一个元素包含json对象\nif (inputData.length > 0 && inputData[0].json) {\n  const queries = inputData[0].json; // 获取实际的查询参数\n\n  // 排除Status字段\n  delete queries['Status'];\n  delete queries['InboundDate_End'];\n  delete queries['InboundDate_Start'];\n\n  // 遍历queries的键值对\n  for (const [key, value] of Object.entries(queries)) {\n    if (key === 'ActiveDate_End' || key === 'ActiveDate_Start') continue; // 跳过ActiveDate_End, ActiveDate_Start\n\n    if (value && value !== \"0\") { // 如果键有非\"0\"值，构造条件并添加到数组\n      if (key === 'order_number') {\n        // 使用LIKE进行模糊匹配\n        const orderNumbers = value.split(';').filter(v => v.trim() !== '');\n        if (orderNumbers.length > 0) {\n          orderNumbers.forEach(orderNumber => {\n            whereConditions.push(`dod.order_number LIKE '%${orderNumber.trim()}%'`);\n          });\n        }\n      } else if (key === 'retroid') {\n        whereConditions.push(`dod.${key} = '${value}'`);\n      } else {\n        whereConditions.push(`dod.${key} = '${value}'`); // 注意，这里应该根据实际情况决定是否要加引号\n      }\n    }\n  }\n\n  // 处理ActiveDate_Start和ActiveDate_End，仅当有非\"0\"的有效值时添加条件\n  if (queries['ActiveDate_Start'] && queries['ActiveDate_Start'] !== '0') {\n    whereConditions.push(`dod.create_time >= '${queries['ActiveDate_Start']} 00:00:00'`);\n  }\n  if (queries['ActiveDate_End'] && queries['ActiveDate_End'] !== '0') {\n    whereConditions.push(`dod.create_time <= '${queries['ActiveDate_End']} 23:59:59'`);\n  }\n}\n\n// 构建SQL查询语句\nconst sqlQuery = `\nSELECT DISTINCT dod.id, dod.retroid, dod.uuid, dod.watchtype, dod.price, dod.order_number, \n                dod.create_time, dod.watch_status, dod.sku_code, dod.uuid_unique, dod.sku_name, \n                MAX(pt.trial_expiration_date) AS trial_expiration_date\nFROM public.delivery_order_details dod\nJOIN public.prototype_trial pt ON dod.order_number = ANY(pt.order_number)\nWHERE ${whereConditions.join(' AND ')} AND pt.trial_expiration_date > now()\nGROUP BY dod.id, dod.retroid, dod.uuid, dod.watchtype, dod.price, dod.order_number, \n         dod.create_time, dod.watch_status, dod.sku_code, dod.uuid_unique, dod.sku_name;\n`;\n\n// 返回sqlQuery\nreturn { sqlQuery: sqlQuery };\n"
+      },
+      "id": "1e5b725e-7cb4-4fe0-97d5-4ef5fe189359",
+      "name": "构建SQL语句",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all(); // 获取所有输入\nlet whereConditions = []; // 存储动态条件\n\n// 如果inputData数组中至少有一个元素,并且第一个元素包含json对象\nif (inputData.length > 0 && inputData[0].json) {\n  const queries = inputData[0].json; // 获取实际的查询参数\n\n  // 排除Status字段\n  delete queries['Status'];\n\n  for (const [key, value] of Object.entries(queries)) {\n    if (key === 'ActiveDate_End' || key === 'ActiveDate_Start' || key === 'InboundDate_End' || key === 'InboundDate_Start') continue;\n    if (value && value !== \"0\") {\n      if (key === 'order_number' || key === 'retroid') {\n        // 使用LIKE进行模糊匹配\n        whereConditions.push(`dod.${key} LIKE '%${value}%'`);\n      } else {\n        whereConditions.push(`${key} = '${value}'`);\n      }\n    }\n  } // 这里添加了缺失的右大括号\n\n  // 处理ActiveDate_Start和ActiveDate_End,仅当有非\"0\"的有效值时添加条件\n  if (queries['ActiveDate_Start'] && queries['ActiveDate_Start'] !== '0') {\n    whereConditions.push(`dod.create_time >= '${queries['ActiveDate_Start'].toString()} 00:00:00'`);\n  }\n  if (queries['ActiveDate_End'] && queries['ActiveDate_End'] !== '0') {\n    whereConditions.push(`dod.create_time <= '${queries['ActiveDate_End'].toString()} 23:59:59'`);\n  }\n\n  // 处理InboundDate_Start和InboundDate_End,仅当有非\"0\"的有效值时添加条件\n  if (queries['InboundDate_Start'] && queries['InboundDate_Start'] !== '0') {\n    whereConditions.push(`pt.create_time >= '${queries['InboundDate_Start'].toString()} 00:00:00'`);\n  }\n  if (queries['InboundDate_End'] && queries['InboundDate_End'] !== '0') {\n    whereConditions.push(`pt.create_time <= '${queries['InboundDate_End'].toString()} 23:59:59'`);\n  }\n}\n\n// 拼接动态条件与固定条件\nconst dynamicWhereClause = whereConditions.join(' AND ');\nconst fixedConditions = \"pt.refund_status = '2' AND dod.watch_status = '2'\";\nconst whereClause = dynamicWhereClause\n  ? `${dynamicWhereClause} AND ${fixedConditions}`\n  : fixedConditions;\n\n// 构建SQL查询语句\nconst sqlQuery = `\nSELECT dod.*, pt.refund_status, pt.create_time AS pt_create_time, pt.retroid AS pt_retroid, dod.retroid AS dod_retroid\nFROM public.delivery_order_details dod JOIN public.refund pt ON dod.order_number = pt.order_number and pt.retroid=dod.retroid\nWHERE ${whereClause};`;\n\n// 返回sqlQuery\nreturn { sqlQuery: sqlQuery };\n"
+      },
+      "id": "4ce05db7-28f9-4ceb-9ced-eb56259f02c6",
+      "name": "构建SQL语句1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all(); // 获取所有输入\nlet whereConditions = ['dod.watch_status = \\'1\\'']; // 默认添加watch_status条件\n\n// 如果inputData数组中至少有一个元素，并且第一个元素包含json对象\nif (inputData.length > 0 && inputData[0].json) {\n  const queries = inputData[0].json; // 获取实际的查询参数\n\n  // 排除Status字段\n  delete queries['Status'];\n  delete queries['InboundDate_End'];\n  delete queries['InboundDate_Start'];\n  \n  // 遍历queries的键值对\n  for (const [key, value] of Object.entries(queries)) {\n    if (key === 'ActiveDate_End' || key === 'ActiveDate_Start') continue; // 跳过处理\n\n    if (value && value !== \"0\") {\n      if (key === 'order_number') {\n        // 使用LIKE进行模糊匹配\n        whereConditions.push(`dod.${key} LIKE '%${value}%'`);\n      } else {\n        whereConditions.push(`dod.${key} = '${value}'`); // 继续使用精确匹配\n      }\n    }\n  }\n\n  // 处理ActiveDate_Start和ActiveDate_End，仅当有非\"0\"的有效值时添加条件\n  if (queries['ActiveDate_Start'] && queries['ActiveDate_Start'] !== '0') {\n    whereConditions.push(`dod.create_time >= '${queries['ActiveDate_Start'].toString()} 00:00:00'`);\n  }\n  if (queries['ActiveDate_End'] && queries['ActiveDate_End'] !== '0') {\n    whereConditions.push(`dod.create_time <= '${queries['ActiveDate_End'].toString()} 23:59:59'`);\n  }\n}\n\n// 构建SQL查询语句\nconst sqlQuery = `\nSELECT DISTINCT dod.*, pt.trial_expiration_date\nFROM public.delivery_order_details dod\nJOIN public.prototype_trial pt \nCROSS JOIN UNNEST(pt.order_number) as order_id \nON dod.order_number = order_id\nWHERE ${whereConditions.join(' AND ')} \nAND pt.trial_expiration_date < NOW();\n`;\n\n// 返回sqlQuery\nreturn { sqlQuery: sqlQuery };\n"
+      },
+      "id": "623be7d9-8de6-478e-9ce3-4c267e31be14",
+      "name": "构建SQL语句2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = $input.all().map(item => {\n  // 获取实际数据\n  let actualData = item.json;\n  // 根据入参判断是否返回空值\n  if (actualData.success === true) {\n    return {}; // 或者返回 null 或者其他表示空的值，依据你的需要\n  }\n\n  // 添加新的键 status 并设置值为 'done'\n  return {\n    ...actualData,\n    status: '已到期未退货'\n  };\n});\nreturn result;"
+      },
+      "id": "21db7d70-a716-4353-ba62-82f435d498f1",
+      "name": "状态赋值—已到期未退回",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all(); // 获取所有输入\nlet whereConditions = []; // 存储动态条件\n\n// 如果inputData数组中至少有一个元素,并且第一个元素包含json对象\nif (inputData.length > 0 && inputData[0].json) {\n  const queries = inputData[0].json; // 获取实际的查询参数\n\n  // 排除Status字段\n  delete queries['Status'];\n\n  // 遍历queries的键值对\n  for (const [key, value] of Object.entries(queries)) {\n    if (key === 'ActiveDate_End' || key === 'ActiveDate_Start' || key === 'InboundDate_End' || key === 'InboundDate_Start') continue;\n    if (value && value !== \"0\") {\n      if (key === 'order_number') {\n        // 使用LIKE进行模糊匹配\n        whereConditions.push(`dod.${key} LIKE '%${value}%'`);\n      } else if (key === 'retroid') {\n        whereConditions.push(`dod.${key} = '${value}'`);  // 精确匹配\n      } else {\n        whereConditions.push(`${key} = '${value}'`);  // 其他字段的精确匹配\n      }\n    }\n  } \n\n  // 处理ActiveDate_Start和ActiveDate_End,仅当有非\"0\"的有效值时添加条件\n  if (queries['ActiveDate_Start'] && queries['ActiveDate_Start'] !== '0') {\n    whereConditions.push(`dod.create_time >= '${queries['ActiveDate_Start'].toString()} 00:00:00'`);\n  }\n  if (queries['ActiveDate_End'] && queries['ActiveDate_End'] !== '0') {\n    whereConditions.push(`dod.create_time <= '${queries['ActiveDate_End'].toString()} 23:59:59'`);\n  }\n\n  // 处理InboundDate_Start和InboundDate_End,仅当有非\"0\"的有效值时添加条件\n  if (queries['InboundDate_Start'] && queries['InboundDate_Start'] !== '0') {\n    whereConditions.push(`pt.create_time >= '${queries['InboundDate_Start'].toString()} 00:00:00'`);\n  }\n  if (queries['InboundDate_End'] && queries['InboundDate_End'] !== '0') {\n    whereConditions.push(`pt.create_time <= '${queries['InboundDate_End'].toString()} 23:59:59'`);\n  }\n}\n\n// 拼接动态条件与固定条件\nconst dynamicWhereClause = whereConditions.join(' AND ');\nconst fixedConditions = \"pt.refund_status <> '2' AND dod.watch_status = '2'\";\nconst whereClause = dynamicWhereClause\n  ? `${dynamicWhereClause} AND ${fixedConditions}`\n  : fixedConditions;\n\n// 构建SQL查询语句\nconst sqlQuery = `\nSELECT dod.*, pt.refund_status, pt.create_time AS pt_create_time, pt.retroid AS pt_retroid, dod.retroid AS dod_retroid\nFROM public.delivery_order_details dod \nJOIN public.refund pt ON dod.order_number = pt.order_number AND pt.retroid = dod.retroid\nWHERE ${whereClause};\n`;\n\n// 返回sqlQuery\nreturn { sqlQuery: sqlQuery };\n"
+      },
+      "id": "30be17fe-0f9a-4928-bd78-f5799a7a5316",
+      "name": "构建SQL语句3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "0423c1ec-b10d-4441-8b55-14360bd3ecb9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8da1afec-33ac-49c5-8a21-2dfba9fe1e58",
+      "name": "If4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "0423c1ec-b10d-4441-8b55-14360bd3ecb9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ee7d7dfe-dc4f-4500-8302-4a3975b9ef14",
+      "name": "If5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0423c1ec-b10d-4441-8b55-14360bd3ecb9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "75feccdf-b545-4f11-b3dc-9ab7868d8abf",
+      "name": "If6",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0423c1ec-b10d-4441-8b55-14360bd3ecb9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a39ebdac-876b-4b5b-ade3-5e7164df6d42",
+      "name": "If7",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlQuery }}",
+        "options": {}
+      },
+      "id": "bbd4dbbf-fd27-4c9d-b208-88778a28fcef",
+      "name": "查询已退货未退款",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1696,
+        752
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = $input.all().map(item => {\n  // 获取实际数据\n  let actualData = item.json;\n  // 根据入参判断是否返回空值\n  if (actualData.success === true) {\n    return {}; // 或者返回 null 或者其他表示空的值，依据你的需要\n  }\n\n  // 添加新的键 status 并设置值为 'done'\n  return {\n    ...actualData,\n    status: '已退货未退款'\n  };\n});\nreturn result;"
+      },
+      "id": "dc6f331c-1236-43c7-93e0-6b562b745382",
+      "name": "状态赋值—已退货未退款",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"查询成功\",\n  \"SearchData\":{{JSON.stringify($json.SearchData)}}\n}",
+        "options": {}
+      },
+      "id": "03c95e6a-1695-4ab5-8d30-a60db528c445",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "e7fb980c-bb38-4373-9728-9719a4967ec2",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Delivery",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "428198ce-0fd1-4bb7-930f-929289963663",
+      "name": "状态判断—已发货未到期",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        544,
+        112
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "dd00d3eb-d19d-495f-9c6d-a82df5faf7f8",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Done",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "905842c2-13ca-4777-913e-c966ed2c253a",
+      "name": "状态判断—已退货退款",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        848,
+        320
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d8484af1-34a6-45a1-8051-d99288a21397",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Overtime",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d00bbf0e-f1e9-422e-9424-d0e119b71741",
+      "name": "状态判断—已到期未退回",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        992,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2ebb7bef-8379-4a29-b738-0c3120833ba6",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "InboundButnotrefund",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f01fe670-6154-42f2-bbd9-9589cfffbd35",
+      "name": "状态判断—已退货未退款",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ced6b0ef-d3e0-45cc-b9c5-37c7d0c31a6c",
+              "leftValue": "={{ $json.query.InboundDate_Start }}",
+              "rightValue": "1970-01-01",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b7ed9026-9cb1-4945-885c-d7d821c12c9f",
+              "leftValue": "={{ $json.query.ActiveDate_End }}",
+              "rightValue": "1970-01-01",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "068bc0ac-7590-4700-9277-9c8de71cce68",
+              "leftValue": "={{ $json.query.ActiveDate_Start }}",
+              "rightValue": "1970-01-01",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2d092530-3b36-47d5-87a7-796d79b78389",
+              "leftValue": "={{ $json.query.InboundDate_End }}",
+              "rightValue": "1970-01-01",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "9843c6bf-3512-4cca-b749-0cdb9fcd8db3",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        304
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all()[0].json.query;\nfor(let key in input){\n  if(input[key]===\"1970-01-01\"){\n    input[key]=''\n  }\n}\nreturn $input.all();"
+      },
+      "id": "d99b41d7-361e-4ab2-92ed-c8e629c53f2c",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all(); // 获取所有输入\nlet whereConditions = ['dod.watch_status = \\'1\\'']; // 默认添加watch_status条件\n\n// 添加create_time的固定条件\nwhereConditions.push(`dod.create_time < '2024-05-07 00:00:00.064'`);\n\n// 如果inputData数组中至少有一个元素，并且第一个元素包含json对象\nif (inputData.length > 0 && inputData[0].json) {\n  const queries = inputData[0].json; // 获取实际的查询参数\n\n  // 排除Status、InboundDate_End和InboundDate_Start字段\n  delete queries['Status'];\n  delete queries['InboundDate_End'];\n  delete queries['InboundDate_Start'];\n\n  // 遍历queries的键值对\n  for (const [key, value] of Object.entries(queries)) {\n    if (key === 'ActiveDate_End' || key === 'ActiveDate_Start') continue; // 跳过ActiveDate_End和ActiveDate_Start的处理\n\n    if (value && value !== \"0\") { // 如果键有非\"0\"值，构造条件并添加到数组\n      if (key === 'order_number') {\n        // 使用LIKE进行模糊匹配\n        whereConditions.push(`dod.${key} LIKE '%${value}%'`);\n      } else if (key === 'retroid') {\n        whereConditions.push(`dod.${key} = '${value}'`);\n      } else {\n        whereConditions.push(`${key} = '${value}'`); // 精确匹配其他字段\n      }\n    }\n  }\n\n  // 处理ActiveDate_Start和ActiveDate_End，仅当有非\"0\"的有效值时添加条件\n  if (queries['ActiveDate_Start'] && queries['ActiveDate_Start'] !== '0') {\n    whereConditions.push(`dod.create_time >= '${queries['ActiveDate_Start'].toString()} 00:00:00'`);\n  }\n  if (queries['ActiveDate_End'] && queries['ActiveDate_End'] !== '0') {\n    whereConditions.push(`dod.create_time <= '${queries['ActiveDate_End'].toString()} 23:59:59'`);\n  }\n}\n\n// 构建SQL查询语句\nconst sqlQuery = `\nSELECT DISTINCT dod.*\nFROM public.delivery_order_details dod\nWHERE ${whereConditions.join(' AND ')}\nAND dod.order_number NOT IN (\n  SELECT UNNEST(order_number)\n  FROM public.prototype_trial\n);\n`;\n\n// 返回sqlQuery\nreturn { sqlQuery: sqlQuery };\n"
+      },
+      "id": "17b22cac-4fc0-489a-863f-af070631c9dc",
+      "name": "构建SQL语句4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e7fb980c-bb38-4373-9728-9719a4967ec2",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "HistroyOrder",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2241a268-f55c-46c5-8b58-80b8c8cb3e2e",
+      "name": "状态判断—历史已发货未退回",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        992
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = $input.all().map(item => {\n  // 获取实际数据\n  let actualData = item.json;\n  // 根据入参判断是否返回空值\n  if (actualData.success === true) {\n    return {}; // 或者返回 null 或者其他表示空的值，依据你的需要\n  }\n\n  // 添加新的键 status 并设置值为 'done'\n  return {\n    ...actualData,\n    status: '历史订单已发货未退回'\n  };\n});\nreturn result;\n"
+      },
+      "id": "82b69786-9245-4bdd-b3c4-0b49623ace0c",
+      "name": "状态赋值—历史已发货未退回",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2576,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlQuery }}",
+        "options": {}
+      },
+      "id": "cbf127aa-8fa9-4ff7-b5dd-383a5ebf2524",
+      "name": "查询历史已发货未退回",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2224,
+        992
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"状态不存在\"\n}",
+        "options": {}
+      },
+      "id": "d49741e4-0b99-4e0f-b088-4900501a9cd5",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2176,
+        1696
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15b5f419-742b-4993-b663-4f87db6ab2bd",
+              "name": "create_time",
+              "value": "={{ $json.create_time ? new Date($json.create_time ).toDateTime(): ''}}",
+              "type": "string"
+            },
+            {
+              "id": "04fcdd24-37e5-4266-afe8-0dd1e6016e50",
+              "name": "pt_create_time",
+              "value": "={{ $json.pt_create_time ? new Date($json.pt_create_time).toDateTime() : '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        -256
+      ],
+      "id": "ec645ab3-4d39-4251-8a54-246fee5ebf63",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5933fac1-bbbe-4591-9dc7-efd64b16c51e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        0
+      ],
+      "id": "7bc6486f-145d-4b5f-8fcc-f7ec4dbdfb52",
+      "name": "Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "07a0db97-6882-4c88-9ed8-1a10f559259d",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        -80
+      ],
+      "id": "f0036621-7501-4c83-b6b6-b4d035ae9e39",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"暂无查询条件数据！\"\n}",
+        "options": {}
+      },
+      "id": "e4b9fd3e-75b4-4b09-8c32-83d81597d46d",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all(); // 获取所有输入\nlet whereConditions = ['dod.watch_status = \\'1\\'']; // 默认添加watch_status条件\n\n// 添加create_time的固定条件\nwhereConditions.push(`dod.create_time > '2024-05-07 00:00:00.064'`);\n\n// 如果inputData数组中至少有一个元素，并且第一个元素包含json对象\nif (inputData.length > 0 && inputData[0].json) {\n  const queries = inputData[0].json; // 获取实际的查询参数\n\n  // 排除Status、InboundDate_End和InboundDate_Start字段\n  delete queries['Status'];\n  delete queries['InboundDate_End'];\n  delete queries['InboundDate_Start'];\n\n  // 遍历queries的键值对\n  for (const [key, value] of Object.entries(queries)) {\n    if (key === 'ActiveDate_End' || key === 'ActiveDate_Start') continue; // 跳过ActiveDate_End和ActiveDate_Start的处理\n\n    if (value && value !== \"0\") { // 如果键有非\"0\"值，构造条件并添加到数组\n      if (key === 'order_number') {\n        // 使用LIKE进行模糊匹配\n        const orderNumbers = value.split(';').filter(v => v.trim() !== '');\n        if (orderNumbers.length > 0) {\n          orderNumbers.forEach(orderNumber => {\n            whereConditions.push(`dod.order_number LIKE '%${orderNumber.trim()}%'`);\n          });\n        }\n      } else if (key === 'retroid') {\n        whereConditions.push(`dod.${key} = '${value}'`);\n      } else {\n        whereConditions.push(`${key} = '${value}'`); // 注意，这里应该根据实际情况决定是否要加引号\n      }\n    }\n  }\n\n  // 处理ActiveDate_Start和ActiveDate_End，仅当有非\"0\"的有效值时添加条件\n  if (queries['ActiveDate_Start'] && queries['ActiveDate_Start'] !== '0') {\n    whereConditions.push(`dod.create_time >= '${queries['ActiveDate_Start'].toString()} 00:00:00'`);\n  }\n  if (queries['ActiveDate_End'] && queries['ActiveDate_End'] !== '0') {\n    whereConditions.push(`dod.create_time <= '${queries['ActiveDate_End'].toString()} 23:59:59'`);\n  }\n}\n\n// 构建SQL查询语句\nconst sqlQuery = `\nSELECT DISTINCT dod.*\nFROM public.delivery_order_details dod\nWHERE ${whereConditions.join(' AND ')}\nAND dod.order_number NOT IN (\n  SELECT UNNEST(order_number)\n  FROM public.prototype_trial\n);\n`;\n\n// 返回sqlQuery\nreturn { sqlQuery: sqlQuery };\n"
+      },
+      "id": "c94c9e69-f06a-47a3-aa3c-eb5a0a693837",
+      "name": "构建SQL语句5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "0423c1ec-b10d-4441-8b55-14360bd3ecb9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fc2cfd84-278f-471c-9433-7c56f606e3bd",
+      "name": "If9",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = $input.all().map(item => {\n  // 获取实际数据\n  let actualData = item.json;\n  // 根据入参判断是否返回空值\n  if (actualData.success === true) {\n    return {}; // 或者返回 null 或者其他表示空的值，依据你的需要\n  }\n\n  // 添加新的键 status 并设置值为 'done'\n  return {\n    ...actualData,\n    status: '未上传审批流订单'\n  };\n});\nreturn result;\n"
+      },
+      "id": "2682f031-f7db-4712-a026-f761e80338b0",
+      "name": "状态赋值—未上传审批流订单",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "e7fb980c-bb38-4373-9728-9719a4967ec2",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "=Abnormalorders",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7666ce9f-9335-4115-8908-cf677b07ce4e",
+      "name": "状态判断—未完成审批流订单",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        1328
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlQuery }}",
+        "options": {}
+      },
+      "id": "98e7ec0b-a270-4019-b096-be29463d7319",
+      "name": "查询未完成审批流订单",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2320,
+        1344
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0423c1ec-b10d-4441-8b55-14360bd3ecb9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d3f54f21-d99e-400b-a4f5-0bd451b3a4ff",
+      "name": "If8",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        992
+      ]
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "状态判断—已发货未到期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断必填项是否填写": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断必填项是否填写",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询已发货未到期": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询已退货退款": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询已到期未退货": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态赋值—已发货未到期": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态赋值—已退货退款": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建SQL语句": {
+      "main": [
+        [
+          {
+            "node": "查询已发货未到期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建SQL语句1": {
+      "main": [
+        [
+          {
+            "node": "查询已退货退款",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建SQL语句2": {
+      "main": [
+        [
+          {
+            "node": "查询已到期未退货",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态赋值—已到期未退回": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建SQL语句3": {
+      "main": [
+        [
+          {
+            "node": "查询已退货未退款",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "状态赋值—已发货未到期",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "状态赋值—已退货退款",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "状态赋值—已到期未退回",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "状态赋值—已退货未退款",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询已退货未退款": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态赋值—已退货未退款": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态判断—已发货未到期": {
+      "main": [
+        [
+          {
+            "node": "构建SQL语句",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "状态判断—已退货退款",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态判断—已退货退款": {
+      "main": [
+        [
+          {
+            "node": "构建SQL语句1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "状态判断—已到期未退回",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态判断—已到期未退回": {
+      "main": [
+        [
+          {
+            "node": "构建SQL语句2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "状态判断—已退货未退款",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态判断—已退货未退款": {
+      "main": [
+        [
+          {
+            "node": "构建SQL语句3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "状态判断—历史已发货未退回",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建SQL语句4": {
+      "main": [
+        [
+          {
+            "node": "查询历史已发货未退回",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态判断—历史已发货未退回": {
+      "main": [
+        [
+          {
+            "node": "构建SQL语句4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "状态判断—未完成审批流订单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态赋值—历史已发货未退回": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询历史已发货未退回": {
+      "main": [
+        [
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建SQL语句5": {
+      "main": [
+        [
+          {
+            "node": "查询未完成审批流订单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "状态赋值—未上传审批流订单",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态赋值—未上传审批流订单": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "状态判断—未完成审批流订单": {
+      "main": [
+        [
+          {
+            "node": "构建SQL语句5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询未完成审批流订单": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "状态赋值—历史已发货未退回",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.29.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "ActiveDate_End": "1970-01-01",
+            "ActiveDate_Start": "1970-01-01",
+            "InboundDate_Start": "1970-01-01",
+            "retroid": "",
+            "Status": "[\"Delivery\",\"Overtime\",\"Done\",\"InboundButnotrefund\",\"HistroyOrder\",\"Abnormalorders\"]",
+            "InboundDate_End": "1970-01-01",
+            "order_number": "REDACTED"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/API_testMachinesearch",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "66f00687-0d52-4c40-b59d-70dc40697f6b",
+  "activeVersionId": "66f00687-0d52-4c40-b59d-70dc40697f6b",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:12:55.284Z",
+      "createdAt": "2024-04-24T09:12:55.284Z",
+      "id": "I6FeqDLYYpIOV1kH",
+      "name": "样机试用申请API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-04-17T12:09:08.824Z",
+      "createdAt": "2024-04-17T12:09:08.824Z",
+      "role": "workflow:owner",
+      "workflowId": "SNSHAKOocwUCNtPw",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    },
+    {
+      "updatedAt": "2025-02-14T02:52:51.565Z",
+      "createdAt": "2025-02-14T02:52:51.565Z",
+      "role": "workflow:editor",
+      "workflowId": "SNSHAKOocwUCNtPw",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    },
+    {
+      "updatedAt": "2025-11-04T02:52:01.573Z",
+      "createdAt": "2025-11-04T02:52:01.573Z",
+      "role": "workflow:editor",
+      "workflowId": "SNSHAKOocwUCNtPw",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

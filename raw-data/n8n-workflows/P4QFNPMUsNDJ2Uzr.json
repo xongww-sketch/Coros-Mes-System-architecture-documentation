@@ -1,0 +1,1136 @@
+{
+  "updatedAt": "2026-01-28T01:53:58.109Z",
+  "createdAt": "2025-01-09T09:25:49.802Z",
+  "id": "P4QFNPMUsNDJ2Uzr",
+  "name": "smt_test_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smt_test_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c4587d81-611d-4726-96dd-dc992f90f4f5",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        400
+      ],
+      "webhookId": "3f265590-ab51-4373-a547-4c2b79546947"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"message\":\"请填写所有必填项\"\n}",
+        "options": {}
+      },
+      "id": "f3ddd68e-891a-4215-9cbc-1d24f6e5d2b1",
+      "name": "报错信息：请填写所有必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"400\",\n  \"message\":\"网络波动，数据库错误！\"\n}\n",
+        "options": {}
+      },
+      "id": "bbbe8779-8bb0-4212-937c-bf3999790d35",
+      "name": "数据库错误！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2608,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "6fa87696-99f6-4de6-88bc-a44dff73fac0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7817e511-b416-498b-ba63-ac7f0fde5196",
+      "name": "If3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2560,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"message\":\"检测结果已上传成功\"\n}",
+        "options": {}
+      },
+      "id": "f3134279-7570-4f2e-81b6-64480274629e",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2752,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $(\"Webhook\").all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        384
+      ],
+      "id": "27a400de-491b-430e-84d2-f5f65a099742",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"403\",\n  \"message\":\"该SN未完成{{ $json.procedure_name }}\"\n} ",
+        "options": {}
+      },
+      "id": "7b9e767a-5f47-4cb6-ba6f-88968f84055e",
+      "name": "报错信息：该SN未完成上一道工序",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $('获取retroid_id').item.json.retroid_id }}",
+            "procedure_detail_id": "={{ $('工序查询通用接口').item.json.data[0].procedure_detail_id }}",
+            "user_id": 1,
+            "data": "={{ $('Webhook').item.json.body }}",
+            "createtime": "={{ $now }}",
+            "history_procedure_id": "={{ $('工序查询通用接口').item.json.data[1].history_procedure_id }}",
+            "machine_id": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "924fa99c-1623-455b-881e-6e858e64b31e",
+      "name": "插入工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2352,
+        336
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 首先，查询符合条件的retroid_id\nWITH filtered_retroids AS (\n    SELECT\n        retroid_id\n    FROM\n        mes.retroid\n    WHERE\n        retroid = '{{ $json.body.retroid }}'\n        AND status IN (1, 2)\n),\njoborder_series AS (\n    SELECT '{{ $json.body.joborder }}' AS joborder -- 生成一个仅包含目标订单号的数据\n)\n\n-- 使用过滤后的retroid_id进行主查询\nSELECT \n    js.joborder,\n    COALESCE(COUNT(md.\"data\"->>'joborder'), 0) AS occurrences\nFROM \n    joborder_series js\nLEFT JOIN\n    mes.machine_data md\nON\n    md.retroid_id IN (SELECT retroid_id FROM filtered_retroids)\n    AND md.procedure_detail_id = {{ $('工序查询通用接口').item.json.data[1].procedure_detail_id }}\n    AND md.\"data\"->>'joborder' = js.joborder\nGROUP BY \n    js.joborder;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1296,
+        256
+      ],
+      "id": "a6b14dc7-53dc-423e-a772-ace16592cfbf",
+      "name": "查询是否有相同信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3815c47d-182f-41f4-8429-b12fe7778133",
+              "leftValue": "={{ $json.occurrences }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        240
+      ],
+      "id": "f65e0183-db44-40d0-8d51-c3d3a08734a8",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"403\",\n  \"message\":\"该SN已有FQC记录\"\n}",
+        "options": {}
+      },
+      "id": "583a7d87-a050-49bc-b9cd-263a538dd067",
+      "name": "报错信息:该SN已有FQC记录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93701f5d-2a48-4867-9de5-9d6c9a3d4a21",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        368
+      ],
+      "id": "9c331195-1ba7-426b-95ee-bc1c008a0ae9",
+      "name": "If12"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    body:{\n      ...$('Webhook').item.json.body,\n      sn:$('Webhook').first().json.body.retroid\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        240
+      ],
+      "id": "4e3bc061-89e6-4127-af82-b8eeb634eeab",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "r9luD4UCXwa2jCAp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/r9luD4UCXwa2jCAp",
+          "cachedResultName": "1.Mes重构 — 前置工序校验通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1984,
+        368
+      ],
+      "id": "7aff108e-99c2-414f-ab75-ae8c298f2490",
+      "name": "校验前置工序是否完成"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r\nwhere r.retroid = '{{ $('Webhook').item.json.body.retroid}}' AND r.status in('1','2') ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        144,
+        400
+      ],
+      "id": "1664bc93-4863-4ba8-a915-7d1d472e78da",
+      "name": "获取retroid_id",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bdc20c75-f22a-44be-bff6-80258fc9d9c2",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        240
+      ],
+      "id": "84cd26db-1c33-4271-90bc-1e904548afe3",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"message\":\"查询不到该SN\"\n}",
+        "options": {}
+      },
+      "id": "f55b9019-9e47-41aa-9292-a1276f9572ec",
+      "name": "报错信息：查询不到该SN",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        464,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1901e065-a2d7-483f-985b-b7c8b40e29f4",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        400
+      ],
+      "id": "69b4b570-a21a-4e03-8661-37392b85399e",
+      "name": "判断工序是否存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"403\",\n  \"message\":\"该工序不存在\"\n}",
+        "options": {}
+      },
+      "id": "1ca5e45e-9efd-446e-a8f4-0950f602dfcb",
+      "name": "报错信息：该工序不存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        112,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "90a755ad-01cb-46d9-8643-c9bb7ad7d908",
+              "leftValue": "={{ $json.body.check_rebind }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        320
+      ],
+      "id": "e770709f-26d5-4cd3-8929-3f03ee880ac1",
+      "name": "判断是否需要校验"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "dff0fc79-961a-4496-b4bf-f56632aaf4b8",
+              "leftValue": "={{ $json.body.uesrName_smt }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e49de6fc-a76a-442b-b203-b4b335c21abb",
+              "leftValue": "={{ $json.body.retroid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "00d67eef-7794-4df3-94b5-9e37c19a31ca",
+              "leftValue": "={{ $json.body.bind_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e387be80-8ac0-4ca4-b338-0509f9b2824e",
+              "leftValue": "={{ $json.body.joborder }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5235cb78-2b6d-47bf-8290-50e6f77f8108",
+      "name": "判断必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a0b72a71-e36b-4d5b-8153-1c1060c78ede",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        400
+      ],
+      "id": "912bbcc7-1bd6-42fe-b8b7-87e74c5e907a",
+      "name": "判断sn是否存在"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "oorZAXhWJO5nu8br",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/oorZAXhWJO5nu8br",
+          "cachedResultName": "设备锁机状态"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        384
+      ],
+      "id": "5c4e3795-0c22-4cd4-a45e-d90296d48ffa",
+      "name": "查询设备锁机"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "179b4404-4cf9-453c-b3b7-42575f04051f",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        384
+      ],
+      "id": "911d24a5-a526-41b7-b12a-3d53fb06dcb5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $(\"Webhook\").all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        368
+      ],
+      "id": "2d9e19d3-cc93-4d7f-8431-a5c867231dc7",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iipMI3IDY4ryTUpO",
+          "cachedResultName": "1.Mes重构 — 工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        400
+      ],
+      "id": "2988eea6-e8db-49be-b0be-b5685c8bf6ae",
+      "name": "工序查询通用接口"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"401\",\n  \"message\":\"{{ $json.msg }}\"\n} ",
+        "options": {}
+      },
+      "id": "aff20a2b-5f4a-4277-b34d-da8c0cb543c3",
+      "name": "报错信息：sn锁机/未删除激活记录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        848,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "工序查询通用接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "查询设备锁机",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入工序表": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "查询是否有相同信息": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息:该SN已有FQC记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If12": {
+      "main": [
+        [
+          {
+            "node": "插入工序表",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未完成上一道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "校验前置工序是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验前置工序是否完成": {
+      "main": [
+        [
+          {
+            "node": "If12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取retroid_id": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工序是否存在": {
+      "main": [
+        [
+          {
+            "node": "获取retroid_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该工序不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否需要校验": {
+      "main": [
+        [
+          {
+            "node": "查询是否有相同信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断必填项": {
+      "main": [
+        [
+          {
+            "node": "判断是否需要校验",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否存在": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：查询不到该SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询设备锁机": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：sn锁机/未删除激活记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "判断必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "工序查询通用接口": {
+      "main": [
+        [
+          {
+            "node": "判断工序是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "177",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_name": "FQC测试",
+            "uesrName_smt": "11585 1438 1465 1924 2131 1447",
+            "bind_id": "测试OK",
+            "retroid": "W51A026527",
+            "joborder": "1000004985",
+            "check_rebind": false
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/smt_test_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "18fadb92-6466-48ca-95eb-3be3297b7d14",
+  "activeVersionId": "18fadb92-6466-48ca-95eb-3be3297b7d14",
+  "versionCounter": 60,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:56:29.098Z",
+      "createdAt": "2025-04-24T05:56:29.098Z",
+      "role": "workflow:owner",
+      "workflowId": "P4QFNPMUsNDJ2Uzr",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

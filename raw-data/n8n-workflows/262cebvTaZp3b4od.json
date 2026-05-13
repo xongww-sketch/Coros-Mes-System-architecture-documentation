@@ -1,0 +1,615 @@
+{
+  "updatedAt": "2025-04-24T07:22:20.345Z",
+  "createdAt": "2025-04-03T02:17:15.740Z",
+  "id": "262cebvTaZp3b4od",
+  "name": "ip_registration",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/resource/ipRegistration",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        280,
+        100
+      ],
+      "id": "0494bf7e-8476-423b-8b45-4d895321620c",
+      "name": "Webhook",
+      "webhookId": "bb7c3cfa-b3ee-4472-8a02-1c74735b89e1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = {\n    code: 200,\n    message: '验证通过',\n    errors: []\n};\n\n// 检查IP地址和mac地址非空且符合要求\nfor (const item of $input.all()) {\n    const req = item.json.body;\n    if (!isIPAddress(req.ip)) {\n        result.errors.push(`IP地址不合法: ${req.ip}`);\n    }\n    if (!isValidMAC(req.mac)) {\n        result.errors.push(`MAC地址不合法: ${req.mac}`);\n    }\n}\n\n// 如果有错误，更新返回码和消息\nif (result.errors.length > 0) {\n    result.code = 201;\n    result.message = '参数验证失败';\n}\n\n// 检验是否是合法的IP地址\nfunction isIPAddress(ip) {\n    const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])){3}$/;\n    return ipv4Regex.test(ip);\n}\n\n// 检验是否是合法的MAC地址\nfunction isValidMAC(mac) {\n    // 带统一分隔符（冒号或连字符）\n    const hasSeparator = /^([0-9A-F]{2})([:-])([0-9A-F]{2}\\2){4}[0-9A-F]{2}$/i.test(mac);\n    // 不带分隔符（12位十六进制）\n    const noSeparator = /^[0-9A-F]{12}$/i.test(mac);\n    return hasSeparator || noSeparator;\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        100
+      ],
+      "id": "ab568969-cdeb-439d-9550-7fdf374d64fd",
+      "name": "检查ip和mac的参数是否正确"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "adf4aa6d-552c-4169-97f3-46e5d0483ca0",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        100
+      ],
+      "id": "7901aca1-1ad0-43fe-9c32-2256d7da92f3",
+      "name": "判断参数结果"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "MES-IP地址分配",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2620,
+        500
+      ],
+      "id": "7f873d69-9832-4b6b-bb83-ff8c9f8729aa",
+      "name": "Send Email",
+      "webhookId": "7fa201ee-20b1-4e7d-9661-5b190db7a37b",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "device_registration",
+          "mode": "list",
+          "cachedResultName": "device_registration"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "mac",
+              "value": "={{ $json.mac }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1620,
+        40
+      ],
+      "id": "07f5e904-42f3-40b0-9cb2-bf51bacbfd0f",
+      "name": "查询数据库中是否存在同一mac",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b1b7fd56-19a4-4ea5-a667-069666c4c631",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        20
+      ],
+      "id": "cb49adca-11fc-492a-af6a-e7a5babfff20",
+      "name": "判断mac地址是否存在"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "device_registration",
+          "mode": "list",
+          "cachedResultName": "device_registration"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ip": "={{ $('Edit Fields').all()[0].json.ip }}",
+            "mac": "={{ $('Edit Fields').all()[0].json.mac }}",
+            "create_time": "={{ $now }}",
+            "update_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ip",
+              "displayName": "ip",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mac",
+              "displayName": "mac",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "update_time",
+              "displayName": "update_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2260,
+        -100
+      ],
+      "id": "bb04ea00-cd00-485f-8990-7f2cffd9292b",
+      "name": "插入新IP注册信息",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "device_registration",
+          "mode": "list",
+          "cachedResultName": "device_registration"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "update_time": "={{ $now }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ip",
+              "displayName": "ip",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mac",
+              "displayName": "mac",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "update_time",
+              "displayName": "update_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2260,
+        100
+      ],
+      "id": "b1bfd01d-f432-4dac-802d-9c26b9916366",
+      "name": "更新IP注册时间",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eef358ad-4028-4ad3-b4c7-9ac0eafa2656",
+              "name": "=ip",
+              "value": "={{ $('Webhook').all()[0].json.body.ip }}",
+              "type": "string"
+            },
+            {
+              "id": "35932d42-d66c-4dad-b3f3-352d279e38f4",
+              "name": "=mac",
+              "value": "={{ $('Webhook').all()[0].json.body.mac }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1160,
+        60
+      ],
+      "id": "698c09d7-2c92-45f5-9bcc-9b38649a4ff4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2600,
+        -120
+      ],
+      "id": "e97f17fe-09d8-4407-a5c3-96232bbbaefe",
+      "name": "新设备注册"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2600,
+        100
+      ],
+      "id": "339710d5-6afc-4ed2-9f9b-dd53999c4601",
+      "name": "老设备更新注册时间"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "检查ip和mac的参数是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查ip和mac的参数是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断参数结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数结果": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询数据库中是否存在同一mac": {
+      "main": [
+        [
+          {
+            "node": "判断mac地址是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断mac地址是否存在": {
+      "main": [
+        [
+          {
+            "node": "插入新IP注册信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "更新IP注册时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新IP注册时间": {
+      "main": [
+        [
+          {
+            "node": "老设备更新注册时间",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入新IP注册信息": {
+      "main": [
+        [
+          {
+            "node": "新设备注册",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "查询数据库中是否存在同一mac",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.9",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "47",
+            "user-agent": "python-requests/2.25.1",
+            "accept-encoding": "gzip, deflate",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "ip": "192.168.1.11",
+            "mac": "16:20:81:ce:39:23"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/ipRegistration",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "9c79ab1d-6678-4b8c-8b05-86b3367b76bc",
+  "activeVersionId": "9c79ab1d-6678-4b8c-8b05-86b3367b76bc",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T06:41:42.259Z",
+      "createdAt": "2025-04-24T06:41:42.259Z",
+      "role": "workflow:owner",
+      "workflowId": "262cebvTaZp3b4od",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

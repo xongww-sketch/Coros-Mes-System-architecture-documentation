@@ -1,0 +1,321 @@
+{
+  "updatedAt": "2025-04-24T06:02:30.570Z",
+  "createdAt": "2024-07-17T03:19:45.406Z",
+  "id": "0PveYvjyXZ5pe23C",
+  "name": "deleteprintinfo_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "da73261a-282c-438c-9179-4b0c5973ebd9",
+              "leftValue": "={{ $json.body.printinfo_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d8333682-131f-47d6-9722-ae27e49ea25a",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        740,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d352b050-485d-4edd-be00-04df84983b70",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e4acda2d-219f-42f6-952d-a27025e014b4",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"改模板已冻结\"\n}",
+        "options": {}
+      },
+      "id": "99052070-56f3-403f-819b-c155b1df6fde",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 首先检查 printinfo_id 为 62 的记录的 status 是否为 1\nDO $$\nBEGIN\n    -- 查询 status 值\n    IF EXISTS (SELECT 1 FROM mes.printinfo WHERE printinfo_id = {{ $json.body.printinfo_id }} AND status = 1) THEN\n        -- 如果满足条件，则更新 status 为 2\n        UPDATE mes.printinfo\n        SET status = 2 \n        WHERE printinfo_id = {{ $json.body.printinfo_id }};\n    END IF;\nEND $$;\n-- 再查询更新后的状态\nSELECT printinfo_id, status\nFROM mes.printinfo\nWHERE printinfo_id = {{ $json.body.printinfo_id }};",
+        "options": {}
+      },
+      "id": "4a349046-4263-49df-aff5-157bcfd3ca37",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        920,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"修改状态失败\"\n}",
+        "options": {}
+      },
+      "id": "15bfecba-a805-4ae5-9563-08258ff26c23",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"无法找到对应模板\"\n}",
+        "options": {}
+      },
+      "id": "d698429a-3bcb-4388-a28f-0a1ac361b5a5",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] -  打印模板冻结数据失败",
+        "emailFormat": "text",
+        "options": {}
+      },
+      "id": "95ed02fc-1a9f-4d25-b3f6-297207f17078",
+      "name": "接口调取失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1160,
+        480
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deleteprintinfo_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "060ca28f-5a34-4712-b0d7-ddeacad27a98",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        540,
+        280
+      ],
+      "webhookId": "2160b3eb-ac4a-4af3-aee2-f94c0d8c78b1"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.25.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "15",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "printinfo_id": "93"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/deleteprintinfo_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "035faea8-133a-4ad0-b71d-9046c0538314",
+  "activeVersionId": "035faea8-133a-4ad0-b71d-9046c0538314",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:39:30.122Z",
+      "createdAt": "2025-04-24T05:39:30.122Z",
+      "role": "workflow:owner",
+      "workflowId": "0PveYvjyXZ5pe23C",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

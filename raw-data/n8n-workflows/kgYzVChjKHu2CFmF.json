@@ -1,0 +1,1350 @@
+{
+  "updatedAt": "2025-07-29T07:16:08.475Z",
+  "createdAt": "2025-07-24T03:00:30.076Z",
+  "id": "kgYzVChjKHu2CFmF",
+  "name": "schedule_get_component_info_test",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vhggsps4ci.sap.coros.com:44300/sap/zrestsrv/zrestful",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "sap-client",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "sndprn",
+              "value": "MES"
+            },
+            {
+              "name": "zrfcid",
+              "value": "MES001"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"AUFNR\": \"3900000295\"\n }",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3344,
+        1584
+      ],
+      "id": "b02a4271-e9cf-4eed-a496-cd1e240d52f3",
+      "name": "调用SAP接口，通过工单号获取到组件描述",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Cm2mEZNoCXemPYwx",
+          "name": "SAP "
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//规则数组\nlet ruleArr=[13000,13001,13002,13003,13004]\nlet res=[];\nlet pcbaArr=[];\nlet others=[];\nfor (const item of $input.all()) {\n  const matNr=item.json.material_code;\n  \n  if(ruleArr.includes(Number(matNr.substring(0,5)))){\n    pcbaArr.push(item.json);\n  }else{\n    others.push(item.json);\n  }\n}\nres.push({pcbaArr})\nres.push({others})\nreturn res;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2368,
+        1200
+      ],
+      "id": "329c03a5-c61b-441e-87d2-d22a1160ec18",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76d65fb3-1b73-4712-9375-40cb275f4558",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        704
+      ],
+      "id": "394f10ba-6ddc-4e25-8443-53e931fa1be8",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3616,
+        1392
+      ],
+      "id": "f95ab6cc-7aba-4676-91d0-79ca9733c08a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "pcbaArr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1472,
+        752
+      ],
+      "id": "51f9868a-0bbb-4766-89fd-0796965f6bfb",
+      "name": "获取每条记录"
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "657c3617-c7d7-4e6b-97d2-56ad4376670d",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -  同步SN到京东仓库",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "id": "d1a5d28d-96a8-46b4-86a0-c8691f3bf158",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1536,
+        1552
+      ],
+      "retryOnFail": false,
+      "webhookId": "a350a08f-a7fc-407e-8fdd-47880088da57",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33784bf8-9543-4730-bc11-2a35e3a15e1d",
+              "name": "message",
+              "value": "该工单不存在PCB板拼板描述！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2096,
+        736
+      ],
+      "id": "95816249-09e2-4b94-b78e-9405ee57620b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "workOrderList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        704
+      ],
+      "id": "4dbcec26-24ed-4a75-a2da-28e7e1a71c8b",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "order_number",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        192,
+        752
+      ],
+      "id": "7587112d-ad68-45a3-91d1-e5162cadf28c",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3deaf010-3ca9-4123-8c44-0662275aeec4",
+              "leftValue": "={{ $json.E_TYPE }}",
+              "rightValue": "S",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3184,
+        1392
+      ],
+      "id": "a335aa7b-d142-4bb6-aa39-a4d57b96ab72",
+      "name": "判断SAP是否成功返回数据"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "ET_OUTPUT",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2976,
+        1216
+      ],
+      "id": "8feb9512-9a57-4a48-86f8-d3bf9e3d0cb8",
+      "name": "拆分SAP返回的数据"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb1a30c6-4b63-42d9-95e3-26f8a97a32ee",
+              "name": "material_code",
+              "value": "={{ $json.MATNR }}",
+              "type": "string"
+            },
+            {
+              "id": "1de2311c-533d-4ca1-af34-0159707060ee",
+              "name": "material_description",
+              "value": "={{ $json.IDNKX }}",
+              "type": "string"
+            },
+            {
+              "id": "069b9468-76e8-44c7-95d4-6d5135fc2af7",
+              "name": "production_quantity",
+              "value": "={{ $json.GAMNG }}",
+              "type": "number"
+            },
+            {
+              "id": "9b1a4252-75e6-44ec-b406-609bf26c39bc",
+              "name": "type",
+              "value": "={{ $json.LBTXT1 }}",
+              "type": "string"
+            },
+            {
+              "id": "a5259c1e-4088-4f3e-b3b1-685ead424682",
+              "name": "production_date",
+              "value": "={{ $json.GSTRP }}",
+              "type": "string"
+            },
+            {
+              "id": "966f6e4f-0287-4f36-8ea5-8cabae141b7e",
+              "name": "order_status",
+              "value": "={{ $json.ZSFWJ==='否'? 2 : 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "dc553c52-0908-4818-8e4d-a965c2dc81ff",
+              "name": "production_end_date",
+              "value": "={{ $json.GLTRP }}",
+              "type": "string"
+            },
+            {
+              "id": "c53731cf-d8dc-44e1-b284-49bdd328db71",
+              "name": "order_number",
+              "value": "={{ $json.AUFNR }}",
+              "type": "string"
+            },
+            {
+              "id": "21c79139-e5fa-4dd1-95ba-f48486c681bf",
+              "name": "order_create_time",
+              "value": "={{$json.ERDAT}}",
+              "type": "string"
+            },
+            {
+              "id": "fb7896a2-d66d-4acd-b0b5-77af51452088",
+              "name": "base_bom_code",
+              "value": "={{ $json.PLNBEZ }}",
+              "type": "string"
+            },
+            {
+              "id": "f456a294-49ee-4f42-b5de-dc1a0dbd08bf",
+              "name": "zecnl4",
+              "value": "={{ $json.ZECNL4 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2704,
+        1216
+      ],
+      "id": "17b408b6-bde5-40b7-a0c9-471e9c56634f",
+      "name": "取出需要的属性字段"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ddd2752f-f2c3-4698-8e7b-9288ff3702da",
+              "leftValue": "={{ $json.pcbaArr }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2144,
+        1200
+      ],
+      "id": "c79a17e0-8490-4d05-bd23-24039df69e2a",
+      "name": "对两个数组做不同的处理"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst res={};\nfor (const item of $input.all()) {\n  const arr=item.json.others;\n  var newArr=arr.filter(e=>e.material_description.includes('镭雕'))\n}\nres.arr=newArr;\nreturn res;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        1344
+      ],
+      "id": "ba1f7509-1577-4e2b-a671-39a009109a8d",
+      "name": "判断数组中的物料描述中是否带有镭雕两个字"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "arr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        1344
+      ],
+      "id": "4a6984f0-b18e-47d5-9eb3-279fdab044db",
+      "name": "拆分所有包含镭雕字段物料描述的数组"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst sapArr=$(\"判断SAP是否成功返回数据\").all()[0].json['ET_OUTPUT'];\nfor (const item of $input.all()) {\n  let childerns=[];\n  sapArr.forEach(e=>{\n    if (e['PLNBEZ']==item.json.material_code) {\n       childerns.push(e);\n    }\n  })\n  item.json.childerns=childerns;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        1344
+      ],
+      "id": "c5c456ce-4ea8-4639-b4c6-3c2147c7c4f5",
+      "name": "从查询到的数据中获取具体的拼板描述"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76fde4cc-7dd6-4167-9c4f-f9e4c8273163",
+              "leftValue": "={{ $json.childerns }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthNotEquals",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -784,
+        1344
+      ],
+      "id": "1026b3fa-aece-4a41-92c6-731dbb60e4a1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//规则数组\nlet ruleArr=[13000,13001,13002,13003,13004]\nlet res=[];\nfor (const item of $input.all()) {\n  const childern = [...item.json.childerns].sort((a, b) => \n  b.ERDAT.localeCompare(a.ERDAT)\n)[0];\n  \n  if(ruleArr.includes(Number(childern.MATNR.substring(0,5)))){\n    item.json.material_description=childern.IDNKX;\n    res.push(item);\n  }\n}\nreturn res"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        1184
+      ],
+      "id": "d5977163-427a-42c3-a2f9-32f4b79ed8e8",
+      "name": "获取到数组中工单创建时间最新的数据，判断其工单号是否是规则数组内"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "886e7783-7a10-4df7-bfd5-b35809bee951",
+              "name": "material_code",
+              "value": "={{ $json.material_code }}",
+              "type": "string"
+            },
+            {
+              "id": "9e5be52f-08b9-4996-9d1b-8e99eb1870b9",
+              "name": "material_description",
+              "value": "={{ $json.material_description }}",
+              "type": "string"
+            },
+            {
+              "id": "99b3cf28-56eb-4369-a656-b7d3ca2f51b2",
+              "name": "production_quantity",
+              "value": "={{ $json.production_quantity }}",
+              "type": "number"
+            },
+            {
+              "id": "8935f34d-5067-40da-8081-7f73a6f9e07d",
+              "name": "type",
+              "value": "={{ $json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "62d9748f-3f42-4562-a22d-df6e57c9e061",
+              "name": "production_date",
+              "value": "={{ $json.production_date }}",
+              "type": "string"
+            },
+            {
+              "id": "2463a480-6274-4e59-98bb-519c7704ac89",
+              "name": "order_number",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            },
+            {
+              "id": "68008827-7deb-459f-bb05-f7162635e76f",
+              "name": "order_create_time",
+              "value": "={{ $json.order_create_time }}",
+              "type": "string"
+            },
+            {
+              "id": "10d328bd-8b2d-4e8e-a1cb-fbd61ea1148a",
+              "name": "order_status",
+              "value": "={{ $json.order_status }}",
+              "type": "string"
+            },
+            {
+              "id": "971c5e27-e2ae-4f51-b261-d9049fe3db16",
+              "name": "production_end_date",
+              "value": "={{ $json.production_end_date }}",
+              "type": "string"
+            },
+            {
+              "id": "e19da069-b052-4d1f-8432-d16ec596e212",
+              "name": "base_bom_code",
+              "value": "={{ $json.childerns[0].PLNBEZ }}",
+              "type": "string"
+            },
+            {
+              "id": "47377c33-2a26-40a1-a32e-43dd3f073137",
+              "name": "zecnl4",
+              "value": "={{ $json.ZECNL4 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        1184
+      ],
+      "id": "d69fc37d-0e13-463b-8294-c221b9a68da3",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -112,
+        784
+      ],
+      "id": "fe60e89c-f4ee-46c9-b83f-4534890cd55f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "yf_pcba_data",
+          "mode": "list",
+          "cachedResultName": "yf_pcba_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "work_order_number": "={{ $json.work_order_number }}",
+            "material_code": "={{ $json.material_code }}",
+            "material_description": "={{ $json.material_description }}",
+            "production_quantity": "={{ $json.production_quantity }}",
+            "type": "={{ $json.type }}",
+            "production_date": "={{ $json.production_date }}",
+            "order_status": "={{ $json.order_status }}",
+            "create_time": "={{ $now }}",
+            "production_end_date": "={{ $json.production_end_date }}",
+            "order_create_time": "={{ $json.order_create_time }}",
+            "base_bom_code": "={{ $json.base_bom_code }}"
+          },
+          "matchingColumns": [
+            "work_order_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "material_code",
+              "displayName": "material_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "material_description",
+              "displayName": "material_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_quantity",
+              "displayName": "production_quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_date",
+              "displayName": "production_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_end_date",
+              "displayName": "production_end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "work_order_number",
+              "displayName": "work_order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_create_time",
+              "displayName": "order_create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "base_bom_code",
+              "displayName": "base_bom_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1088,
+        736
+      ],
+      "id": "5cfca9af-f610-476d-9285-f35a9bc269c6",
+      "name": "Postgres1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "yf_pcba_data",
+          "mode": "list",
+          "cachedResultName": "yf_pcba_data"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        576,
+        304
+      ],
+      "id": "00ad923a-5f4d-4d2a-96a2-22c5da001b68",
+      "name": "从数据库中获取所有数据",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const orderList = $(\"Aggregate1\").all()[0].json.orderList;\nconst inputItems = $input.all();\n\n// 创建物料代码映射用于快速查找\nconst inputMaterialMap = {};\nfor (const item of inputItems) {\n    inputMaterialMap[item.json.work_order_number] = item; // 存储整个对象以便引用\n}\n\n// 处理现有数据并添加新数据\nconst result = [...inputItems]; // 复制原始输入\n\nfor (const item of inputItems) {\n    const order = orderList.find(e => e.order_number === item.json.work_order_number);\n    \n    if (order) {\n        // 使用严格比较并处理可能的null/undefined\n        const isSameDesc = order.material_description === item.json.material_description;\n        const isSameQty = Number(order.production_quantity) === Number(item.json.production_quantity);\n        const isSameStart = order.production_date === item.json.production_date;\n        const isSameEnd = order.production_end_date === item.json.production_end_date;\n        const isSameZecnl4 = String(order.zecnl4 || '') === String(item.json.zecnl4 || '');\n        \n        if (isSameDesc && isSameQty && isSameStart && isSameEnd && isSameZecnl4) {\n            item.json.is_update = 0; // 没有变化\n        } else {\n            // 用新数据覆盖旧数据（包括zecnl4）\n            item.json.material_description = order.material_description;\n            item.json.production_quantity = order.production_quantity;\n            item.json.production_date = order.production_date;\n            item.json.production_end_date = order.production_end_date;\n            item.json.zecnl4 = order.zecnl4; // 确保更新这个字段\n            item.json.is_update = 1; // 标记为已更新\n            \n            console.log('更新记录:', {\n                work_order: order.order_number,\n                old_zecnl4: inputMaterialMap[order.order_number].json.zecnl4,\n                new_zecnl4: order.zecnl4\n            });\n        }\n    } else {\n        item.json.is_update = 0;\n    }\n}\n\n// 添加新数据（存在于orderList但不存在于input）\nfor (const order of orderList) {\n    if (!inputMaterialMap[order.order_number]) {\n        result.push({\n            json: {\n                material_code: order.material_code,\n                material_description: order.material_description,\n                base_bom_code: order.base_bom_code,\n                type: order.type,\n                order_status: order.order_status,\n                work_order_number: order.order_number,\n                order_create_time: order.order_create_time,\n                production_quantity: order.production_quantity,\n                production_date: order.production_date,\n                production_end_date: order.production_end_date,\n                zecnl4: order.zecnl4, // 确保包含此字段\n                is_update: 1 // 新数据标记为需要更新\n            }\n        });\n    }\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        304
+      ],
+      "id": "fdd0ee86-6ac9-4600-8a53-31cb09afc1fa",
+      "name": "比对当前数据是新增还是修改"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "orderList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        368,
+        304
+      ],
+      "id": "f7933ee2-a7df-4aeb-b3b3-f5961b47068f",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        32
+      ],
+      "id": "43c50fbf-4b6e-48c8-ab91-84688166f734",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "yf_pcba_data",
+          "mode": "list",
+          "cachedResultName": "yf_pcba_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "work_order_number": "={{ $json.work_order_number }}",
+            "order_status": "={{ $json.order_status }}",
+            "is_update": "={{ $json.is_update}}",
+            "material_code": "={{ $json.material_code }}",
+            "material_description": "={{ $json.material_description }}",
+            "production_quantity": "={{ $json.production_quantity }}",
+            "type": "={{ $json.type }}",
+            "production_date": "={{ $json.production_date }}",
+            "create_time": "={{ $now }}",
+            "production_end_date": "={{ $json.production_end_date}}",
+            "order_create_time": "={{ $json.order_create_time}}",
+            "base_bom_code": "={{ $json.base_bom_code}}",
+            "zecnl4": "={{ $json.zecnl4 }}"
+          },
+          "matchingColumns": [
+            "work_order_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "material_code",
+              "displayName": "material_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "material_description",
+              "displayName": "material_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_quantity",
+              "displayName": "production_quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_date",
+              "displayName": "production_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_end_date",
+              "displayName": "production_end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "work_order_number",
+              "displayName": "work_order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_create_time",
+              "displayName": "order_create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "base_bom_code",
+              "displayName": "base_bom_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "is_update",
+              "displayName": "is_update",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "zecnl4",
+              "displayName": "zecnl4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1216,
+        304
+      ],
+      "id": "b87b53f4-f542-40c9-bc91-0586bcc1ce96",
+      "name": "插入数据到pcba数据表中",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "调用SAP接口，通过工单号获取到组件描述": {
+      "main": [
+        [
+          {
+            "node": "判断SAP是否成功返回数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "对两个数组做不同的处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "调用SAP接口，通过工单号获取到组件描述",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取每条记录": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断SAP是否成功返回数据": {
+      "main": [
+        [
+          {
+            "node": "拆分SAP返回的数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分SAP返回的数据": {
+      "main": [
+        [
+          {
+            "node": "取出需要的属性字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "取出需要的属性字段": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "对两个数组做不同的处理": {
+      "main": [
+        [
+          {
+            "node": "获取每条记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断数组中的物料描述中是否带有镭雕两个字",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数组中的物料描述中是否带有镭雕两个字": {
+      "main": [
+        [
+          {
+            "node": "拆分所有包含镭雕字段物料描述的数组",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分所有包含镭雕字段物料描述的数组": {
+      "main": [
+        [
+          {
+            "node": "从查询到的数据中获取具体的拼板描述",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从查询到的数据中获取具体的拼板描述": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "获取到数组中工单创建时间最新的数据，判断其工单号是否是规则数组内",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到数组中工单创建时间最新的数据，判断其工单号是否是规则数组内": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从数据库中获取所有数据": {
+      "main": [
+        [
+          {
+            "node": "比对当前数据是新增还是修改",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "比对当前数据是新增还是修改": {
+      "main": [
+        [
+          {
+            "node": "插入数据到pcba数据表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "从数据库中获取所有数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 1800
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "25921424-f363-431e-82e9-720b4b2e1160",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-07-24T03:00:30.076Z",
+      "createdAt": "2025-07-24T03:00:30.076Z",
+      "role": "workflow:owner",
+      "workflowId": "kgYzVChjKHu2CFmF",
+      "projectId": "Y6ZOz21cjq2fKS18",
+      "project": {
+        "updatedAt": "2025-08-07T02:20:43.893Z",
+        "createdAt": "2025-02-07T02:43:11.522Z",
+        "id": "Y6ZOz21cjq2fKS18",
+        "name": "5.YF_MES_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

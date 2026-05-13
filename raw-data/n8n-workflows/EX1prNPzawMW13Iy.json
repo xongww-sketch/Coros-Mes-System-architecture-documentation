@@ -1,0 +1,635 @@
+{
+  "updatedAt": "2025-04-24T06:20:33.192Z",
+  "createdAt": "2024-08-05T05:50:07.766Z",
+  "id": "EX1prNPzawMW13Iy",
+  "name": "createApplication",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "56fab96a-4d98-4d31-88fb-d1c3501bc989",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"参数错误！\"\n}",
+        "options": {}
+      },
+      "id": "5e43ca1b-1684-4e38-85af-fc5e9896dea5",
+      "name": "the params has a error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n //1.检查应用名称是否符合要求\n  //2.检查软件包ID是为空\n  //3.检查设备的ID是否为空\n}\n\nreturn $input.all();"
+      },
+      "id": "f03a19b5-32c3-4453-8b75-fdc9b065a7fb",
+      "name": "check params is not null",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "installation_package",
+          "mode": "list",
+          "cachedResultName": "installation_package"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "package_id",
+              "value": "={{ $json.body.packageId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "90c43186-5ab6-4f71-aa87-76177396bdb4",
+      "name": "check softwareID is exist",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1340,
+        160
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "5cb2e262-fd1d-4a52-8003-b90f658e5a0a",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "009eea0a-7be6-4947-b2a2-bd7290f8223b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "08824ae5-2f8f-4592-8b6d-3e00b3d97895",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 203,\n  \"message\":\"软件包ID不存在！\"\n}",
+        "options": {}
+      },
+      "id": "4276aeec-15d3-4482-a526-dc6b39fb7ab0",
+      "name": "software id is not exist",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "b99df1b9-c546-4b15-b9bd-ac21ad000f02",
+      "name": "database error1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2540,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"新建成功！\"\n}",
+        "options": {}
+      },
+      "id": "8dcf89e9-680f-474d-8141-21f60d94f29f",
+      "name": "insert success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2540,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "7bc8029c-408c-46b7-829b-f8140189945d",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3275dddb-47b2-45ff-b7a3-711b4aefb945",
+      "name": "check result",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2060,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "application",
+          "mode": "list",
+          "cachedResultName": "application"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "application_name",
+              "value": "={{ $('Webhook').all()[0].json.body.appName }}"
+            },
+            {
+              "column": "application_version",
+              "value": "={{ $('Webhook').all()[0].json.body.appVersion }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9e69a18b-cb37-4412-8644-4a2e06db211d",
+      "name": "query records with the same name and the same version number",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1820,
+        20
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "70c7f22b-6273-46d8-a256-5ce4ae175cbd",
+      "name": "applcation table error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2060,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"存在相同的软件包！\"\n}",
+        "options": {}
+      },
+      "id": "35fe830c-243c-4594-a073-7784dfd11ad0",
+      "name": "esist the same name and version",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "application",
+          "mode": "list",
+          "cachedResultName": "application"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "package_id": "={{ $('Webhook').all()[0].json.body.packageId }}",
+            "application_name": "={{ $('Webhook').all()[0].json.body.appName }}",
+            "application_version": "={{ $('Webhook').all()[0].json.body.appVersion }}",
+            "device_ids": "={{ $('Webhook').all()[0].json.body.deviceIds }}",
+            "is_delete": 0,
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "application_name",
+              "displayName": "application_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_version",
+              "displayName": "application_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "package_id",
+              "displayName": "package_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "device_ids",
+              "displayName": "device_ids",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "edc4ca44-5559-4779-b088-eb54e58227b4",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2300,
+        -160
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/application/createApplication",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7979cf2c-5714-4657-805d-875f86a1e8a3",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        740,
+        260
+      ],
+      "webhookId": "846279e6-2a0c-4f1c-93c0-e393e7c6dfab"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "check softwareID is exist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "the params has a error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check params is not null": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check softwareID is exist": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "query records with the same name and the same version number",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "software id is not exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check result": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "esist the same name and version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query records with the same name and the same version number": {
+      "main": [
+        [
+          {
+            "node": "check result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "applcation table error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "insert success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check params is not null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "73",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "appVersion": "1.0.1",
+            "deviceIds": [
+              58
+            ],
+            "appName": "相机",
+            "packageId": 45
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/application/createApplication",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "d6a5494d-95e6-4a6f-b4dd-3c78825d43b8",
+  "activeVersionId": "d6a5494d-95e6-4a6f-b4dd-3c78825d43b8",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:47:32.369Z",
+      "createdAt": "2025-04-24T05:47:32.369Z",
+      "role": "workflow:owner",
+      "workflowId": "EX1prNPzawMW13Iy",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

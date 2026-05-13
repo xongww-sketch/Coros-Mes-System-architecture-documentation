@@ -1,0 +1,519 @@
+{
+  "updatedAt": "2024-05-31T02:28:30.534Z",
+  "createdAt": "2024-03-12T02:25:10.264Z",
+  "id": "4BvE1BfeHupLqsKE",
+  "name": "品质检验程序",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "SMT_TEST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "eecb74fe-5ef4-4dfb-a9ca-d77c614a611d",
+      "name": "品质检测测试信息上传",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -380,
+        300
+      ],
+      "webhookId": "8d8bdca3-f152-4349-82c3-d92dc09a261b"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO \nYFConsumer.dbo.smt_smart_wear_test(\n  userName,\n  ordernumber,\n  model,\n  procedurevalue,\n  barcode,\n  checkret,\n  createtime\n)VALUES(\n  '{{ $json.body.uesrName_smt }}',\n  '{{ $json.body.ordernumber_smt }}',\n  '{{ $json.body.productcode_smt }}',\n  '{{ $json.body.producevalue}}',\n  '{{ $json.body.barcode_smt}}',\n  '{{ $json.body.checkret}}',\n  GETDATE()\n);\nselect @@ROWCOUNT"
+      },
+      "id": "c563d4d3-7bb9-4522-bd5d-b71b65b781c5",
+      "name": "更新后台检测表信息",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        960,
+        260
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "784ec742-8e2b-4f95-a2b1-fcfa4aa0f70a",
+              "leftValue": "={{ $json.body.productcode_smt }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "23ec6d1f-e046-451c-a9fa-bae9c7154f49",
+              "leftValue": "={{ $json.body.ordernumber_smt }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "84489d61-0cfb-4abe-8397-1624c1c04126",
+              "leftValue": "={{ $json.body.uesrName_smt }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4a09d207-11bf-484d-9d69-9af8361f9591",
+              "leftValue": "={{ $json.body.producevalue }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "86f9ef78-ee60-4c08-923d-d174fa4172fa",
+              "leftValue": "={{ $json.body.barcode_smt }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4cd2a3e2-985e-4a62-b982-7e7d4898e3ee",
+              "leftValue": "={{ $json.body.checkret }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6a6f532e-358f-4234-8e7e-9df763c5c1e4",
+      "name": "判断所有必填项是否已填写",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2b145f00-373e-4e4a-822b-99a3dc385595",
+              "leftValue": "={{ $json }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "66b659d8-fc21-4169-84b0-f11d6f5eea5a",
+      "name": "判断SN是否已绑定条码",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        140,
+        280
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"403\",\n  \"message\":\"该SN未绑定条码\"\n}",
+        "options": {}
+      },
+      "id": "6a47e14f-ad23-47d4-9dce-47703184b5b8",
+      "name": "报错信息：该SN未绑定条码！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        380,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"message\":\"请填写所有必填项\"\n}",
+        "options": {}
+      },
+      "id": "3e1788bb-909b-486b-949d-7f4aa5ba4379",
+      "name": "报错信息：请填写所有必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = [];\n\n  let queryResult = $('判断所有必填项是否已填写').all()[0].json;\n\n  result.push(queryResult);\n\nreturn result;"
+      },
+      "id": "9eb06941-ea67-4459-99b8-24b062ee74dc",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"message\":\"已成功上传检测结果\"\n}",
+        "options": {}
+      },
+      "id": "55ca2f75-d53d-456e-af63-b6163baa3644",
+      "name": "成功上传",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM consm_barcodebindinfo WHERE retroid = '{{ $json.body.barcode_smt }}'"
+      },
+      "id": "3a31789a-061e-4d2c-86bd-c7996c2981ac",
+      "name": "查询后台条码绑定数据",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * from YFConsumer.dbo.smt_smart_wear_test WHERE barcode = '{{ $json.body.barcode_smt }}' and ordernumber = '{{ $json.body.ordernumber_smt }}'"
+      },
+      "id": "9f78728c-45f6-4efe-b98e-3f6cb2dc4bb8",
+      "name": "判断是否有相同数据",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        460,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "4dac5959-b815-4b25-bc46-18e2a9ffea35",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ca7519c7-0a2e-4c54-9ad5-f3ca2b00aed5",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        620,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = [];\n\n  let queryResult = $('判断所有必填项是否已填写').all()[0].json;\n\n  result.push(queryResult);\n\nreturn result;"
+      },
+      "id": "bf8710ae-f862-49f6-8701-1d58eb4f6639",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"404\",\n  \"message\":\"该SN和工单号已存在记录\"\n}",
+        "options": {}
+      },
+      "id": "363b0267-9304-44f9-93b9-c1877c125e50",
+      "name": "报错信息：该SN和工单号已存在记录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        780,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "品质检测测试信息上传": {
+      "main": [
+        [
+          {
+            "node": "判断所有必填项是否已填写",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断所有必填项是否已填写": {
+      "main": [
+        [
+          {
+            "node": "查询后台条码绑定数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断SN是否已绑定条码": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未绑定条码！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新后台检测表信息": {
+      "main": [
+        [
+          {
+            "node": "成功上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "判断是否有相同数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询后台条码绑定数据": {
+      "main": [
+        [
+          {
+            "node": "判断SN是否已绑定条码",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有相同数据": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN和工单号已存在记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "更新后台检测表信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "品质检测测试信息上传": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.18.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "171",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "productcode_smt": "W331",
+            "ordernumber_smt": "1000001317",
+            "uesrName_smt": "10000654 10001285",
+            "producevalue": "FQC",
+            "barcode_smt": "W31AP60313",
+            "checkret": "测试OK+真水OK"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/SMT_TEST",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "1949086b-27bf-49c6-8a92-87dad2b1e021",
+  "activeVersionId": "1949086b-27bf-49c6-8a92-87dad2b1e021",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:32.105Z",
+      "createdAt": "2024-01-26T07:50:15.258Z",
+      "id": "Sagrd0CJUl5QtuS4",
+      "name": "MES相关应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-12T02:25:10.264Z",
+      "createdAt": "2024-03-12T02:25:10.264Z",
+      "role": "workflow:owner",
+      "workflowId": "4BvE1BfeHupLqsKE",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

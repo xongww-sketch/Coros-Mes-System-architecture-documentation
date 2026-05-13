@@ -1,0 +1,4465 @@
+{
+  "updatedAt": "2026-02-05T02:54:15.774Z",
+  "createdAt": "2025-12-17T02:08:54.870Z",
+  "id": "L2zaEktfYXQm5tlE",
+  "name": "[管易]:同步发货单数据到本地数据库",
+  "description": "",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 试用机存储数据\n",
+        "height": 1552,
+        "width": 6384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5008,
+        -3456
+      ],
+      "typeVersion": 1,
+      "id": "53088087-bcaf-4456-a87d-d0ce2884d972",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "4afe0c52-7103-4c6f-8100-8bdaba453a1a",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1376,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "abe07a72-4944-45f8-a3ae-c28a17c2ab95",
+      "name": "Crypto3",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.get"
+            },
+            {
+              "name": "start_delivery_date",
+              "value": "={{ $json.oneHourAfter}}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "end_delivery_date",
+              "value": "={{ $json.now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2cdd1787-18e0-424c-a90b-1907a093ecc9",
+      "name": "管易通过单据编号查询到对应订单信息3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -752,
+        128
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nlet res={};\nfunction toDatabaseDateTimeString(date) {\n  const pad = (number) => number.toString().padStart(2, '0');\n\n  const year = date.getFullYear();\n  const month = pad(date.getMonth() + 1); // 月份从0开始，所以+1\n  const day = pad(date.getDate());\n  const hours = pad(date.getHours());\n  const minutes = pad(date.getMinutes());\n  const seconds = pad(date.getSeconds());\n\n  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;\n}\n\n// 获取当前时间\nconst now =new Date();\n const utcOffset = now.getTimezoneOffset() * 60000; // 获取UTC偏移量并转成毫秒\n  const chinaOffset = 8 * 60 * 60 * 1000;\n  const chinaTime=new Date(now.getTime() + utcOffset + chinaOffset);\n// 获取当前时间之前的六小时的数据\nconst oneHourAfter = new Date(chinaTime.getTime() - 60 * 60 * 6000);\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.trade.deliverys.get\",\n  \"start_delivery_date\":toDatabaseDateTimeString(oneHourAfter),\n  \"end_delivery_date\":toDatabaseDateTimeString(chinaTime)\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nres.now=toDatabaseDateTimeString(chinaTime);\nres.oneHourAfter=toDatabaseDateTimeString(oneHourAfter);\nresult.push(res);\nreturn result;"
+      },
+      "id": "bebbcc65-e75a-4309-8679-719786deb3b7",
+      "name": "生成管易签名3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst orderList=[];\nfor (const item of $input.all()) {\n  const tempList=JSON.parse(item.json.data).deliverys;\n  tempList.forEach(e=>{\n    orderList.push(e.code);\n  })\n}\n\nreturn {\n  orderList:orderList\n};"
+      },
+      "id": "efeff185-a115-41b5-ac5c-1ef96c9a170b",
+      "name": "Code3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "orderList",
+        "options": {
+          "destinationFieldName": "code"
+        }
+      },
+      "id": "6162ace2-add0-412c-9642-1557f5970261",
+      "name": "Split Out1",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        672,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.res.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "20f375ce-74f9-487b-ba48-8a8df2305138",
+      "name": "Crypto4",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.detail.get"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "code",
+              "value": "={{ $json.code }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c6183d03-7e3b-43e4-9e49-1a2e86412155",
+      "name": "管易通过单据编号查询到对应订单信息4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1264,
+        112
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor(const item of $input.all()){\n  let res={};\n  let json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.trade.deliverys.detail.get\",\n  \"code\":item.json.code,\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\n  item.json.res=res;\n}\n\nreturn $input.all();"
+      },
+      "id": "4d151622-a79a-448d-89df-129283e74119",
+      "name": "生成管易签名4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "073bb10a-0a7e-49e5-8a55-f17eb7e9aca4",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5600,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "=[n8n warn] -  {{ $json.errTitle }}",
+        "html": "={{ JSON.stringify($json.errMessage) }}",
+        "options": {}
+      },
+      "id": "620cbc36-4f2b-4cf8-82b1-769efbf2793e",
+      "name": "Send Warn Email1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        5696,
+        640
+      ],
+      "retryOnFail": false,
+      "webhookId": "a350a08f-a7fc-407e-8fdd-47880088da57",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dca557a2-6542-4424-8480-9c280036e8e6",
+              "name": "total",
+              "value": "={{ Math.ceil(JSON.parse($json.data).total/10) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cdcfab2d-f636-4a4f-9b29-7833d010823d",
+      "name": "Edit Fields5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -544,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "e7e7df4c-60a3-4018-9f90-0dfee4075914",
+      "name": "Crypto5",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        16,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.get"
+            },
+            {
+              "name": "start_delivery_date",
+              "value": "={{ $json.startTime }}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "end_delivery_date",
+              "value": "={{ $json.now }}"
+            },
+            {
+              "name": "page_no",
+              "value": "={{ $json.page }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 10
+            }
+          }
+        }
+      },
+      "id": "e9912619-42f3-4ffb-a86f-aee7f5ef17a8",
+      "name": "管易通过单据编号查询到对应订单信息5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        240,
+        112
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 辅助函数：格式化时间\nfunction toDatabaseDateTimeString(date) {\n  const pad = (number) => number.toString().padStart(2, '0');\n  const year = date.getFullYear();\n  const month = pad(date.getMonth() + 1);\n  const day = pad(date.getDate());\n  const hours = pad(date.getHours());\n  const minutes = pad(date.getMinutes());\n  const seconds = pad(date.getSeconds());\n  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;\n}\n\n// 1. 统一计算中国时间\n// 获取UTC时间并加上8小时偏移量\nconst now = new Date();\nconst timezoneOffset = now.getTimezoneOffset(); // 本地时间与UTC的分钟差\n// (timezoneOffset + 480) 计算出当前环境与中国时区(UTC+8)的分钟差，如果不理解可以直接用下面的通用方式\nconst chinaTime = new Date(now.getTime() + (timezoneOffset + 480)* 60 * 1000);\n\n// 2. 计算开始时间（当前时间往回推8小时）\n// 30分钟 * 60秒 * 1000毫秒\nconst startTime = new Date(chinaTime.getTime() - 60 * 60 * 6000);\nconst secret = "REDACTED";\nlet result = [];\n\n// 3. 遍历输入项\nconst items = $input.all();\n\n// 使用 for...of 遍历数组中的对象，而不是索引\nfor (const item of items) {\n  // 获取当前item的json数据（防止报错加个默认值）\n  const itemJson = item.json || {};\n  \n  // 动态获取页码，如果没有只默认设为0再+1\n  const currentPage = itemJson.page ? parseInt(itemJson.page) : 0;\n  const nextPage = currentPage + 1;\n\n  // 4. 在循环内部构建请求参数，这样每个item的page_no才互不影响\n  let requestBody = {\n    \"appkey\": \"176397\",\n    \"sessionkey\": \"1f9fd48ad3d14304a40c4a52df91646a\",\n    \"method\": \"gy.erp.trade.deliverys.get\",\n    \"start_delivery_date\": toDatabaseDateTimeString(startTime),\n    \"end_delivery_date\": toDatabaseDateTimeString(chinaTime),\n    \"page_no\": nextPage\n  };\n\n  // 生成签名字符串（注意：JSON.stringify生成的顺序可能因环境而异，管易ERP通常要求紧凑格式）\n  let str = secret + JSON.stringify(requestBody) + secret;\n\n  // 5. 构建返回对像\n  let res = {\n    // 建议保留原始json数据，方便后续节点使用\n    ...itemJson,\n    // 添加你的新字段\n    str: str,\n    page: nextPage,\n    now: toDatabaseDateTimeString(chinaTime),\n    startTime: toDatabaseDateTimeString(startTime),\n    requestBody: requestBody // 调试用，可以看到发送了什么\n  };\n\n  result.push({ json: res });\n}\n\nreturn result;"
+      },
+      "id": "8e0c7ec9-c131-436e-a7f4-d933e3d82161",
+      "name": "生成管易签名5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet pageList=[];\nfor (const item of $input.all()) {\n  for(let i=0;i<item.json.total;i++){\n    pageList.push({\n      page:i\n    })\n  }\n}\n\nreturn pageList;"
+      },
+      "id": "0966fe47-64b7-4b49-9d63-0df5da20f332",
+      "name": "Code4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c28068d8-1416-400f-9528-7e0fb9641ee2",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        112
+      ],
+      "id": "e3fb8862-9598-42ad-9f81-25d7263e1584",
+      "name": "将字符串转换成对象1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "685b5532-48b8-48b6-bc1f-29c57ecdc406",
+              "name": "platform_code",
+              "value": "={{ $json.data.delivery.platform_code }}",
+              "type": "string"
+            },
+            {
+              "id": "d039fce5-faf8-4501-994b-9229a9ec9483",
+              "name": "express_no",
+              "value": "={{ $json.data.delivery.express_no }}",
+              "type": "string"
+            },
+            {
+              "id": "f264dc0e-6415-4a99-8039-50c8b5401d68",
+              "name": "sku_code",
+              "value": "={{ $json.data.delivery.details[0].sku_code }}",
+              "type": "string"
+            },
+            {
+              "id": "b198567b-d192-4c3b-b012-5065f59f9f67",
+              "name": "unique_code",
+              "value": "={{ $json.data.delivery.details[0].detail_unique[0].unique_code }}",
+              "type": "string"
+            },
+            {
+              "id": "ea71fb08-74e4-49b4-8433-785b41fcef6c",
+              "name": "shop",
+              "value": "={{ $json.data.delivery.shop_name }}",
+              "type": "string"
+            },
+            {
+              "id": "e7454d50-f446-4919-8bb0-44a56e6d1e57",
+              "name": "delivery_date",
+              "value": "={{ $json.data.delivery.delivery_statusInfo.delivery_date }}",
+              "type": "string"
+            },
+            {
+              "id": "2ba848c0-4f8e-412f-aa15-02bc3d10a18a",
+              "name": "customer_name",
+              "value": "={{ $json.data.delivery.vip_name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        112
+      ],
+      "id": "ceafc648-d206-4859-ab6f-bc074b3cd701",
+      "name": "取出需要存储到字段1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 定义常规店铺映射 (Key: 店铺名, Value: ChannelID)\nconst shopMap = {\n  \"高驰官方旗舰店(抖音)\": 10851,\n  \"COROS天猫旗舰店\": 10587,\n  \"COROS京东旗舰店\": 10760,\n  \"COROS小红书店\": 10920,\n  \"有赞商城\": 10764,\n  \"COROS高驰微信小店\": 11049,\n  \"COROS高驰得物店\": 11048,\n  \"COROS高驰京东（供销平台）\": 10760,\n  \"COROS 高驰订货商城\": 11064,\n  \"COROS高驰智能手表旗舰店\": 11064,\n};\n\n// 2. 定义【线下渠道】的特殊客户映射\nconst offlineCustomerMap = {\n  \"飞亚达销售有限公司\": 11066,\n  \"上海蔚景商贸有限公司\": 11055,\n  \"北京京东世纪贸易有限公司\": 10931,\n  \"云南九机电子产品有限公司\": 11054,\n  \"门店经销-迪脉（上海）企业管理有限公司\": 10866,\n  \"深圳市顺电连锁股份有限公司\": 11090,\n  \"京东闪送\": 11075,\n  \"无锡汇跑体育有限公司\":11020\n};\n\n// 默认线下渠道 ID\nconst DEFAULT_OFFLINE_ID = 10470;\n\n// 3. 使用 map 遍历所有输入数据\nreturn $input.all().map(item => {\n  // 假设你的数据在 item.json 下，根据实际情况修改字段名\n  const shop = item.json.shop; \n  const customerName = item.json.customer_name;\n  \n  let channelId = null;\n\n  if (shop === \"COROS线下渠道\") {\n    // 如果是线下渠道，查 offlineMap，查不到则使用默认值\n    channelId = offlineCustomerMap[customerName] || DEFAULT_OFFLINE_ID;\n  } else if(shop==='COROS 高驰订货商城'){\n    const new_customer = Number(item.json.customer_name);\nif (isNaN(new_customer)) {\n    item.json.msg=\"customer_name不是有效的数字字符串!\"\n  // 处理转换失败的逻辑\n} else {\n   channelId=new_customer;\n}\n  }else {\n    // 如果是普通渠道，查 shopMap，查不到则为 null (或你指定的默认值)\n    channelId = shopMap[shop] || null;\n  }\n\n  // 将结果写入新的字段\n  item.json.ChannelId = channelId;\n  \n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        112
+      ],
+      "id": "dcb6fa09-28a4-4233-b8dd-1e07524861e6",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * from mes.machine_data as md join mes.retroid as r on md.retroid_id =r.retroid_id where r.retroid='{{ $json.unique_code }}' and md.procedure_detail_id='39' and r.status in (1,2)",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2608,
+        80
+      ],
+      "id": "19b8ccdd-3d7a-48a5-b19c-5b43783f84af",
+      "name": "通过SN查询对应的uuid和uuid_unique1",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "00512cd3-e60c-4512-a656-d4b3cd115387",
+              "leftValue": "={{ $json.unique_code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2352,
+        96
+      ],
+      "id": "da1fada2-131f-4797-bfc6-c0c72ae72a6e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9fd46009-44bd-4bb6-a0d2-167187b8d565",
+              "name": "uuid",
+              "value": "={{ $json.data.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "4ec1623e-5053-4b43-8c4a-93ae32054e89",
+              "name": "uuid_unique",
+              "value": "={{ $json.data.uuid.slice(0,6)+$json.data.uuid.slice(-11) }}",
+              "type": "string"
+            },
+            {
+              "id": "ecc71448-a000-4aa6-9cd5-abb500b492b4",
+              "name": "sn",
+              "value": "={{ $json.data.sn }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2768,
+        -48
+      ],
+      "id": "a6e6892a-5bb4-4af5-a291-37b10415dbdf",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst deliveryData=$('If').all();\nfor (const item of $input.all()) {\n  deliveryData.forEach(e=>{\n    if(e.json.unique_code==item.json.sn){\n      e.json.uuid=item.json.uuid;\n      e.json.uuid_unique=item.json.uuid_unique;\n    }\n  })\n}\n\nreturn deliveryData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        -48
+      ],
+      "id": "b055631c-49bb-43b4-8df9-837bf323e64a",
+      "name": "返回所有数据1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "mes_delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "mes_delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.unique_code }}",
+            "uuid": "={{ $json.uuid }}",
+            "order_number": "={{ $json.platform_code }}",
+            "express_no": "={{ $json.express_no }}",
+            "create_time": "={{ $json.delivery_date }}",
+            " uuid_unique": "={{ $json.uuid_unique }}",
+            "delivery_status": 1,
+            "channel": "={{ $json.ChannelId }}",
+            "sku_code": "={{ $json.sku_code }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " uuid_unique",
+              "displayName": " uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "box_id",
+              "displayName": "box_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3616,
+        96
+      ],
+      "id": "4b6202aa-8c88-4f75-bd52-4413ddfdac5e",
+      "name": "将数据存储到发货单中1",
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf14c046-3f94-402d-9d00-63b2dd491996",
+              "name": "errTitle",
+              "value": "数据库错误",
+              "type": "string"
+            },
+            {
+              "id": "4eb63bd1-70f9-4a08-a3ba-0661b122d993",
+              "name": "errMessage",
+              "value": "={{ $json }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5472,
+        160
+      ],
+      "id": "9c948457-83f9-4726-b283-f247c40a944f",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe329df7-bb30-4c3f-a846-b4304e8e6327",
+              "name": "errTitle",
+              "value": "管易API调用失败",
+              "type": "string"
+            },
+            {
+              "id": "a727eb29-bef9-4d18-b712-2192eaf43ec6",
+              "name": "errMessage",
+              "value": "={{ $json }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2416,
+        480
+      ],
+      "id": "2a37f445-6e6f-4b4c-8b10-2b2beeb36b50",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "411af8fb-36ec-446c-af82-68ff09968528",
+              "leftValue": "={{ $json.msg }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        112
+      ],
+      "id": "9efe34f1-4de8-4035-877c-17d677d40e53",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "22e6eed7-d468-4806-b2ba-9d25effb9ba0",
+              "name": "errTilte",
+              "value": "渠道号错误",
+              "type": "string"
+            },
+            {
+              "id": "ea4afae7-9e0c-434f-bb4a-8b95f81cb58b",
+              "name": "errMessage",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2416,
+        288
+      ],
+      "id": "2b76b793-d219-44be-a731-d4f857a022df",
+      "name": "Edit Fields9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a3717cd8-ac47-4b63-8894-77c0c925596b",
+              "name": "errTitle",
+              "value": "管易数据同步成功！",
+              "type": "string"
+            },
+            {
+              "id": "224ac1e5-903a-4401-b75e-c692f8213969",
+              "name": "errMessage",
+              "value": "={{ $input.all()[0].json.data.length }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6304,
+        -608
+      ],
+      "id": "b56bbfbe-66e4-4e20-ac9e-f8c17ffa7de1",
+      "name": "显示同步记录条数1"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "=[n8n warn] -  {{ $json.errTitle }}",
+        "html": "=已成功同步管易出货数据：{{ JSON.stringify($json.errMessage) }}！",
+        "options": {
+          "ccEmail": "luolei@coros.com"
+        }
+      },
+      "id": "e4ae63d8-b3f2-4996-bbe9-0ded705a7244",
+      "name": "发送同步记录条数1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        6608,
+        -608
+      ],
+      "retryOnFail": false,
+      "webhookId": "a350a08f-a7fc-407e-8fdd-47880088da57",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 发送同步邮件",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "7707bf98-92f3-4dcb-bcfc-fea0aea77f3d",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6512,
+        -688
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        6048,
+        -608
+      ],
+      "id": "93e8b8ac-c3ed-4b80-931c-b44b4778ca2d",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const newItems = [];\n\nfor (const item of $input.all()) {\n  // 确保数据路径正确，防止报错\n  const delivery = item.json.data && item.json.data.delivery ? item.json.data.delivery : null;\n   let orderDetails=delivery.details.map(el=>{\n    return {\n      sku_code:el.sku_code,\n      sku_name:el.sku_name,\n      quantity:el.qty,\n      price:el.price,\n      amount:el.amount\n    }\n  })\n\n  if (delivery) {\n    \n    // 1. 获取 delivery_date \n    // 注意：根据你的JSON，这个字段在 delivery_statusInfo 对象下\n    let deliveryDate = null;\n    if (delivery.delivery_statusInfo) {\n      deliveryDate = delivery.delivery_statusInfo.delivery_date;\n    }\n\n    // 2. 准备订单层级的公共数据\n    const baseInfo = {\n      platform_code: delivery.platform_code,\n      express_no: delivery.express_no,\n      shop: delivery.shop_name,\n      customer_name: delivery.vip_name,\n      delivery_date: deliveryDate  // <--- 新增字段\n    };\n\n    // 3. 遍历商品详情 details\n    if (delivery.details && Array.isArray(delivery.details)) {\n      for (const detail of delivery.details) {\n        \n        const skuCode = detail.sku_code;\n        const skuName=detail.sku_name\n\n        // 4. 遍历唯一码 detail_unique\n        if (detail.detail_unique && Array.isArray(detail.detail_unique)) {\n          for (const uniqueItem of detail.detail_unique) {\n            \n            // 5. 组合最终数据并推入数组\n            newItems.push({\n              json: {\n                ...baseInfo,             // 展开公共字段 (含 delivery_date)\n                sku_code: skuCode,       // SKU编码\n                sku_name:skuName,\n                unique_code: uniqueItem.unique_code,// 唯一码\n                watch_type:detail.item_code, //机型\n                warehouse_name:uniqueItem.warehouse_name,\n                order_details:orderDetails, //订单详情\n                payment:delivery.payment,\n                price:detail.price\n              }\n            });\n            \n          }\n        }\n      }\n    }\n  }\n}\n\nreturn newItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        -112
+      ],
+      "id": "195dc194-202b-441e-a3f8-334646100e94",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2784,
+        288
+      ],
+      "id": "2a4d54b9-fe53-480c-bdcb-d825b7a6c193",
+      "name": "Aggregate3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "519e5b04-81e9-49cd-b38f-e4e0411190d5",
+              "leftValue": "={{ $json.warehouse_name }}",
+              "rightValue": "试用样机仓",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3136,
+        -144
+      ],
+      "id": "c95b453e-807f-45a2-9381-23e9eb291bc6",
+      "name": "判断是否有试用机1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"出库成功！\",\n  \"data\":{\n    \"snList\":{{JSON.stringify($json.snList)}}\n  }\n}",
+        "options": {}
+      },
+      "id": "7b25af2c-f8d9-4383-aa08-94d98f95bd68",
+      "name": "出库成功1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        6960,
+        -992
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库出错！\"\n}",
+        "options": {}
+      },
+      "id": "2fb1329a-4456-4926-a3b2-3ee2681f5d73",
+      "name": "错误信息:数据库错误！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        7088,
+        -656
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2ea3264e-b665-435b-808b-fe033b7fc6a6",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "520d90f4-e2b5-43e0-b12a-747ea2b7f7ba",
+      "name": "判断订单表中是否存在数据1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3568,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('判断是否有试用机1').all();"
+      },
+      "id": "19b5e1a4-0be0-47bb-80d4-f4517c0f39b0",
+      "name": "处理上传的手表信息1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3632,
+        -304
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst result=[];\nconst resJson=[];\nconst now = new Date();\n const utcOffset = now.getTimezoneOffset() * 60000; // 获取UTC偏移量并转成毫秒\n  const chinaOffset = 8 * 60 * 60 * 1000;\n  const chinaTime=new Date(now.getTime() + utcOffset + chinaOffset);\n$('给出库的sn绑定价格').all()[0].json.watch_info.forEach(el=>{\n  resJson.push({\n    retroid:el.retroid,\n    channelId:$('Webhook').all()[0].json.body.channelId,\n    createTime:chinaTime\n  })\n})\nresult.push({\n  snList:resJson\n})\nreturn result;"
+      },
+      "id": "07dfc8fe-e19e-4ad1-8c47-fbd2986b3add",
+      "name": "出库成功返回这次出库信息1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6752,
+        -992
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order",
+          "mode": "list",
+          "cachedResultName": "delivery_order"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "create_time": "={{ new Date() }}",
+            "order_number": "={{ $json.platform_code }}",
+            "payment_amount": "={{ $json.payment }}",
+            "order_details": "={{ $json.order_details }}",
+            "channel_id": "={{ $json.ChannelId }}",
+            "express_no": "={{ $json.express_no }}"
+          },
+          "matchingColumns": [
+            "order_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "trial_status",
+              "displayName": "trial_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payment_amount",
+              "displayName": "payment_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_details",
+              "displayName": "order_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel_id",
+              "displayName": "channel_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d69a9c7e-f229-492d-b663-9e8f9fa2dcc3",
+      "name": "存储仓库出库的有赞订单信息1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        3408,
+        -304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "mes_delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "mes_delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.unique_code }}",
+            "uuid": "={{ $json.uuid }}",
+            "order_number": "={{ $json.platform_code }}",
+            "express_no": "={{ $json.express_no }}",
+            "create_time": "={{ new Date() }}",
+            "delivery_status": 1,
+            " uuid_unique": "={{ $json.uuid_unique }}",
+            "channel": "={{ $json.ChannelId }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " uuid_unique",
+              "displayName": " uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0e9938b6-3480-4467-b88b-ff7d7bffc76f",
+      "name": "mes存储出库信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        4784,
+        -464
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.unique_code }}",
+            "uuid": "={{ $json.uuid }}",
+            "watchtype": "={{ $json.unique_code.slice(0,3) }}",
+            "order_number": "={{ $json.platform_code }}",
+            "create_time": "={{ $now }}",
+            "watch_status": 1,
+            "sku_code": "={{ $json.sku_code }}",
+            "sku_name": "={{ $json.sku_name }}",
+            "uuid_unique": "={{ $json.uuid_unique }}",
+            "price": "={{ $json.price }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "watchtype",
+              "displayName": "watchtype",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "watch_status",
+              "displayName": "watch_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_name",
+              "displayName": "sku_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9fb02086-ae9c-4f30-a48b-2bbc6e05475c",
+      "name": "存储出货订单",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        4160,
+        -320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order",
+          "mode": "list",
+          "cachedResultName": "delivery_order"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "order_number",
+              "value": "={{ $json.platform_code }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3104,
+        -816
+      ],
+      "id": "f4235bd0-1396-44f5-8b84-689629a51423",
+      "name": "根据订单号查询是否存储过有赞订单信息1",
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        -224
+      ],
+      "id": "421ded09-62ac-4a17-a3fa-9a588e3094e9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "=consm_barcodebindinfo",
+        "updateKey": "retroid",
+        "columns": "modifytime,Channel"
+      },
+      "id": "a6ae38d4-e75c-41a5-9b71-e17ade49f2ac",
+      "name": "Microsoft SQL1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        5280,
+        -800
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $('处理上传的手表信息1').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4432,
+        -480
+      ],
+      "id": "dac3e9d2-98ec-469f-ac39-412c72588d6d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5ec90710-84c7-4eb9-83ea-f8d8722957df",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "0179ad9e-5862-48a9-85d3-8ed980739c58",
+              "name": "modifytime",
+              "value": "={{ DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss.SSS') }}",
+              "type": "string"
+            },
+            {
+              "id": "4120b44c-15d5-4103-acc7-69fb25acac79",
+              "name": "Channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5008,
+        -800
+      ],
+      "id": "2ca1f14e-8e58-475e-ad5e-2f86407c8b57",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "=consm_barcodebindinfo",
+        "updateKey": "retroid",
+        "columns": "modifytime,Channel"
+      },
+      "id": "76975616-de86-455c-99fb-7c224b9bc954",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        4240,
+        -16
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5ec90710-84c7-4eb9-83ea-f8d8722957df",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "0179ad9e-5862-48a9-85d3-8ed980739c58",
+              "name": "modifytime",
+              "value": "={{ DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss.SSS') }}",
+              "type": "string"
+            },
+            {
+              "id": "4120b44c-15d5-4103-acc7-69fb25acac79",
+              "name": "Channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3952,
+        -16
+      ],
+      "id": "b1527899-1522-4a93-b209-fb4d7ba50836",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5728,
+        -688
+      ],
+      "id": "47c80d70-eb09-431a-bf4b-b710ba86a87c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "mes_delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "mes_delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.unique_code }}",
+            "uuid": "={{ $json.uuid }}",
+            "order_number": "={{ $json.platform_code }}",
+            "express_no": "={{ $json.express_no }}",
+            "create_time": "={{ $json.delivery_date }}",
+            " uuid_unique": "={{ $json.uuid_unique }}",
+            "delivery_status": 1,
+            "channel": "={{ $json.ChannelId }}",
+            "sku_code": "={{ $json.sku_code }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " uuid_unique",
+              "displayName": " uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "box_id",
+              "displayName": "box_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4704,
+        -752
+      ],
+      "id": "8afa9690-87bd-468b-84ff-4a8bcbc43e73",
+      "name": "将数据存储到发货单中",
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto3": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名3": {
+      "main": [
+        [
+          {
+            "node": "Crypto3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto4": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息4": {
+      "main": [
+        [
+          {
+            "node": "将字符串转换成对象1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名4": {
+      "main": [
+        [
+          {
+            "node": "Crypto4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto5": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息5": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名5": {
+      "main": [
+        [
+          {
+            "node": "Crypto5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将字符串转换成对象1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "通过SN查询对应的uuid和uuid_unique1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "通过SN查询对应的uuid和uuid_unique1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "返回所有数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回所有数据1": {
+      "main": [
+        [
+          {
+            "node": "判断是否有试用机1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将数据存储到发货单中1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields9": {
+      "main": [
+        [
+          {
+            "node": "Aggregate3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "显示同步记录条数1": {
+      "main": [
+        [
+          {
+            "node": "发送同步记录条数1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "显示同步记录条数1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate3": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有试用机1": {
+      "main": [
+        [
+          {
+            "node": "存储仓库出库的有赞订单信息1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "将数据存储到发货单中1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "出库成功返回这次出库信息1": {
+      "main": [
+        [
+          {
+            "node": "出库成功1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存储仓库出库的有赞订单信息1": {
+      "main": [
+        [
+          {
+            "node": "处理上传的手表信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mes存储出库信息": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "存储出货订单": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "返回所有数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理上传的手表信息1": {
+      "main": [
+        [
+          {
+            "node": "存储出货订单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "将数据存储到发货单中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将数据存储到发货单中": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        6
+      ]
+    },
+    "node:Schedule Trigger1": {
+      "recurrenceRules": [
+        6
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000007",
+          "unique_code": "W35A030958",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "0331564642030AD89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000007",
+          "unique_code": "W35A012223",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "4CD9494453042AE89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000007",
+          "unique_code": "W35A012705",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "3CD27646138420D89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000007",
+          "unique_code": "W35A007353",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "F80DA54B10839AC89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000007",
+          "unique_code": "W35A009157",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "E8CB254F010492C89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000007",
+          "unique_code": "W35AP10057",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "D91E999C01B880D7C"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000007",
+          "unique_code": "W35A009604",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "02DAC3495F0448A88"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B016813",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "C50DCB4C138590489"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B030228",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "DA818C3A1086CA18B"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B019912",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "CF8119431F0288188"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B025220",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "FC2A2048440472B89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B022569",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "925AC140530318C89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B042229",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "26E70E364F8632E8A"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B027112",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "8C92E2435F82D0088"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSR400000006",
+          "unique_code": "W35B042214",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "D94A8C4D508288A89"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW541000010",
+          "unique_code": "W51A015710",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "B76A714C5E8512C88"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW541000010",
+          "unique_code": "W51A018688",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "7561D64B4084B0989"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW541000010",
+          "unique_code": "W51A016754",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "D715A7444F0440388"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW541000010",
+          "unique_code": "W51A017605",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "5C461749408472089"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW541000011",
+          "unique_code": "W51B004827",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "43EFB713478072A87"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW541000011",
+          "unique_code": "W51B012543",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "872B3F4D52833A189"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW541000011",
+          "unique_code": "W51B012532",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "62D2C3490F8372088"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000013",
+          "unique_code": "W92AP50266",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "0684B88C4F384237B"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000013",
+          "unique_code": "W92A002686",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "9C96F849563962883"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000013",
+          "unique_code": "W92AP50107",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "649D43834F397067B"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000013",
+          "unique_code": "W92AF00177",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "5928568452B97037C"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000015",
+          "unique_code": "W92C007996",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "52D8DE4C0E84D0C88"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000015",
+          "unique_code": "W92C008067",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "32909D4D5F053AC88"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000015",
+          "unique_code": "W92C003867",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "F2B2380805387067C"
+        }
+      },
+      {
+        "json": {
+          "platform_code": "REDACTED",
+          "express_no": "SF3264644732664",
+          "shop": "有赞商城",
+          "customer_name": "$uEHzuwh1HyWA2kDypErPHQ==$1$",
+          "delivery_date": "2026-01-28 19:43:59",
+          "sku_code": "GSW942000015",
+          "unique_code": "W92CE00056",
+          "warehouse_name": "试用样机仓",
+          "order_details": [
+            {
+              "sku_code": "GSR400000007",
+              "sku_name": "W335黑色硅胶",
+              "quantity": 7,
+              "price": "0.03",
+              "amount": "0.21"
+            },
+            {
+              "sku_code": "GSR400000006",
+              "sku_name": "W335白色硅胶",
+              "quantity": 8,
+              "price": "0.03",
+              "amount": "0.24"
+            },
+            {
+              "sku_code": "GSW541000010",
+              "sku_name": "W541黑色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW541000011",
+              "sku_name": "W541白色",
+              "quantity": 3,
+              "price": "0.03",
+              "amount": "0.09"
+            },
+            {
+              "sku_code": "GSW942000013",
+              "sku_name": "W942绿色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            },
+            {
+              "sku_code": "GSW942000015",
+              "sku_name": "W942棕色",
+              "quantity": 4,
+              "price": "0.03",
+              "amount": "0.12"
+            }
+          ],
+          "payment": "0.9",
+          "ChannelId": 10764,
+          "uuid": "REDACTED",
+          "uuid_unique": "0A77E6810EB82237B"
+        }
+      }
+    ],
+    "Schedule Trigger1": [
+      {
+        "json": {
+          "timestamp": "2026-02-04T18:00:48.007+08:00",
+          "Readable date": "February 4th 2026, 6:00:48 pm",
+          "Readable time": "6:00:48 pm",
+          "Day of week": "Wednesday",
+          "Year": "2026",
+          "Month": "February",
+          "Day of month": "04",
+          "Hour": "18",
+          "Minute": "00",
+          "Second": "48",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "mes存储出库信息": [
+      {
+        "json": {
+          "id": 662526,
+          "retroid": "W51A018933",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124387127089",
+          "create_time": "2026-02-04T10:00:56.381Z",
+          "delivery_status": 1,
+          " uuid_unique": "A38FAC4E430532C89",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662527,
+          "retroid": "W92CE00865",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5109057661740",
+          "create_time": "2026-02-04T10:00:56.383Z",
+          "delivery_status": 1,
+          " uuid_unique": "70CA924C463948483",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662528,
+          "retroid": "M18EJ58219",
+          "uuid": null,
+          "order_number": "REDACTED",
+          "express_no": "SF5124387383270",
+          "create_time": "2026-02-04T10:00:56.385Z",
+          "delivery_status": 1,
+          " uuid_unique": null,
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662529,
+          "retroid": "W35A032565",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124387381526",
+          "create_time": "2026-02-04T10:00:56.388Z",
+          "delivery_status": 1,
+          " uuid_unique": "B107CC4F5182D2889",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662530,
+          "retroid": "H31AE90007",
+          "uuid": null,
+          "order_number": "REDACTED",
+          "express_no": "SF5124387597003",
+          "create_time": "2026-02-04T10:00:56.389Z",
+          "delivery_status": 1,
+          " uuid_unique": null,
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662531,
+          "retroid": "W31AF26058",
+          "uuid": null,
+          "order_number": "REDACTED",
+          "express_no": "SF5109057642547",
+          "create_time": "2026-02-04T10:00:56.390Z",
+          "delivery_status": 1,
+          " uuid_unique": null,
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662532,
+          "retroid": "W51A018609",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124387543332",
+          "create_time": "2026-02-04T10:00:56.392Z",
+          "delivery_status": 1,
+          " uuid_unique": "70DEE1411084BA389",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662533,
+          "retroid": "W35B017638",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124389745364",
+          "create_time": "2026-02-04T10:00:56.393Z",
+          "delivery_status": 1,
+          " uuid_unique": "BC27394452030A389",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662534,
+          "retroid": "W35B004236",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124353668453",
+          "create_time": "2026-02-04T10:00:56.394Z",
+          "delivery_status": 1,
+          " uuid_unique": "F2C669325E850AB88",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662535,
+          "retroid": "W35A033782",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124353685695",
+          "create_time": "2026-02-04T10:00:56.395Z",
+          "delivery_status": 1,
+          " uuid_unique": "9C2C7947520258189",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662536,
+          "retroid": "W51B007970",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124591866458",
+          "create_time": "2026-02-04T10:00:56.396Z",
+          "delivery_status": 1,
+          " uuid_unique": "24D7EB4C110260F89",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662537,
+          "retroid": "W31AJ01712",
+          "uuid": null,
+          "order_number": "REDACTED",
+          "express_no": "SF5124591866273",
+          "create_time": "2026-02-04T10:00:56.398Z",
+          "delivery_status": 1,
+          " uuid_unique": null,
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      },
+      {
+        "json": {
+          "id": 662538,
+          "retroid": "W35A011181",
+          "uuid": "REDACTED",
+          "order_number": "REDACTED",
+          "express_no": "SF5124506402136",
+          "create_time": "2026-02-04T10:00:56.399Z",
+          "delivery_status": 1,
+          " uuid_unique": "EC20314502846AE89",
+          "channel": "10764",
+          "sku_code": null,
+          "box_id": null,
+          "record_create_time": "2026-02-04T02:00:56.401Z"
+        }
+      }
+    ]
+  },
+  "versionId": "0394dd2a-6c02-46da-b5b1-559dd416abf9",
+  "activeVersionId": "0394dd2a-6c02-46da-b5b1-559dd416abf9",
+  "versionCounter": 435,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-12-17T02:08:54.870Z",
+      "createdAt": "2025-12-17T02:08:54.870Z",
+      "role": "workflow:owner",
+      "workflowId": "L2zaEktfYXQm5tlE",
+      "projectId": "tWCIm1YoFSonVJe1",
+      "project": {
+        "updatedAt": "2025-05-08T05:37:40.946Z",
+        "createdAt": "2025-05-08T05:37:31.597Z",
+        "id": "tWCIm1YoFSonVJe1",
+        "name": "仓库出入库",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "layer-group"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

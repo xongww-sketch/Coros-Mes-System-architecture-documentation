@@ -1,0 +1,545 @@
+{
+  "updatedAt": "2026-01-06T11:16:48.428Z",
+  "createdAt": "2025-01-13T07:22:54.606Z",
+  "id": "pFtxRBG2y6gnbpDO",
+  "name": "getPrintByWork",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "16288217-7f26-4f1e-bc3c-780bff5eb53c",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c0455450-9c4e-4315-b2a4-822ad275857e",
+      "name": "判断参数是否合法",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1392,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "path": "print/getPrintModel",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1edca99e-0e0f-4c8a-adfa-e398ed177d05",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        848,
+        544
+      ],
+      "webhookId": "12d1f0ba-8469-4e49-9054-00463630c8f5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet res={};\nfor (const item of $input.all()) {\n  if(item.json.query.ticketNo){\n    res.ticketNo=item.json.query.ticketNo;\n    res.printType=item.json.query.printType;\n    res.printSecond=item.json.query.printSecond;\n    res.code=1;\n  }else{\n    res.code=2;\n    res.message='订单号不能为空！'\n  }\n  \n}\n\nreturn res;"
+      },
+      "id": "de62374a-429d-4cf3-ab91-77c5e8bd63a6",
+      "name": "参数校验",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{{ JSON.stringify($json) }}\n} ",
+        "options": {}
+      },
+      "id": "01e2e69b-cc21-48aa-a520-f73321670738",
+      "name": "返回查询结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3600,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "99cd5a54-96e1-4bb0-9470-9bd64e39b412",
+      "name": "返回查询结果1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlStr }}",
+        "options": {}
+      },
+      "id": "f3ac8cae-9f17-4297-b03c-bce67e393be3",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1824,
+        384
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateSQL(printType, ticketNo, printSecond) {\n    // 1. 基础字段选择\n    // 为了防止字段名冲突，我们明确指定表别名\n    let selectFields = `\n        j.joborder_number,\n        pi.product_code,\n        pi.product_color,\n        hpl.procedure_detail_id,\n        hpl.user_id,\n        p1.file_name AS file_name_main \n    `;\n\n    // 2. 基础表连接\n    let fromClause = `\n        FROM mes.joborder AS j\n        LEFT JOIN mes.product_info AS pi ON pi.product_id = j.product_id\n        -- 优化：只取需要的字段进行子查询，提高性能\n        LEFT JOIN (\n            SELECT procedure_list_id, procedure_detail_id, user_id,\n                   ROW_NUMBER() OVER (PARTITION BY procedure_list_id ORDER BY createtime DESC) AS rn \n            FROM mes.history_procedure_list\n        ) hpl ON j.procedure_list_id = hpl.procedure_list_id AND hpl.rn = 1\n    `;\n\n    // 3. 处理打印模版逻辑\n    let joinClause = \"\";\n    \n    // 强制类型转换，确保比较准确\n    printType = Number(printType);\n    printSecond = Number(printSecond);\n\n    // 确定主模版连接的字段 (printType 1=ID, 2=BoxID)\n    let mainJoinField = (printType === 2) ? \"j.printinfobox_id\" : \"j.printinfo_id\";\n\n    // 连接主打印模版表 (p1)\n    joinClause += ` LEFT JOIN mes.printinfo AS p1 ON ${mainJoinField} = p1.printinfo_id `;\n\n    // 4. 判断是否需要获取第二个模版\n    if (printSecond === 1) {\n        // 增加第二个文件名字段\n        selectFields += `, p2.file_name AS file_name_second `;\n        // 连接副打印模版表 (p2)，假设副ID字段仅在 printType=1 时有效，或者通用\n        // 如果 printType=2 也就是外箱也需要两个模版，逻辑同理\n        joinClause += ` LEFT JOIN mes.printinfo AS p2 ON j.printinfo_second_id = p2.printinfo_id `;\n    } else {\n        // 如果不需要，可以置空或者不需要处理，SQL保持清爽\n        selectFields += `, NULL AS file_name_second `; \n    }\n\n    // 5. 组装 SQL\n    // 简单的防注入处理 (如果 ticketNo 可能包含单引号)\n    let safeTicketNo = ticketNo.replace(/'/g, \"''\");\n    \n    let sql = `SELECT ${selectFields} ${fromClause} ${joinClause} WHERE j.joborder_number = '${safeTicketNo}' AND j.status = 1`;\n\n    return sql;\n}\n\n// 结果数组\nlet results = [];\n\nfor (const item of $input.all()) {\n    // 获取参数并生成SQL\n    let sqlStr = generateSQL(\n        item.json.printType, \n        item.json.ticketNo, \n        item.json.printSecond\n    );\n    \n    // 将结果存入数组，保留对应的 ticketNo 以便区分\n    results.push({\n        ticketNo: item.json.ticketNo,\n        sqlStr: sqlStr\n    });\n}\n\n// 返回处理后的数组\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        384
+      ],
+      "id": "d013ac2b-f920-4026-a122-1fc5397b6f3e",
+      "name": "拼接SQL语句"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_detail",
+          "mode": "list",
+          "cachedResultName": "procedure_detail"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_detail_id",
+              "value": "={{ $json.list }}"
+            },
+            {
+              "column": "status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3120,
+        272
+      ],
+      "id": "725b5e1f-d32d-49aa-a4af-15fd1345d13a",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.list=JSON.parse(item.json.procedure_detail_id);\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        272
+      ],
+      "id": "7e4a2dc6-26b8-4388-96e6-fcb91dab914a",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        272
+      ],
+      "id": "6ae96d93-3f57-43d7-b453-39abd2c9ef2d",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = {};\n// 提前缓存需要重复访问的数据\nconst returnData = $(\"返回数据\").all()[0]?.json || {};\nconst { printType } = $('Webhook').all()[0]?.json?.query || {};\n\n// 当不存在 printType 时直接返回\nif (typeof printType === 'undefined') return res;\n\n// 使用解构赋值和逻辑映射优化条件判断\nconst CONDITION_MAP = {\n  '制箱、扫描、装箱、封箱': 2,\n  '彩盒打印、贴贴纸、对号': 1\n};\n\nfor (const item of $input.all()) {\n  const { procedure_name, procedure_detail_id } = item.json;\n  // 通过映射表进行条件匹配\n  if (CONDITION_MAP[procedure_name] == printType) {\n    Object.assign(res, {\n      procedure_id: procedure_detail_id,\n      ticketNo: returnData.ticketNo,\n      path: returnData.path,\n      second_path:returnData.second_path,\n      product_code:returnData.product_code,\n      product_color:returnData.product_color,\n      user_id: returnData.user_id\n    });\n    // 如需优先取第一个匹配项可在此处 break\n  }\n}\n\nreturn res;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3344,
+        272
+      ],
+      "id": "5dcdde36-e5b4-42d8-a31d-3d28c8d6a20d",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "137ed774-8bf1-4e98-aa0a-d3421d931e94",
+              "name": "ticketNo",
+              "value": "={{ $json.joborder_number}}",
+              "type": "string"
+            },
+            {
+              "id": "0f9421bb-311b-42a9-acfc-5ef07799a06d",
+              "name": "path",
+              "value": "=/printinfo/{{$json.file_name_main}}",
+              "type": "string"
+            },
+            {
+              "id": "3d9b5c64-2fd5-48be-8de7-75275f09c8e2",
+              "name": "procedure_detail_id",
+              "value": "={{ $json.procedure_detail_id.procedure_detail_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b3d70686-4c59-4847-a0ec-40cb56640ecc",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "42886def-87a3-4401-8c94-5e6ea61d8500",
+              "name": "product_code",
+              "value": "={{ $json.product_code }}",
+              "type": "string"
+            },
+            {
+              "id": "0b4d7aab-106c-4580-b833-6e4049ec3bb6",
+              "name": "product_color",
+              "value": "={{ $json.product_color }}",
+              "type": "string"
+            },
+            {
+              "id": "fe930337-e732-4eef-b7c9-07289511ecd7",
+              "name": "second_path",
+              "value": "=/printinfo/{{$json.file_name_second}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "86f0454d-30f2-46ba-83b8-de43ebe61105",
+      "name": "返回数据",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2384,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a92bc278-1b65-424e-ba7a-f15ffae37831",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2128,
+        384
+      ],
+      "id": "ae894328-4b6f-40ab-bd4a-68271c66db05",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 201,\n  \"message\":\"工单对应模版信息不存在！\"\n}",
+        "options": {}
+      },
+      "id": "1c6fb20d-092f-4f85-9067-7a664c5f270b",
+      "name": "返回查询结果2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2384,
+        464
+      ]
+    }
+  ],
+  "connections": {
+    "判断参数是否合法": {
+      "main": [
+        [
+          {
+            "node": "拼接SQL语句",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回查询结果1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数校验",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数校验": {
+      "main": [
+        [
+          {
+            "node": "判断参数是否合法",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回查询结果1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拼接SQL语句": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回数据": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "返回查询结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "返回数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回查询结果2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "返回查询结果1": [
+      {
+        "json": {
+          "code": 2,
+          "message": "工单号不能为空！"
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.203",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "user-agent": "got (https://github.com/sindresorhus/got)"
+          },
+          "params": {},
+          "query": {
+            "ticketNo": "5000000290",
+            "printType": "1",
+            "printSecond": 1
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/print/getPrintModel",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "e839d100-77c3-4d76-bc12-1765836cb537",
+  "activeVersionId": "e839d100-77c3-4d76-bc12-1765836cb537",
+  "versionCounter": 80,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-06-18T07:28:44.090Z",
+      "createdAt": "2025-06-18T07:28:44.090Z",
+      "role": "workflow:owner",
+      "workflowId": "pFtxRBG2y6gnbpDO",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

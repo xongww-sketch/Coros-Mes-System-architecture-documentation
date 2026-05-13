@@ -1,0 +1,873 @@
+{
+  "updatedAt": "2025-07-10T02:40:26.166Z",
+  "createdAt": "2024-08-06T07:07:52.694Z",
+  "id": "4muwK0TXVmlqURDG",
+  "name": "MesLoginApi",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请输入正确的用户名或密码\"\n}",
+        "options": {}
+      },
+      "id": "9e4fa511-94a8-4a65-8bcb-ed20697b5868",
+      "name": "报错信息：用户名或密码错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d22522c0-045b-4102-8e7e-5196bad7be61",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d7660a84-02fe-466a-81dc-1e402aced1e9",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c5c1b363-5b5a-4a79-8240-315d35009c43",
+      "name": "判断用户是否存在或密码是否匹配",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        368,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "590e69b3-4bc8-4e4c-aa52-b49a21dcb9e9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8c0a4361-b981-4596-9a41-63fe8e98e4cb",
+      "name": "判断数据是否更新成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] - Mes_Inquire_Login_API接口失败",
+        "options": {}
+      },
+      "id": "69cedbaf-d5d5-4c91-987a-b823bd74d1a6",
+      "name": "数据库插入失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1344,
+        352
+      ],
+      "webhookId": "9773d75d-fe7c-4578-9c77-5c9079759306",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \n    \"code\": \"200\",\n    \"token\":\"{{$json.token}}\",\n    \"token_expire\":\"{{$json.token_expire}}\",\n    \"user_id\":\"{{$json.user_id}}\"\n}\n  \n",
+        "options": {}
+      },
+      "id": "783df5c3-f834-4353-9a70-00cd7ceb5e21",
+      "name": "成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "=POST",
+        "path": "Mes_Login_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7777eaf5-7039-4a82-b476-919b6bb1d699",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        272
+      ],
+      "webhookId": "0bf76942-2c46-4041-ad53-6c221c744b78"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "user",
+          "mode": "list",
+          "cachedResultName": "user"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "user_name",
+              "value": "={{ $json.body.username }}"
+            },
+            {
+              "column": "password",
+              "value": "={{ $json.body.password }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c19b273-88be-4ceb-af24-09118a9e0504",
+      "name": "查询是否存在相关用户名以及密码是否正确",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        144,
+        272
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \n    \"code\": \"200\"\n}\n  \n",
+        "options": {}
+      },
+      "id": "8c9a970d-f0f3-48bf-9788-ca0eb8e89b57",
+      "name": "成功1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "3a84f76c-1aeb-42ca-afae-5db457138a05",
+              "leftValue": "={{ $json.body.user_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "34745eff-2921-4914-b356-b7dfd7823a18",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        64,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "9d4ea458-26e2-4ca7-add1-699d0ec2c7c1",
+              "leftValue": "={{ $json.body.username }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7669781b-f4cb-439d-922c-8737a184f043",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"登录已过期，请重新登录\"\n}",
+        "options": {}
+      },
+      "id": "d0755f37-d7ee-4ce6-922b-32b11bfb720f",
+      "name": "报错信息：登录已过期，请重新登录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c6702350-bbff-4ea6-8b04-9d5b1af699cb",
+              "leftValue": "={{ $json.token }}",
+              "rightValue": "={{ $('Webhook').item.json.body.token }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d8009d32-c60c-4d4a-bbee-6291a081e90b",
+              "leftValue": "={{ Number($json.token_expire)}}",
+              "rightValue": "={{ Number($json.now) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "68df3854-c703-461b-8ded-4513b3f69e9d",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        704,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $now }}",
+        "format": "x",
+        "outputFieldName": "now",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "id": "0b3fb1a9-4c8c-42ce-9cd1-3a61794c7a8e",
+      "name": "Date & Time",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        592,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "user",
+          "mode": "list",
+          "cachedResultName": "user"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.id }}",
+            "token": "REDACTED",
+            "token_expire": "={{($now + 2 * 60 * 60 * 1000)}}"
+          },
+          "matchingColumns": [
+            "user_id"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "role_id",
+              "displayName": "role_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createuser",
+              "displayName": "createuser",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "password",
+              "displayName": "password",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "token_expire",
+              "displayName": "token_expire",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9928dfe5-4128-469e-993a-5343e92916d1",
+      "name": "更新Token以及时间",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        960,
+        272
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "user",
+          "mode": "list",
+          "cachedResultName": "user"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.body.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3ae06235-c45b-43b4-bbac-fa99834b14d6",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        304,
+        464
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.token_expire }}",
+        "format": "x",
+        "outputFieldName": "token_expire",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "id": "b8adacdf-f64c-4a19-8fa8-b3bca6f3defb",
+      "name": "Date & Time1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        448,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从JSON中获取username和password\nconst username = $input.all()[0].json.user_name;\nconst password = $input.all()[0].json.password;\nconst id = $input.all()[0].json.user_id;\n\nfunction generateToken() {\n  // 生成随机token\n  const token = Math.random().toString(36).substr(2);\n  \n\n  return {\n    id: id,\n    username: username,\n    password: password,\n    token: token,\n  };\n}\n\n// 调用函数并输出结果\nconst result = generateToken();\nreturn result;\n\n\n\n\n  \n"
+      },
+      "id": "eaaff77f-b91a-439a-b593-78840405fd5b",
+      "name": "生成token以及token时效",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d7b8dc1-f1b9-4bb5-92da-6c37ed3d55ea",
+              "name": "token",
+              "value": "={{ $json.token }}",
+              "type": "string"
+            },
+            {
+              "id": "eac77141-43d0-4612-9baa-8289e4e64665",
+              "name": "tokenExpire",
+              "value": "={{ $json.tokenExpire }}",
+              "type": "string"
+            },
+            {
+              "id": "4118d117-55b5-4116-b658-3f7b4e9759cf",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        272
+      ],
+      "id": "07465c72-f61d-4d60-8b31-8bd469f329f8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请输入用户名和密码\"\n}",
+        "options": {}
+      },
+      "id": "52fb8c2b-e416-469d-8dfb-055d9c08935f",
+      "name": "报错信息：请输入用户名和密码",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        656
+      ]
+    }
+  ],
+  "connections": {
+    "判断用户是否存在或密码是否匹配": {
+      "main": [
+        [
+          {
+            "node": "生成token以及token时效",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：用户名或密码错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据是否更新成功": {
+      "main": [
+        [
+          {
+            "node": "成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库插入失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询是否存在相关用户名以及密码是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断用户是否存在或密码是否匹配",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请输入用户名和密码",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "查询是否存在相关用户名以及密码是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "成功1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：登录已过期，请重新登录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新Token以及时间": {
+      "main": [
+        [
+          {
+            "node": "判断数据是否更新成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成token以及token时效": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "更新Token以及时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.31.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "33",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "username": null,
+            "password": null
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/Mes_Login_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "5cd58a22-ccd2-46a9-837f-945f402eaee8",
+  "activeVersionId": "5cd58a22-ccd2-46a9-837f-945f402eaee8",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:43:55.528Z",
+      "createdAt": "2025-04-24T03:43:55.528Z",
+      "role": "workflow:owner",
+      "workflowId": "4muwK0TXVmlqURDG",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

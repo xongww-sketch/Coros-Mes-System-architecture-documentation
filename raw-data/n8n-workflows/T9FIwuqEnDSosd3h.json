@@ -1,0 +1,335 @@
+{
+  "updatedAt": "2025-04-24T07:13:50.223Z",
+  "createdAt": "2025-04-14T02:20:55.341Z",
+  "id": "T9FIwuqEnDSosd3h",
+  "name": "bind_ip_to_led",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/resource/bindIPToLed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ff016c41-259e-465d-86bc-f53d2ea0e877",
+      "name": "Webhook",
+      "webhookId": "89d583e4-f5d7-4168-b4f5-e3ed72ececc2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "adf4aa6d-552c-4169-97f3-46e5d0483ca0",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "d499aadd-1562-4704-b737-187d43869d9c",
+      "name": "判断参数结果"
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = {\n    code: 200,\n    message: '验证通过',\n    errors: []\n};\n\n// 检查IP地址和mac地址非空且符合要求\nfor (const item of $input.all()) {\n    const req = item.json.query;\n    if (!isIPAddress(req.ip)) {\n        result.errors.push(`IP地址不合法: ${req.ip}`);\n    }\n}\n\n// 如果有错误，更新返回码和消息\nif (result.errors.length > 0) {\n    result.code = 201;\n    result.message = '参数验证失败';\n}\n\n// 检验是否是合法的IP地址\nfunction isIPAddress(ip) {\n    const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])){3}$/;\n    return ipv4Regex.test(ip);\n}\n\n// 检验是否是合法的MAC地址\nfunction isValidMAC(mac) {\n    // 带统一分隔符（冒号或连字符）\n    const hasSeparator = /^([0-9A-F]{2})([:-])([0-9A-F]{2}\\2){4}[0-9A-F]{2}$/i.test(mac);\n    // 不带分隔符（12位十六进制）\n    const noSeparator = /^[0-9A-F]{12}$/i.test(mac);\n    return hasSeparator || noSeparator;\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "184e6288-95d0-4ae2-8e59-a1c58a99d556",
+      "name": "检查ip地址是否正确"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        120
+      ],
+      "id": "d071a7e9-c4c5-4d88-9a2c-2f17df4d20f4",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "=/home/active_led.sh {{ $json.ip }}"
+      },
+      "id": "03587da6-5aec-43d4-94a4-d6ebf05862c4",
+      "name": "SSH",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -60
+      ],
+      "notesInFlow": false,
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "Q7v8IjunkfcNBrdw",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"指示灯已亮！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1480,
+        -160
+      ],
+      "id": "491d88df-2500-49af-9830-78fa96ea3485",
+      "name": "错误：资源已经初始化1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1dff8c6-0c3d-4dd2-b6af-7448ba85b40d",
+              "name": "ip",
+              "value": "={{ $('Webhook').all()[0].json.query.ip }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        -60
+      ],
+      "id": "4e9757f4-b49a-4a68-bf4d-d83a695bda69",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "74874b45-a546-4b2b-b5a4-ac6aefdd7cf7",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1160,
+        -60
+      ],
+      "id": "48eb3c17-2678-4e0f-bda2-199f21a1bd1d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"远程服务出错，请联系系统管理员！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1480,
+        20
+      ],
+      "id": "61e1d7f0-075f-4a0a-a8e8-a1d23052e6bc",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "检查ip地址是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查ip地址是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断参数结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数结果": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SSH": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "SSH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "错误：资源已经初始化1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.25.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "ip": "192.168.32.168"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/bindIPToLed",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "5244740f-a5c2-439f-9817-6b0fa48ebd7e",
+  "activeVersionId": "5244740f-a5c2-439f-9817-6b0fa48ebd7e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T07:13:35.198Z",
+      "createdAt": "2025-04-24T07:13:35.198Z",
+      "role": "workflow:owner",
+      "workflowId": "T9FIwuqEnDSosd3h",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

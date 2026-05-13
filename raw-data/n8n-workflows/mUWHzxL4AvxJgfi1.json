@@ -1,0 +1,3346 @@
+{
+  "updatedAt": "2026-03-13T19:51:25.521Z",
+  "createdAt": "2024-03-22T02:23:23.120Z",
+  "id": "mUWHzxL4AvxJgfi1",
+  "name": "拉取每日已激活设备接口",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "4f5db1fc-5a65-4188-ad22-15ade86ebaa6",
+      "name": "Date & Time",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "75e3db51-ec20-47cd-a290-a5a32a34ab17",
+      "name": "Date & Time2",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "216f5f81-6901-4236-b557-2e9eba406465",
+      "name": "Date & Time3",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }}T00:00:00.000Z",
+              "type": "string"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }}T23:59:59.999Z",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "493cdd3a-6d4b-429e-9960-ce16220ed59d",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -224,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "3d94e3b1-ea47-48eb-ac9f-e1ea7cc3d62a",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "id": "31f7a2c9-2ab0-4275-9a17-4b559c4a2458",
+      "name": "定时触发-中国",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 16
+            }
+          ]
+        }
+      },
+      "id": "45740771-8090-4f85-ba4e-4047fddc8482",
+      "name": "定时触发-欧美",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -848,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "5522ae88-aae6-40b7-b107-c536d3f5fede",
+      "name": "Split Out1",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -656
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "c2eae938-49d5-4de3-888b-a045d89ae69e",
+      "name": "Split Out2",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "24a372aa-cde1-4b19-8968-1ccee9dea806",
+      "name": "Loop Over Items3",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        544,
+        -656
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "1604305f-1d3b-454a-8e86-1acb028322e1",
+      "name": "Split Out3",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        144,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://simpleadmincn.coros.com/coros/admin/device/activate/findByTime?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startDate\": \"{{ $json.startdate }}\",\n  \"endDate\": \"{{ $json.enddate }}\"\n}    ",
+        "options": {}
+      },
+      "id": "5bba5fd1-c1f9-4f4f-860f-788e04e266f3",
+      "name": "国内激活设备获取",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -16,
+        384
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://simpleadmin.coros.com/coros/admin/device/activate/findByTime?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startDate\":\"{{ $json.startdate }}\",\n  \"endDate\":\"{{ $json.enddate }}\"\n}   ",
+        "options": {}
+      },
+      "id": "d768e45e-874d-4a22-a583-5c4279b643cc",
+      "name": "北美正式服激活设备获取",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -80,
+        -656
+      ],
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "activation_records",
+          "mode": "list",
+          "cachedResultName": "activation_records"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "deactivestatus",
+              "condition": "IS NULL"
+            },
+            {
+              "column": "retroid",
+              "value": "={{ $json.SN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b6ab0587-285a-438d-bc8b-a31895e8f316",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1520,
+        -720
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "activation_records",
+          "mode": "list",
+          "cachedResultName": "activation_records"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "activatetime": "={{ $json.activateDay }}",
+            "city": "={{ $json.city }}",
+            "country_code": "={{ $json.countryCode }}",
+            "email": "={{ $json.email }}",
+            "expirestime": "={{ $json.expiresTime }}",
+            "firmware_type": "={{ $json.firmwareType }}",
+            "ip_address": "={{ $json.ipAddress }}",
+            "remain_warranty_days": "={{ $json.remainWarrantyDays }}",
+            "user_id": "={{ $json.userId }}",
+            "retroid": "={{ $json.SN }}",
+            "uuid": "={{ $json.uuid }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "activatetime",
+              "displayName": "activatetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "clienttype_name",
+              "displayName": "clienttype_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country_code",
+              "displayName": "country_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expirestime",
+              "displayName": "expirestime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "firmware_type",
+              "displayName": "firmware_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ip_address",
+              "displayName": "ip_address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remain_warranty_days",
+              "displayName": "remain_warranty_days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deactivestatus",
+              "displayName": "deactivestatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7eb0759c-3e3f-4ae6-8c65-f9bf1ef47e06",
+      "name": "数据库插入数据",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1984,
+        -720
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('Edit Fields').all();"
+      },
+      "id": "e87fea71-8029-4e6a-90e3-84b0a7f6da5a",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "[n8n warn] - 激活异常数据-US-拉取每日已激活设备接口",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "d73ed955-c57f-4cf8-92a4-6e3d1d4b9178",
+      "name": "重复激活设备",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1152,
+        -928
+      ],
+      "webhookId": "37896cc4-e916-489c-89e9-be3970b782fa",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0d0d808b-f5ed-4d97-8e47-c9d48d97b035",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "68e52cc8-f4af-4cc1-ac8c-8325a1828066",
+      "name": "判断是否有激活记录",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a93c7990-31bd-4071-bf9a-a893967b784e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ea344271-deed-489c-8725-b2f3434de40e",
+      "name": "判断是否激活成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://simpleadmineu.coros.com/coros/admin/device/activate/findByTime?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startDate\": \"{{ $json.startdate }}\",\n  \"endDate\": \"{{ $json.enddate }}\"\n}  ",
+        "options": {}
+      },
+      "id": "ee7dc8ca-fdb6-4b67-bea5-3ff09f457ca4",
+      "name": "欧洲正式服激活设备获取",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -80,
+        -480
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }}T00:00:00.000Z",
+              "type": "string"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }}T23:59:59.999Z",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c5a84d55-08d8-4927-9fb5-84f2bf2c3f9d",
+      "name": "日期格式转换-海外",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -304,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] -  激活设备获取失败",
+        "html": "=",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "bc30f598-4683-47d5-9b79-d78072af3b7f",
+      "name": "接口调取失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        624
+      ],
+      "webhookId": "f16941ba-5adb-437c-b1ff-c01583397dc0",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8655cf4a-34fd-4ac4-8bad-51ef88ef46c2",
+              "name": "=SN",
+              "value": "={{ $json.retroId }}",
+              "type": "string"
+            },
+            {
+              "id": "12a17502-e663-48c7-97fc-f3f22bb84549",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "d793667a-55fc-4da7-bec2-19264688c271",
+              "name": "activateDay",
+              "value": "={{ $json.activateTimeLong }}",
+              "type": "string"
+            },
+            {
+              "id": "f3891905-483b-4627-87b0-7057e4e32947",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "9aed4cba-3813-4846-a3d0-d85d529ac2cb",
+              "name": "countryCode",
+              "value": "=US",
+              "type": "string"
+            },
+            {
+              "id": "e1bb19fd-f091-4b83-9c61-cf3f1219b071",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "c2fa67d3-801c-48b6-af22-1ede6b0da1f3",
+              "name": "expiresTime",
+              "value": "={{ $json.expiresTime }}",
+              "type": "string"
+            },
+            {
+              "id": "ebadccc1-d0cd-45a1-bf23-09d2721b66a7",
+              "name": "firmwareType",
+              "value": "={{ $json.firmwareType }}",
+              "type": "string"
+            },
+            {
+              "id": "a27af9fb-c3b3-4c56-9c26-e56da7e1ee85",
+              "name": "ipAddress",
+              "value": "={{ $json.ipAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac9d070-1266-49e5-8b9d-236e9cbfda35",
+              "name": "remainWarrantyDays",
+              "value": "={{ $json.remainWarrantyDays }}",
+              "type": "number"
+            },
+            {
+              "id": "d6dec448-c63f-4cfa-a647-77324ea95827",
+              "name": "userId",
+              "value": "={{ $json.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "c04e897d-6e67-42d9-9ed1-dc5b9505022f",
+              "name": "deviceId",
+              "value": "={{ $json.deviceId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d59bba34-9e7c-4a9b-9ea0-1de31ca67f2e",
+      "name": "整合激活数据-US",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        320,
+        -656
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8655cf4a-34fd-4ac4-8bad-51ef88ef46c2",
+              "name": "=SN",
+              "value": "={{ $json.retroId }}",
+              "type": "string"
+            },
+            {
+              "id": "12a17502-e663-48c7-97fc-f3f22bb84549",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "d793667a-55fc-4da7-bec2-19264688c271",
+              "name": "activateDay",
+              "value": "={{ $json.activateTimeLong }}",
+              "type": "string"
+            },
+            {
+              "id": "f3891905-483b-4627-87b0-7057e4e32947",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "9aed4cba-3813-4846-a3d0-d85d529ac2cb",
+              "name": "countryCode",
+              "value": "=EU",
+              "type": "string"
+            },
+            {
+              "id": "e1bb19fd-f091-4b83-9c61-cf3f1219b071",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "c2fa67d3-801c-48b6-af22-1ede6b0da1f3",
+              "name": "expiresTime",
+              "value": "={{ $json.expiresTime }}",
+              "type": "string"
+            },
+            {
+              "id": "ebadccc1-d0cd-45a1-bf23-09d2721b66a7",
+              "name": "firmwareType",
+              "value": "={{ $json.firmwareType }}",
+              "type": "string"
+            },
+            {
+              "id": "a27af9fb-c3b3-4c56-9c26-e56da7e1ee85",
+              "name": "ipAddress",
+              "value": "={{ $json.ipAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac9d070-1266-49e5-8b9d-236e9cbfda35",
+              "name": "remainWarrantyDays",
+              "value": "={{ $json.remainWarrantyDays }}",
+              "type": "number"
+            },
+            {
+              "id": "d6dec448-c63f-4cfa-a647-77324ea95827",
+              "name": "userId",
+              "value": "={{ $json.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "8ff31f7a-900a-4fe0-93f7-e3be006a171f",
+              "name": "deviceId",
+              "value": "={{ $json.deviceId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7157251-c188-4a7c-bce4-fb23d6edfc33",
+      "name": "整合激活数据-EU",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        320,
+        -464
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8655cf4a-34fd-4ac4-8bad-51ef88ef46c2",
+              "name": "=SN",
+              "value": "={{ $json.retroId }}",
+              "type": "string"
+            },
+            {
+              "id": "12a17502-e663-48c7-97fc-f3f22bb84549",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "d793667a-55fc-4da7-bec2-19264688c271",
+              "name": "activateDay",
+              "value": "={{ $json.activateTimeLong }}",
+              "type": "string"
+            },
+            {
+              "id": "f3891905-483b-4627-87b0-7057e4e32947",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "9aed4cba-3813-4846-a3d0-d85d529ac2cb",
+              "name": "countryCode",
+              "value": "=CN",
+              "type": "string"
+            },
+            {
+              "id": "e1bb19fd-f091-4b83-9c61-cf3f1219b071",
+              "name": "email",
+              "value": "={{ $json.email ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c2fa67d3-801c-48b6-af22-1ede6b0da1f3",
+              "name": "expiresTime",
+              "value": "={{ $json.expiresTime }}",
+              "type": "string"
+            },
+            {
+              "id": "ebadccc1-d0cd-45a1-bf23-09d2721b66a7",
+              "name": "firmwareType",
+              "value": "={{ $json.firmwareType }}",
+              "type": "string"
+            },
+            {
+              "id": "a27af9fb-c3b3-4c56-9c26-e56da7e1ee85",
+              "name": "ipAddress",
+              "value": "={{ $json.ipAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac9d070-1266-49e5-8b9d-236e9cbfda35",
+              "name": "remainWarrantyDays",
+              "value": "={{ $json.remainWarrantyDays }}",
+              "type": "number"
+            },
+            {
+              "id": "d6dec448-c63f-4cfa-a647-77324ea95827",
+              "name": "userId",
+              "value": "={{ $json.userId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ec194f10-df27-49aa-ba42-b2c423f7c023",
+      "name": "整合激活数据-CN",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        384,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8655cf4a-34fd-4ac4-8bad-51ef88ef46c2",
+              "name": "=SN",
+              "value": "={{ $json.SN }}",
+              "type": "string"
+            },
+            {
+              "id": "12a17502-e663-48c7-97fc-f3f22bb84549",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "d793667a-55fc-4da7-bec2-19264688c271",
+              "name": "activateDay",
+              "value": "={{ $json.activateDay }}",
+              "type": "string"
+            },
+            {
+              "id": "f3891905-483b-4627-87b0-7057e4e32947",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "9aed4cba-3813-4846-a3d0-d85d529ac2cb",
+              "name": "countryCode",
+              "value": "={{ $json.countryCode }}",
+              "type": "string"
+            },
+            {
+              "id": "e1bb19fd-f091-4b83-9c61-cf3f1219b071",
+              "name": "email",
+              "value": "={{ $json.email ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c2fa67d3-801c-48b6-af22-1ede6b0da1f3",
+              "name": "expiresTime",
+              "value": "={{ $json.expiresTime }}",
+              "type": "string"
+            },
+            {
+              "id": "ebadccc1-d0cd-45a1-bf23-09d2721b66a7",
+              "name": "firmwareType",
+              "value": "={{ $json.firmwareType }}",
+              "type": "string"
+            },
+            {
+              "id": "a27af9fb-c3b3-4c56-9c26-e56da7e1ee85",
+              "name": "ipAddress",
+              "value": "={{ $json.ipAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac9d070-1266-49e5-8b9d-236e9cbfda35",
+              "name": "remainWarrantyDays",
+              "value": "={{ $json.remainWarrantyDays }}",
+              "type": "number"
+            },
+            {
+              "id": "d6dec448-c63f-4cfa-a647-77324ea95827",
+              "name": "userId",
+              "value": "={{ $json.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "42759200-f21b-4867-8306-de38471541c0",
+              "name": "deviceId",
+              "value": "={{ $json.deviceId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95a697d6-d323-47dc-a29f-08787f9c8380",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        720,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "item",
+        "options": {}
+      },
+      "id": "f0160971-fd6b-43b3-aeb0-3c3d7994c7af",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "$('Edit Fields').all()[0].json.SN=$('判断是否有SN信息').all()[0].json.retroid;\nreturn $('Edit Fields').all();"
+      },
+      "id": "0ba90326-9cfc-4ea8-aa71-1fb16b746329",
+      "name": "Code3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "8fad46d3-7f46-44d7-9a4e-4bb655151a9f",
+              "leftValue": "={{ $json.SN }}",
+              "rightValue": "={{ null }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d077a304-fd3a-4dc9-b083-48d14674b0a7",
+      "name": "判断SN是否为空",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        864,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from YFConsumer.dbo.consm_barcodebindinfo where RIGHT(uuid,12) = '{{ $json.uuid }}' and LEFT(uuid,6) = '{{ $json.deviceId }}';"
+      },
+      "id": "9a6a17ca-c9a6-4c0d-a08e-40f6e3056478",
+      "name": "通过UUID查询SN信息",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -704
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f480eb37-0038-44e2-bba5-09a6f88d89ff",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dc41a907-74e8-4dd6-8381-e0bc0940aa3d",
+      "name": "判断是否有SN信息",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  激活设备无SN数据:$('Edit Fields').all()[0].json\n};"
+      },
+      "id": "7a7be43d-2970-448e-a267-d71e1c1bae8d",
+      "name": "激活设备无SN信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn {\n  重复激活数据:$('Edit Fields').all()[0].json\n};"
+      },
+      "id": "09ca8890-6692-4b1f-84ec-d0e5120df4ed",
+      "name": "重复激活数据",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  激活数据插入数据库失败:$('Edit Fields').all()[0].json\n};"
+      },
+      "id": "4f8d5587-ed8e-4b99-9ad7-0635442d58fc",
+      "name": "数据库插入失败",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst result = {\n  \"重复激活数据\": [],\n  \"激活设备无SN数据\": [],\n  \"激活数据插入数据库失败\": []\n};\n\ndata[0].json.item.forEach(item => {\n  if (item.hasOwnProperty(\"重复激活数据\")) {\n    result[\"重复激活数据\"].push(item[\"重复激活数据\"][\"SN\"]);\n  } else if (item.hasOwnProperty(\"激活设备无SN数据\")) {\n    result[\"激活设备无SN数据\"].push(item[\"激活设备无SN数据\"][\"uuid\"]);\n  } else if (item.hasOwnProperty(\"激活数据插入数据库失败\")) {\n    result[\"激活数据插入数据库失败\"].push(item[\"激活数据插入数据库失败\"][\"SN\"]);\n  }\n});\nreturn result;"
+      },
+      "id": "cb542ece-3940-4c4b-85bc-32b607ceacda",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -928
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "dcd77833-aa74-4be6-aad6-33e6e68c4b61",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        512,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "activation_records",
+          "mode": "list",
+          "cachedResultName": "activation_records"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "deactivestatus",
+              "condition": "IS NULL"
+            },
+            {
+              "column": "retroid",
+              "value": "={{ $json.SN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "72f08c44-1528-4bd2-99f7-6390fc9e9d86",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1648,
+        -288
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "activation_records",
+          "mode": "list",
+          "cachedResultName": "activation_records"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "activatetime": "={{ $json.activateDay }}",
+            "city": "={{ $json.city }}",
+            "country_code": "={{ $json.countryCode }}",
+            "email": "={{ $json.email }}",
+            "expirestime": "={{ $json.expiresTime }}",
+            "firmware_type": "={{ $json.firmwareType }}",
+            "ip_address": "={{ $json.ipAddress }}",
+            "remain_warranty_days": "={{ $json.remainWarrantyDays }}",
+            "user_id": "={{ $json.userId }}",
+            "retroid": "={{ $json.SN }}",
+            "uuid": "={{ $json.uuid }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "activatetime",
+              "displayName": "activatetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "clienttype_name",
+              "displayName": "clienttype_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country_code",
+              "displayName": "country_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expirestime",
+              "displayName": "expirestime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "firmware_type",
+              "displayName": "firmware_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ip_address",
+              "displayName": "ip_address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remain_warranty_days",
+              "displayName": "remain_warranty_days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deactivestatus",
+              "displayName": "deactivestatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "57432caa-c0d9-4bf4-b08f-25b0d51987db",
+      "name": "数据库插入数据1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2208,
+        -288
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('Edit Fields1').all();"
+      },
+      "id": "02ff707f-0f8a-4e37-b725-e2e4305d3452",
+      "name": "Code2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "[n8n warn] - 激活异常数据-EU-拉取每日已激活设备接口",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "aaac29f2-ca42-4e9d-b17e-a472cad678c8",
+      "name": "重复激活设备1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1152,
+        -336
+      ],
+      "webhookId": "5927ecea-226b-4285-94df-3391ad9bb033",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0d0d808b-f5ed-4d97-8e47-c9d48d97b035",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f11f5514-fa45-4ef8-938e-53bf0aca3ef3",
+      "name": "判断是否有激活记录1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a93c7990-31bd-4071-bf9a-a893967b784e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c526678a-08db-4db4-8430-0ab494c4be90",
+      "name": "判断是否激活成功1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8655cf4a-34fd-4ac4-8bad-51ef88ef46c2",
+              "name": "=SN",
+              "value": "={{ $json.SN }}",
+              "type": "string"
+            },
+            {
+              "id": "12a17502-e663-48c7-97fc-f3f22bb84549",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "d793667a-55fc-4da7-bec2-19264688c271",
+              "name": "activateDay",
+              "value": "={{ $json.activateDay }}",
+              "type": "string"
+            },
+            {
+              "id": "f3891905-483b-4627-87b0-7057e4e32947",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "9aed4cba-3813-4846-a3d0-d85d529ac2cb",
+              "name": "countryCode",
+              "value": "={{ $json.countryCode }}",
+              "type": "string"
+            },
+            {
+              "id": "e1bb19fd-f091-4b83-9c61-cf3f1219b071",
+              "name": "email",
+              "value": "={{ $json.email ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c2fa67d3-801c-48b6-af22-1ede6b0da1f3",
+              "name": "expiresTime",
+              "value": "={{ $json.expiresTime }}",
+              "type": "string"
+            },
+            {
+              "id": "ebadccc1-d0cd-45a1-bf23-09d2721b66a7",
+              "name": "firmwareType",
+              "value": "={{ $json.firmwareType }}",
+              "type": "string"
+            },
+            {
+              "id": "a27af9fb-c3b3-4c56-9c26-e56da7e1ee85",
+              "name": "ipAddress",
+              "value": "={{ $json.ipAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac9d070-1266-49e5-8b9d-236e9cbfda35",
+              "name": "remainWarrantyDays",
+              "value": "={{ $json.remainWarrantyDays }}",
+              "type": "number"
+            },
+            {
+              "id": "d6dec448-c63f-4cfa-a647-77324ea95827",
+              "name": "userId",
+              "value": "={{ $json.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "bc90fb5e-eb3b-44de-afa1-c032f8919fc2",
+              "name": "deviceId",
+              "value": "={{ $json.deviceId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bc38f600-043a-4d9a-8a86-991fea7d658b",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        784,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "item",
+        "options": {}
+      },
+      "id": "598128fe-917d-432a-be9a-b6001f948afe",
+      "name": "Aggregate1",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "$('Edit Fields1').all()[0].json.SN=$('判断是否有SN信息1').all()[0].json.retroid;\nreturn $('Edit Fields1').all();"
+      },
+      "id": "efd102a4-02f1-4c9e-bde0-c04b4374d051",
+      "name": "Code4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "8fad46d3-7f46-44d7-9a4e-4bb655151a9f",
+              "leftValue": "={{ $json.SN }}",
+              "rightValue": "={{ null }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "499ce1c4-c96f-4ed9-90fc-0efc7b19ece2",
+      "name": "判断SN是否为空1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from YFConsumer.dbo.consm_barcodebindinfo where RIGHT(uuid,12) = '{{ $json.uuid }}' and LEFT(uuid,6) = '{{ $json.deviceId }}';"
+      },
+      "id": "2c4d7855-8466-4823-9cd4-a9cfc418fe7d",
+      "name": "通过UUID查询SN信息1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -144
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f480eb37-0038-44e2-bba5-09a6f88d89ff",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c694c11e-8396-4ade-81ac-0ac5873313cb",
+      "name": "判断是否有SN信息1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  激活设备无SN数据:$('Edit Fields1').all()[0].json\n};"
+      },
+      "id": "5957d52a-c40f-4242-be89-20340782255c",
+      "name": "激活设备无SN信息1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn {\n  重复激活数据:$('Edit Fields1').all()[0].json\n};"
+      },
+      "id": "f7f58eb3-1212-46f2-9743-c0095284d3e4",
+      "name": "重复激活数据1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  激活数据插入数据库失败:$('Edit Fields1').all()[0].json\n};"
+      },
+      "id": "6d8416ef-54e9-41d3-a638-664d7bd60e9d",
+      "name": "数据库插入失败1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2512,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst result = {\n  \"重复激活数据\": [],\n  \"激活设备无SN数据\": [],\n  \"激活数据插入数据库失败\": []\n};\n\ndata[0].json.item.forEach(item => {\n  if (item.hasOwnProperty(\"重复激活数据\")) {\n    result[\"重复激活数据\"].push(item[\"重复激活数据\"][\"SN\"]);\n  } else if (item.hasOwnProperty(\"激活设备无SN数据\")) {\n    result[\"激活设备无SN数据\"].push(item[\"激活设备无SN数据\"][\"uuid\"]);\n  } else if (item.hasOwnProperty(\"激活数据插入数据库失败\")) {\n    result[\"激活数据插入数据库失败\"].push(item[\"激活数据插入数据库失败\"][\"SN\"]);\n  }\n});\nreturn result;"
+      },
+      "id": "4d4b9aa3-002e-49fd-ad8f-850208f6541d",
+      "name": "Code5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6f6dd136-2fd1-42a3-b999-09c78dbae442",
+      "name": "Loop Over Items4",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        704,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "activation_records",
+          "mode": "list",
+          "cachedResultName": "activation_records"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "deactivestatus",
+              "condition": "IS NULL"
+            },
+            {
+              "column": "retroid",
+              "value": "={{ $json.SN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2c2b513-1bc7-41bd-9704-c187d2c55d5c",
+      "name": "Postgres2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1824,
+        384
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "activation_records",
+          "mode": "list",
+          "cachedResultName": "activation_records"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "activatetime": "={{ $json.activateDay }}",
+            "city": "={{ $json.city }}",
+            "country_code": "={{ $json.countryCode }}",
+            "email": "={{ $json.email }}",
+            "expirestime": "={{ $json.expiresTime }}",
+            "firmware_type": "={{ $json.firmwareType }}",
+            "ip_address": "={{ $json.ipAddress }}",
+            "remain_warranty_days": "={{ $json.remainWarrantyDays }}",
+            "user_id": "={{ $json.userId }}",
+            "retroid": "={{ $json.SN }}",
+            "uuid": "={{ $json.uuid }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "activatetime",
+              "displayName": "activatetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "clienttype_name",
+              "displayName": "clienttype_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country_code",
+              "displayName": "country_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expirestime",
+              "displayName": "expirestime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "firmware_type",
+              "displayName": "firmware_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ip_address",
+              "displayName": "ip_address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remain_warranty_days",
+              "displayName": "remain_warranty_days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deactivestatus",
+              "displayName": "deactivestatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "64367dd7-ede4-4e6d-a9cb-54876d57868a",
+      "name": "数据库插入数据2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2288,
+        384
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('Edit Fields2').all();"
+      },
+      "id": "18821bc0-a6ad-4c47-b559-7a6359e99a07",
+      "name": "Code6",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "[n8n warn] - 激活异常数据-CN-拉取每日已激活设备接口",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "26b41b72-7765-4766-b053-0b9053b9525c",
+      "name": "重复激活设备2",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        192
+      ],
+      "webhookId": "1c6ae46c-a35f-4a41-b49c-74fad904fe57",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0d0d808b-f5ed-4d97-8e47-c9d48d97b035",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b9f610b0-b6a2-4052-84ea-22d7e7c57928",
+      "name": "判断是否有激活记录2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a93c7990-31bd-4071-bf9a-a893967b784e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "13b8b6ff-8847-41d8-b5d7-1d59dd2673a8",
+      "name": "判断是否激活成功2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8655cf4a-34fd-4ac4-8bad-51ef88ef46c2",
+              "name": "=SN",
+              "value": "={{ $json.SN }}",
+              "type": "string"
+            },
+            {
+              "id": "12a17502-e663-48c7-97fc-f3f22bb84549",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "d793667a-55fc-4da7-bec2-19264688c271",
+              "name": "activateDay",
+              "value": "={{ $json.activateDay }}",
+              "type": "string"
+            },
+            {
+              "id": "f3891905-483b-4627-87b0-7057e4e32947",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "9aed4cba-3813-4846-a3d0-d85d529ac2cb",
+              "name": "countryCode",
+              "value": "={{ $json.countryCode }}",
+              "type": "string"
+            },
+            {
+              "id": "e1bb19fd-f091-4b83-9c61-cf3f1219b071",
+              "name": "email",
+              "value": "={{ $json.email ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c2fa67d3-801c-48b6-af22-1ede6b0da1f3",
+              "name": "expiresTime",
+              "value": "={{ $json.expiresTime }}",
+              "type": "string"
+            },
+            {
+              "id": "ebadccc1-d0cd-45a1-bf23-09d2721b66a7",
+              "name": "firmwareType",
+              "value": "={{ $json.firmwareType }}",
+              "type": "string"
+            },
+            {
+              "id": "a27af9fb-c3b3-4c56-9c26-e56da7e1ee85",
+              "name": "ipAddress",
+              "value": "={{ $json.ipAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac9d070-1266-49e5-8b9d-236e9cbfda35",
+              "name": "remainWarrantyDays",
+              "value": "={{ $json.remainWarrantyDays }}",
+              "type": "number"
+            },
+            {
+              "id": "d6dec448-c63f-4cfa-a647-77324ea95827",
+              "name": "userId",
+              "value": "={{ $json.userId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "957489de-8714-4d14-a21c-aa3f36db375d",
+      "name": "Edit Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1024,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "item",
+        "options": {}
+      },
+      "id": "eb4a8664-3fc7-4884-8ff4-b6a9d5921bc0",
+      "name": "Aggregate2",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "$('Edit Fields2').all()[0].json.SN=$('判断是否有SN信息2').all()[0].json.retroid;\nreturn $('Edit Fields2').all();"
+      },
+      "id": "bd607650-b295-45b8-9cd8-de09e34b1b15",
+      "name": "Code7",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "8fad46d3-7f46-44d7-9a4e-4bb655151a9f",
+              "leftValue": "={{ $json.SN }}",
+              "rightValue": "={{ null }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d299fb1a-3c44-44f8-ace3-d8f4c621623f",
+      "name": "判断SN是否为空2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from YFConsumer.dbo.consm_barcodebindinfo where RIGHT(uuid,12) = '{{ $json.uuid }}';"
+      },
+      "id": "e8cb7bb1-321f-453d-870d-0925268a68d5",
+      "name": "通过UUID查询SN信息2",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        400
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f480eb37-0038-44e2-bba5-09a6f88d89ff",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "82ada4bd-5b41-460a-8335-92732ea642c6",
+      "name": "判断是否有SN信息2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  激活设备无SN数据:$('Edit Fields2').all()[0].json\n};"
+      },
+      "id": "d16b5f6d-c222-4e19-9b61-e368fe31a5cc",
+      "name": "激活设备无SN信息2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn {\n  重复激活数据:$('Edit Fields2').all()[0].json\n};"
+      },
+      "id": "4af52651-68c5-43da-a710-e2fb1cb9b59d",
+      "name": "重复激活数据2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  激活数据插入数据库失败:$('Edit Fields2').all()[0].json\n};"
+      },
+      "id": "41acf7d7-8dec-46bc-9142-f6a9fc9bca08",
+      "name": "数据库插入失败2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst result = {\n  \"重复激活数据\": [],\n  \"激活设备无SN数据\": [],\n  \"激活数据插入数据库失败\": []\n};\n\ndata[0].json.item.forEach(item => {\n  if (item.hasOwnProperty(\"重复激活数据\")) {\n    result[\"重复激活数据\"].push(item[\"重复激活数据\"][\"SN\"]);\n  } else if (item.hasOwnProperty(\"激活设备无SN数据\")) {\n    result[\"激活设备无SN数据\"].push(item[\"激活设备无SN数据\"][\"uuid\"]);\n  } else if (item.hasOwnProperty(\"激活数据插入数据库失败\")) {\n    result[\"激活数据插入数据库失败\"].push(item[\"激活数据插入数据库失败\"][\"SN\"]);\n  }\n});\nreturn result;"
+      },
+      "id": "1b6f3feb-a5e1-42f5-89f8-c660b2b67c32",
+      "name": "Code8",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        192
+      ]
+    }
+  ],
+  "connections": {
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time2": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-海外",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time3": {
+      "main": [
+        [
+          {
+            "node": "Date & Time2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "国内激活设备获取",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定时触发-中国": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定时触发-欧美": {
+      "main": [
+        [
+          {
+            "node": "Date & Time3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "整合激活数据-US",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "整合激活数据-EU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out3": {
+      "main": [
+        [
+          {
+            "node": "整合激活数据-CN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "国内激活设备获取": {
+      "main": [
+        [
+          {
+            "node": "Split Out3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "北美正式服激活设备获取": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "判断是否有激活记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据库插入数据": {
+      "main": [
+        [
+          {
+            "node": "判断是否激活成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "数据库插入数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有激活记录": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重复激活数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否激活成功": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库插入失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "欧洲正式服激活设备获取": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-海外": {
+      "main": [
+        [
+          {
+            "node": "欧洲正式服激活设备获取",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "北美正式服激活设备获取",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合激活数据-US": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合激活数据-EU": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合激活数据-CN": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "判断SN是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断SN是否为空": {
+      "main": [
+        [
+          {
+            "node": "通过UUID查询SN信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "通过UUID查询SN信息": {
+      "main": [
+        [
+          {
+            "node": "判断是否有SN信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有SN信息": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "激活设备无SN信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "激活设备无SN信息": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重复激活数据": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据库插入失败": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "重复激活设备",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "判断是否有激活记录1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据库插入数据1": {
+      "main": [
+        [
+          {
+            "node": "判断是否激活成功1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "数据库插入数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有激活记录1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重复激活数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否激活成功1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库插入失败1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "判断SN是否为空1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断SN是否为空1": {
+      "main": [
+        [
+          {
+            "node": "通过UUID查询SN信息1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "通过UUID查询SN信息1": {
+      "main": [
+        [
+          {
+            "node": "判断是否有SN信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有SN信息1": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "激活设备无SN信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "激活设备无SN信息1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重复激活数据1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据库插入失败1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "重复激活设备1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items4": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres2": {
+      "main": [
+        [
+          {
+            "node": "判断是否有激活记录2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据库插入数据2": {
+      "main": [
+        [
+          {
+            "node": "判断是否激活成功2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "数据库插入数据2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有激活记录2": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重复激活数据2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否激活成功2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库插入失败2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "判断SN是否为空2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Code8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code7": {
+      "main": [
+        [
+          {
+            "node": "Postgres2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断SN是否为空2": {
+      "main": [
+        [
+          {
+            "node": "通过UUID查询SN信息2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "通过UUID查询SN信息2": {
+      "main": [
+        [
+          {
+            "node": "判断是否有SN信息2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有SN信息2": {
+      "main": [
+        [
+          {
+            "node": "Code7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "激活设备无SN信息2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "激活设备无SN信息2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重复激活数据2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据库插入失败2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code8": {
+      "main": [
+        [
+          {
+            "node": "重复激活设备2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 1200,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:定时获取每日新激活机器": {
+      "recurrencyRules": []
+    },
+    "node:定时触发-欧美": {
+      "recurrencyRules": [],
+      "recurrenceRules": []
+    },
+    "node:定时触发-中国": {
+      "recurrencyRules": [],
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "定时触发-欧美": [
+      {
+        "json": {
+          "timestamp": "2024-07-25T16:00:24.019+08:00",
+          "Readable date": "July 25th 2024, 4:00:24 pm",
+          "Readable time": "4:00:24 pm",
+          "Day of week": "Thursday",
+          "Year": "2024",
+          "Month": "July",
+          "Day of month": "25",
+          "Hour": "16",
+          "Minute": "00",
+          "Second": "24",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "定时触发-中国": [
+      {
+        "json": {
+          "timestamp": "2025-05-09T17:14:21.336+08:00",
+          "Readable date": "May 9th 2025, 5:14:21 pm",
+          "Readable time": "5:14:21 pm",
+          "Day of week": "Friday",
+          "Year": "2025",
+          "Month": "May",
+          "Day of month": "09",
+          "Hour": "17",
+          "Minute": "14",
+          "Second": "21",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "日期格式转换-中国": [
+      {
+        "json": {
+          "startdate": "2025-05-07T00:00:00.000Z",
+          "enddate": "2025-05-09T23:59:59.999Z"
+        }
+      }
+    ]
+  },
+  "versionId": "bce90614-a6a5-4c5b-aec6-465adc1d08bf",
+  "activeVersionId": "bce90614-a6a5-4c5b-aec6-465adc1d08bf",
+  "versionCounter": 37,
+  "triggerCount": 2,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:56.804Z",
+      "createdAt": "2024-01-26T07:49:15.286Z",
+      "id": "nTeYqAfpKKoeAJjH",
+      "name": "品质部门应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-22T02:23:23.120Z",
+      "createdAt": "2024-03-22T02:23:23.120Z",
+      "role": "workflow:owner",
+      "workflowId": "mUWHzxL4AvxJgfi1",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    },
+    {
+      "updatedAt": "2026-02-03T08:57:29.720Z",
+      "createdAt": "2026-02-03T08:57:29.720Z",
+      "role": "workflow:editor",
+      "workflowId": "mUWHzxL4AvxJgfi1",
+      "projectId": "hoQDqvLEbD64BkIQ",
+      "project": {
+        "updatedAt": "2026-01-19T07:56:25.309Z",
+        "createdAt": "2026-01-19T07:50:23.327Z",
+        "id": "hoQDqvLEbD64BkIQ",
+        "name": "xiong Jackson <xiongwang@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "7433da26-6bef-4588-9d55-58679e0fbf0d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,1427 @@
+{
+  "updatedAt": "2025-03-17T14:57:34.480Z",
+  "createdAt": "2025-01-15T03:32:50.966Z",
+  "id": "1vpHYTqraKRmUUDL",
+  "name": "SN与apple token绑定工序",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "id": "57684581-80a5-4eea-a753-de5bebe703cb",
+      "name": "Crypto",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        3680,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f3b8c7d7-9bec-42a3-8681-034aefd35da3",
+              "name": "date",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "bca41b1c-b380-425f-a9a2-a78b52de74af",
+              "name": "ppid",
+              "value": "={{ $json.ppid }}",
+              "type": "string"
+            },
+            {
+              "id": "3a12657d-8857-4274-83c5-94bb53446bf0",
+              "name": "token",
+              "value": "={{ $json.auth_entities.tokenId }}",
+              "type": "string"
+            },
+            {
+              "id": "4e5fa3ef-10ac-4b93-9c73-e701a41a6a5b",
+              "name": "request_id",
+              "value": "={{ $('获取request_id').item.json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0e0660f2-5fbb-4461-a164-257de57d8125",
+              "name": "Base64-encoded Token",
+              "value": "={{ $json.auth_entities[\"Base64-encoded Token\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "bba433dc-27e9-453d-bf52-ac790f44eb85",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "71d964f4-f8c5-46b5-980c-67c229cfd500",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4000,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://swa.apple.com/api/v1.0/external/single/usedAuthEntity",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ppid\": \"{{$json.ppid}}\",\n  \"uuid\": \"{{$json.uuid}}\",\n  \"auth_entity\": \"{{$('Extract from File1').item.json.data.split(\",\")[2]}}\"\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "22b77a39-380a-45ac-a9f6-53d8c8e19d64",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4380,
+        260
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpSslAuth": {
+          "id": "ch2114Ze8WivbLJA",
+          "name": "SSL Certificates-apple apl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://swa.apple.com:443/api/v1.0/external/authEntityRequests",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ppid\": \"828649-833829\",\n  \"requested_auth_entity_count\": 100\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "59ce4221-3a9e-48ab-8641-d8b54420c2db",
+      "name": "获取request_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        260
+      ],
+      "credentials": {
+        "httpSslAuth": {
+          "id": "ch2114Ze8WivbLJA",
+          "name": "SSL Certificates-apple apl"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://swa.apple.com/api/v1.0/external/authEntities/{{$json[\"request_id\"]}}",
+        "provideSslCertificates": true,
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "d7cc8b0d-238d-42bd-9456-ae076e918b73",
+      "name": "获取csv",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2020,
+        260
+      ],
+      "credentials": {
+        "httpSslAuth": {
+          "id": "ch2114Ze8WivbLJA",
+          "name": "SSL Certificates-apple apl"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"接口调取失败\"\n}",
+        "options": {}
+      },
+      "id": "469268fd-d497-47d6-a424-ffca9d96ddd9",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2600,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "id": "c79003d6-416a-4dd2-bf36-ff3300015178",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2820,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {
+          "mimeType": "text/javascript"
+        }
+      },
+      "id": "acad30c4-969d-49fb-becc-4fd698015c3a",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2980,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "71a008e7-777e-46bc-ac88-fddebf548820",
+      "name": "Extract from File1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        3160,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://swa.apple.com/api/v1.0/external/authEntities/{{ $json.request_id}}/{{$json[\"file_name\"]}}",
+        "provideSslCertificates": true,
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "04ee74fd-9ec4-4624-9cc9-1062785fc05b",
+      "name": "下载csv",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2620,
+        260
+      ],
+      "credentials": {
+        "httpSslAuth": {
+          "id": "ch2114Ze8WivbLJA",
+          "name": "SSL Certificates-apple apl"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b9de1f66-8ae7-47b1-b30c-3c42fe91bb6d",
+              "leftValue": "={{ $json.request_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "96929792-b062-4f02-9fb2-7367543dc0ba",
+      "name": "If4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1860,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0d3e7746-6862-4b80-862c-3e199363af53",
+              "leftValue": "={{ $json.file_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f9573d5f-b24d-4099-b844-2946314705ad",
+      "name": "If5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2220,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"request_id\": \"{{ $('获取request_id').item.json.request_id }}\",\n  \"file_name\": {{ $json.file_name }}\n}\n",
+        "options": {}
+      },
+      "id": "ee2fea1b-470d-4477-90d9-fad32ddeda4e",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2440,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "path": "apple_MFI",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ae4ac4df-05e4-4cb7-842c-66607cd2e6fd",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        260
+      ],
+      "webhookId": "725d015f-25a3-48e3-892b-280fd201f23b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all(); // 获取所有输入项\n\nfunction getPPID(sn) {\n    const snToPpidMap = {\n        \"W92\": \"828649-509327\",\n        \"W51\": \"828649-833829\",\n        \"W52\": \"828649-814264\"\n    };\n\n    const prefix = sn.substring(0, 3); // 修改为提取前三个字符\n\n    return snToPpidMap.hasOwnProperty(prefix) ? snToPpidMap[prefix] : \"未找到对应的ppid\";\n}\n\nconst results = items.map(item => {\n    const sn = item.json.body.sn; // 从每个项中提取序列号\n    const ppid = getPPID(sn);\n\n    return {\n        json: {\n            sn: sn,\n            ppid: ppid\n        }\n    };\n});\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        260
+      ],
+      "id": "a80d0c52-5203-4eee-b8bd-540a7d1f2b3e",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $('Webhook1').item.json.body.sn }}",
+            "ppid": "={{ $json.ppid }}",
+            "request_id": "={{ $json.request_id }}",
+            "status": 0,
+            "createtime": "={{ $now }}",
+            "uuid": "={{ $json.uuid }}",
+            "token": "REDACTED"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ppid",
+              "displayName": "ppid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4160,
+        260
+      ],
+      "id": "bda7acf6-bb29-4d43-8b7e-e52ff424bfb4",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "16a42097-ab41-430d-a7d7-28b96a1cbc3d",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4600,
+        260
+      ],
+      "id": "700b6fbb-fafe-48c8-9ae9-308f70cea03f",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{$('Postgres1').item.json.id }}",
+            "status": 1,
+            "modifytime": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ppid",
+              "displayName": "ppid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "modifytime",
+              "displayName": "modifytime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "completetime",
+              "displayName": "completetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4860,
+        40
+      ],
+      "id": "6eae5fc5-79c7-40c1-b60c-65ca5d227dcc",
+      "name": "Postgres2",
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all(); // 获取所有输入项\n\n// 假设数据在第一个输入项目的 \"data\" 字段中\nconst rawData = items[0].json.data;\n\n// 将字符串数据以 CRLF 分割成数组\nconst lines = rawData.trim().split('\\r\\n');\n\n// 初始化 auth_entities 数组\nconst authEntities = [];\n\n// 解析每行并生成目标数据结构\nlines.forEach(line => {\n    const [, tokenId, base64Token] = line.split(',', 3); // 提取 tokenId 和 Base64-encoded Token\n    authEntities.push({ tokenId, \"Base64-encoded Token\": base64Token });\n});\n\n// 组装最终结果\nconst result = {\n    ppid: lines.length > 0 ? lines[0].split(',')[0] : null,  // 假设所有行的 ppid 相同\n    auth_entities: authEntities // auth_entities 是一个包含 tokenId 和 base64Token 对象的数组\n};\n\n// 返回结果\nreturn {\n    json: result\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        220
+      ],
+      "id": "f8554b10-c1f2-4d87-b9ba-0277527e5dd5",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "auth_entities",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3460,
+        220
+      ],
+      "id": "b7736865-0488-4214-81e5-8e6f036fec0c",
+      "name": "Split Out"
+    }
+  ],
+  "connections": {
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取request_id": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "获取csv": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载csv": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "获取csv",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "下载csv",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "获取request_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Postgres2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook1": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.82",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "167",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br",
+            "content-type": "multipart/form-data; boundary=--------------------------REDACTED"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W92CD10099"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/apple_MFI",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "分离token": [
+      {
+        "json": {
+          "ppid": "828649-833829",
+          "auth_entities": [
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAj3TZmW04e7Bb6RFLWWlQ0PrxaAduiVJxr/3NO2hepWYCIA+qOCOSlr0tvL+ycJqQSTq+426iDpfaa0TYZqAlGQ5SMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIOClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEFp9kuVCrk+Bl4on1eS5d4g="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAwHwHCTrDJi7aD58Hzh6jEKrllZ9Yh947vsCzwY4f8FgIgEfn6Zs6sukIjHHQvPQpyckmeQtnM9mFylXKD43OjUbQwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhDKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQrBNMCECUSFOeNOOnJNY2vw=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBcFFjLpd7FdVo+GnLqp/iCOGDIrWIvU6rzO15/SlwXhgIgaTXI0s6u2BFtS/I0KndWSWTpXkSv+zjS696P7vKBow4wbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhIKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQRIwVgxhZTUC1c9kpwO7hgg=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEA4ViXF1+3FGHVJwPnVN1I9NUco22qnFDVOoAO2rdHeqgCIAcY6lSa2aEw+l/757AI6DTkYmZxdoK6UixdQEm8NR8+MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQITClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEOic8rztQEm+n8Ekf3iM834="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAxrYKxKFfHka/uoS6yQosTOTDI35sYe6jN7Ybme1vaScCICHGCZjV+pCDtFl7ax0PbZsUJCcTtHIB1pF1KcKqdw2oMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIUClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEHSQbZdcYk0FoH+jQp5Yg1k="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAjqrxhgZfYQ9pMou3lzuCOPA2V6GtbS558CmtIykGENsCIQCViMFbo8PSiHvLlns3y3bY0FHmCODQgyZccOCBJt88LzBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECFUpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDwcztthxlA9KoA/7XAYuwA"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAls+lOWdA/aGplp2XktDbZN3kZwGwu+nFXZN1a8DkcGoCIEsdLG19iiG9sRjjdIWU3d41T80hs5DKLE9XPNy3dxzmMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIWSlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEO1+k88JHksZlzWQk6IlxK4="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA5Ryi+Y0pCvjzimS40nSAITGjHSMPeQXao/LYN7UBX7YCIQDRMMNniZThRdyGgv58VadZYHeEP/K8YtMTTR0lQhyNazBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECF0pVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBAkOe4SDLtGw7+19ZgY+3W+"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiA+X4febi5GAcsnE36OH3w6zwKzruYyRoEcjIjmn9Ky2QIhAIdFUjbtL6o/wJFeVDlSNUhM0DrEJg1uivdKT+NzQv4iMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIYSlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEJGYhXZ8uUh0mA103rBRgnU="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBG99SF2KztYpTF5XMpjct4Qc4fz8eEdGzlcWU0ZQhAoQIhAM3SEKUiAeka1RHHhQUHjiHeYSZbHDVG8+mBZfrgdPCfMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIZSlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEBpIqmvn10NOrKaeEn5VIe8="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBK+DdE7D3P9tgR/Isfda00UBeqg9QRtxI9M6BJU+DpLwIhALibtdaTDJfHzQjXr4cTB/qc3j75tvbWZgKWngq779NfMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIaSlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEM3Z30uJpU7bsJ/ub/tYmsA="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAdmju0FwxM+3Oc/wy+plBWt8eRZ49GhJXKdABSkgIU5wIgE227nlwp/O8IFbMqGX1raRv7VsjytQ3FXLYbnmrgVXYwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhtKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ2GXIa1xIThOkmECCHX+Hgw=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBKow6UwBy6Ra/ZCcC9+b3nO5OjCmaVQAX1s+qrScntBQIgRjL3Marmz0/C5k5WwixEJ3/V93Y3Jzq7nYpmErcM25owbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhxKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQv1KAY+RvQBGFWaVj0BLKpQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiACUXjF1KcJfLQm4RWm3Y+XeMNFYH2u9lpV2HH/Yx486wIgQLEKS70IqLgH2jKL2yG13WWJlzzmjky6i0z04iorm9kwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAh1KVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQKx8jwUvRR9SInapklYHTrw=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAnQcX/eKbAiyrR4EunOOK/8B9rdxFPLx3uuezX/JedNACIHrfd5pAQpQzFyibm+RdxTLA+nK9sEg4eF2wpLoBoFZVMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIeSlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEELLzh3W6+khks+BG4TjGdv4="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAm09nYNXMhq2o2SEDRaJYIkKA0vCDlhCLj6QQR+7bb/gCIEMJedSZVpY8wsaqpBiApVKKZ1yFMcjiEOjADap2TETDMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIfSlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEBxEKvm0P0MWt0Cz6dtL67U="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiALyDh2K7NDbFPetPKUCRrnDA9yEdBmVhnQTrHZ9hTTLgIgEuc+k2yzxPvnzse4Dqz5pEn8nTNWHI4j+TjIfM5zKEMwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAiAKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQvQNnNVTxRd2WeJ5+8VOTHg=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiA5bQO0x9lPhSU0ZjYcV9kGXNvTcW+qmPkbkkMxFkzVsQIgetCWmqYH9Edpkb/1nkLLH1zUr/CKI8YK7S2ZsNQeU+8wbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAiEKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQMxIcv/r7Tqm4gjLFnxf0hg=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAhbUF5mL7k+azhEnpoI9YRRwX3FEInl5c7m7IUGe6wRQIhANqP+3U8BgiWJaWGuvvSsgeyPyOrTP5K6DQXq8/4oy/sMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIjClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEENzqDWh/3URNsilHcueJlmQ="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBK4oPHqUGw1UAqj8VSQS1wD2u/1j+7t2tprPY03aGimQIgPhThND/fmkIEHSNt0nJBt8m5F5E1bkGZwwoJlGWy31EwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAiQKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQVtwe2oY6S3aCK3DTWQcsVg=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBtDi/L2QQ2kMLAtYHZoKtWml8zzu6Z+GU3zgg2HLG+fQIhALqMM/tjnAHGAPT0YDbkshMcFONCukOLwKRS1IimUnRvMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIlClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEJYvPYckDE9NpB3YXJ2DQQw="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEApEipQAefKVEImKG/Prz5I3vwt0mrhYMfC7dQccU9Z4oCIFJmSO5kehNGSYzB55Vg4FHqf11mikrtxn9RIxcQZN3UMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQImClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEOR7phRbgk6xszsXwRNh+8k="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA6K7E8Kgu8p1zKBJ9utYo1ZaN6G8Jq2IhinUaQS+xgH0CIQDceuh7or2NSxNwkW5WmAE6vSfCYKruCdOn3txizD8e6TBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECJ0pVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBCOOVxR8nJKs6lK4OTr0TRV"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAiQVj7zG+HpKgJqz0tTVeHpO7TXRImZGOnc5DYw5+RF0CIQDviOl2Mw0TWTKIgo9uH3ZkMZ/5dWTtyn+SW3q6ByoMDDBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECKApVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBCRT+oP7FRBgoUZbiNeexGc"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAiWgPMG4vB2nPJ0pDdxSaGGskV6Kxd/UTEsxTU3Iz73QIgXxIvC5Y0qs8dSQ/3pH81cGP5vP8LNQCFNkRshq89F7gwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAikKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQpYA0aCCGSqibf3j8woJwGQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEA1S0EBgsxsyzPuo7MyC4kYQdguR9WaiAv1t0pca5xGusCIBh2TAyM4iN1UM8qQzMyWEw6hKkR0QTvXIDu6clNeR4LMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIqClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEENanBXdJtUQBnKj8fbwCYrM="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAqrUwKxiTSgOwe5S0g65ZtHDGxpbGUBZfneQ4j1Y5NOcCIQDWcOnbhaqC/fBTp5ruQ9AkzMjAtODf1iE4jZxeO7cJtjBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECKwpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBAgh3dGZCRGgrOSZCRuZDpo"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEA38sYFYojlU3UtYArEX/L6J9B946mLSw4Q9aFB2Wk+s0CIBLfbG/EGK952SNUZ5R9OgqOZ8S6VxHfWKRy4Knfd2yGMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIsClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEECLHANwPC0uUo8xatGgDKRc="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAyXuJu7jKfGBV8GrOu+0bQ4DHJiMnwq63/MwBQpqYrm0CIQDrXCC/Uf8PuKsfiQ2TOuBooFjdsnR4qgyVIKXnqGawqzBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECLQpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBBoFYlImHhOmb7CFw8+MVJm"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAk5/Spt5AI7JNyXcAIGESLMfE2GXYVK/NkHFSToqG9CgIhAPujdI4sFX+GMIymbcJzOl3PYFN+y8dSfIyURyOG50tWMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIuClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMJvyJn220SjiUT8E0+ObDo="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAml3925FvSoqu4KcqGVsN2SL1YEalMrlTGTNzl5VDCNcCIQCjcDSiBkvggPQpUQl5Lilm2cyQU9qKOha1cd0nHSw44jBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECLwpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBAXGedXscdH5qlR7PCzej0i"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAy+BANFKx30Hd3Rf8ElKuqJ8sM9zRH0DEF4bax6/7KiUCIQC2znoj3MprlXxBJcmzw3pA3PCe/sKDlyFtusZ8lZT2/jBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECMMpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBBSFCnfNDNHIa9ZHRbMvjwl"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBvsA2aTYSCPgI1pdS2bzEC87bjFbZdx6y6eRkqLhR5uAIhAKxHIgCdfJna+0tu6FJEVD7iTi2TCBB98MnHJSAQnj1NMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIxilUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEDlN+3f5F0SAvKlDZLVd/n0="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA2S/oE9/M9jZPRHUbIVsHZFrbMA6TRZgMCoJoXVO6yFUCIQDnxawuU9HilIpvvA3hdJJ6zqk57o5h3u0izgV8MFTvnzBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECMopVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDaiIzBZoZMsb/MQNqwkEOr"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBiHB7vApusiK++7ZnCtrw7fLqQ0zACsDeBTu3sVpuANwIhAIa4GT5ydVutD3OFmpTWDdExcD5CBs6Kx/adCUWAObO0MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIzilUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEHq4pH1+hExkr+VJFf4AYhs="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAoLJlEc1pciuyxcvQKBLeLNwTihRiPDn19blkJoKKMNwIgWgqBJzpRPNFse0v/mHR5fk2cWbmv+ZV2Gr8Z5gQwBBIwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAjRKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQPT266yGcTv+qF5x88VM2xA=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAzdroCSgaC4X7sVsncbvaCHb6bm4FNJm2jd3blo20/tAIgWtMknut1pTluXB80FHmQL2+ApJOhXfb7IKjwwUStAJYwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAjVKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQmmfa7wd4Tv2eNQ4I0M6Ypw=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAna9/wlWVppQaXNvhpy8xnPsSaMX81ahkgN4FHBL5d0ACIBesjqmxfuBhjDlr2zwUhVwwDYkzpr9892jrQcVsDmeeMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI2SlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEAJ8xYHui0XmuZcGuuxGKzU="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAB7oXZCWuAjIoGewEqxNWm4cj6W+jixSkdEkKpOxDVHAIhANyk7MVn75kdTE2PYnu47nb4h/RNiGNOkEdby4YuMgm1MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI3SlUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEELuEfKu2REVujMfYqPfRbwk="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEArt53d6LSSD6Svo4ZCk5D6vsC7MYfGrSU/IiPXggvK3MCIElZ7kXveO5oMbxo/JwAij8RHkprbvwHknvrEpW0rgPGMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI4ilUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMS0Z0nbCE9mlPeD6/WmmYM="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA3ixfWT0MjRq18/KC9M3OXjLgN286D3/mGxkimdHlEjgCIQDFyFh8Sci2kcd3IbPNThbRiUsNPAgqfhHMOX7oTMzHCTBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECOYpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDBe4EGd1tHr6PPtsnyOD2p"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAjaH+tU3+S1U4EoDYDADJmQFMsbwaZvugVkoePBD6SpQCIEOrH8gb+4bGy9sLFnpxJyUmfmh9iYKMpDJMPv/UIehvMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI6ilUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEKi8SLuddkkoq3vW3xwTul0="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiB39SJO3aaI09yslq4MYxMiCnnTvILHIQl42yLwiGCSsAIgZEj+GmFar1OkZ+8zFmjyQ4uWCfdH7kR5DVdtzY5+qnIwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAjtKVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQc7AbNQD5RQ683RKCJegsmA=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAiOtlnOicwKO03XMAlpXDSSoypXBtQuIimNzift1ijXMCIQD6NnazBX2I+joNpmG+KqPLc1HmH+p2sjxgAV/WzvPsEDBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECPEpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBAUSGlxWyJOHITnaiRF7oa/"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAY0cRQ8aLgm1+Cc2ig4/YzkkO3uTBzXfZo2Sll6ZX68AIgbdjz0G72UbzcLVN85s7AOZU9UYL90/CqtE4TrSt8c+wwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAj1KVSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQWT7J1mAsT1m7Yj7mEWkILQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAnvNIOOUE6iNp5ez8Ln3Wpd8wGuEWpTQptzrVgg5GrlACIHt199t5hpXZj4KSmDbpXRTxQ9xmjW61WEceXJJgcU/dMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI+ClUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEE4zhuntikHskq4hPo94rDM="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAptnqUbYQkVJMjrnC83rNcpBmo7X8p2ewdXntH2qnlscCIQCmCcdnw0gEw38l+5vNk79ZNNrwrz2r7rghkGZx+OhiBDBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECPwpVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBBHCXuNJQJGWojzQltAjUsI"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEA91x7eQ0J9CGTxlfi2jt0O7O/nfzrwhVtTHJ1jJerp/kCIEMrFDBcFyb9o3qWpb0jrFHdLG8V/uQQnvpbfwsTBtSIMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIACpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEED05TCBWw0cAtE6XVYhMLHY="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAvxT1eqvRhM3LaFU7SMHi9wpBXXju//sEDM2Mj44PkRsCIEPKMLxlxMKnR96UCuPxskfOhlm8lI2kumNO9Lnx0QWwMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIBCpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEKCj9668IEwWuU3nYK3+drU="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEA3gXfMNStEJZL+3mAO8Ua1vzxhvpFFzvxsuCb2MduhdYCICwGpyoTUza5RgkzYRh4MeWqDddtrkfRm2IZqNJ/7vybMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQICCpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEENmYI6+fGUMbtO8C0mCAb0A="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEArgbG5rC1VKEeQWH5ya7FtGLvRBMj/ldU3RuNOBSOrKACIQCX6ICn18OAtlb5MYlKRIebDa0DXX59BSoroyMMFB1G3DBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECAsqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBCm9gnYlRtNN6kdej8iuvM0"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAxMw2T53qLhxMV9fkY6hIGVifQ5HexnbW5+z70XArSmwIhAKAZ2wNphitQyXmRClNLG1uEUgw5VJ2fTpAQdeHGCwKfMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIDypUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMHcxYdMqkVsuYne03q7U84="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA6xgV7rhDKx0J4cjg8i6a15iPmw+4KaRIa1/m5YKydG4CIQDfm9iqDMEoQV3zEXHVlZgnv91hh9iidByFIS78UwS6dDBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECBIqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBAnn9IyySNGWqq/Kndx4Ztk"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBiO1NfdtxSLgImwrHFyLIhaWUcQGBtCUPJHAsuNCrAvwIgPD8QEe3kOLubB4QhKKB4DbXDYAcd54Fh927V7+oFCu8wbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAgWKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQF9lWgjuZR56HToXVl1lwnQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAmnFdC6Xu1Rg+2hHwkjvG8wb4VTSZ/wJfP39mJJEzfyQCIQCT41Vu7wH0v/5U5D1zb0wwz4lM2I85lW2t8tKpNP8KMjBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECBoqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBBTtYVFllNHTqb0LKY7gIl+"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBftsZSyVbIWlV+52qsE/J6ma+nICxk8Us/4jJHk8EHAgIhANLRR0bdp3vkHNRfg1Ss8g6TIFi5CJ+ou9Owj7SF/47+MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIHipUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEK1Ts67xvko8odfypxE5djg="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAkREmlM+rRzKqMRiBQmbI1zRS51orPd6znGnNpezfMyECIQDPYkMtGvF5xyM79kmiZRIZRqOubprxWz+RPblE7GFSVTBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECCEqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDPP+AmbepLI5Sbc1gx7Fen"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBsLH2e1WP1ukb31Wurem50txdgDUeUBYTIKw348HkfYwIhAMBzlBgDX3Zy+ErgKZ+kGeLIHrMicJgj6u5wMlwvqVn1MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIJSpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMML3H0sW0gcgqElR4LqIHo="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBnk4WTqf5IJye3xivP8yARR/rA93zXhZhr1N7KtwfIIgIgYI0EKl0rIkF1cXeLaGSF2SQsVRoPicE0zhiHozZ/qJMwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAgtKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ+7PZuIwwTOa5JUo1HkbzKA=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBKUg4afzXbri1hqxLqD4qnSEthWDDGZOyj8JpNzfwxEwIhAMd4eYeS8Grk3FgO00ZhKsWhR233IvHlOPtd6KeZln2PMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIMSpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEI+FDtBhF0HUr2xy3iaTobQ="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAv8qj0ID14hvg/FlYMskybu6eq9TT+qVxrivJfTWAasgCIBNy/XfsJPzcoNAXgEqwWncGsg39v9IGPwUgNRvlO9x1MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQINSpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMB45Hj5bU8Zj+d2EgjfHV4="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAzfMIc8uLhKiUsuMtDlkUrGeXscbmc09Lv4/M4cOz0hsCIQDLlIoGGevU81WqzQMkhElw7BsU+e+Cgd/WDGwTvOiSzDBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECDkqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDC0z+Yj5lJJrprjx2Wyt5V"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAiFa7Pq33qkPqRReb3+qtSwXgOpDT5Tbyjpk+xKqTTzgIhAPtbp8JKd7pmXwTyIMaUdtx359cXY4tzTvozxWqKQs3OMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIPSpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEHQcIbg2LUDFih2pDLH2Auc="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA8hMVNtvyAp/bJ0Xsgyf2/TZUxNIRRtZ+A2AyiDTrfEoCIQDsGKlFZMHIDD1tnT/3dfXS9jR2KjMtEc5+O3BI1RnE4TBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECEEqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDeyENnqp9MrLFTFP8aBQGv"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAwKIJH3W9GGvY9EB8cmgQoGQSY5q9GPyQdyXOiGx7QZ4CIH6aWB2a+grEOmfeHvbSTotYdxV+7x/NBBGDLZY7iac4MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIRCpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEH7j6FuSTEEusISipGpOHho="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBHnhHIvs87rfxCD71lEFRkZdO8uLTveNJ2qrYsk3SzHgIgBBAyH0qWkw5DJ+6crvgGMs4ANRY9XhchqvpbYoi66IQwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhIKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ+iWRT1Y4T9iEi1HHlPS51Q=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiA18uf2z4pxIo/UBWXoj7oMPhvqbc91z5axXmVovA26ywIhAKgSvW2+zAZ3+BE+UuMzMhXbviTZIQCMI+QwRv6w9NyCMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQITCpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEBHDn2dGxUrLhImc3SnOQA4="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAn1r3zMtUfKl7/oB1OPIfQ1MOyeojHht6cVfSr/2+NvoCIQDsYaSnyksa+luWut28M/KvLaDtDJr5gW4/FYySye0vkTBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECFAqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBCI+UqfbVpPsKWaIgqg0jta"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAFJNAgLWqAURoB+Ba+nkWklCZEdYWmdefI8b2AL9w/4QIgVRxnS4fm5Ai048aSxUxN4fDoJxmgMINIbDke7Ym8juowbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhUKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQvo+YSzIKRvOcHPGGJbY48w=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAlYr36FBEa7cCKGuPkMNGpXFbBUhCl5gua9Bi2STaR/QIhAJ2240PeiyjaxreNZf2nBhi3Wvbidu3d0eK59MydglvoMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIWCpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEHNriSXSiUgPkDY547L6pxY="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiA+oIQn0XUJ5VAy7MMnaP2XSA9QlLIQduXK4nxONwtkSQIgAuEcKSCsdQP5wUz52KS5fZMj73g3QQ7rKxEmNGQWNAYwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhfKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ8uz8UpefRV+2kfUYAuPiMQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBk85Dc9WnmOzK9/CPZpnI6XZeUuYpeYllPqtOTGgabpAIhANmu9d6Gv2qRPqH8B+ooeinmj6L2T5CZ80FrsRQ5zA/4MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIYypUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEF5qU+oCbEukpwNk9DeSeF4="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAcAia16/RNwf1CvbMvSn8R+E6DsjBAKppRtsq/0urnLAIgFw+Mr/YoxmSMLOfxEBHcZSsZUtkAB7NjUu2hcveuLZgwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhnKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQT8zCGPZmSAK8RW32/j8rhA=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAMeus3+Ypqw6xsdb1nE60HlBblAk5SZVEVZwQKzvuPMgIhAICy2NcA8S7PF+UNl4/JNnL9785QlTeq5ZxLjclWLpetMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIaipUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEPCBXqmeD032pi1BODcxmPQ="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiARTKIqDyW5pjmTG4bMoFloCXtmSMEm1X7W+f9hZ5oqvgIgEIVi9GMII6Tc30tJPmD8EgI3NODsNsQR6AcWy9+0pKEwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAhtKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQO9+xWpG8Q06k4OJ0yEMVHQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAxeHKLUOhgmaf9ZEYn9r5Sf9oJSZjaAn+R5tVdLGnJzcCIBiJGTEGgpQB3fdh/d2UTFN/AN3GGMrO7fRKgSoFnOgIMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIcSpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEENwSs0pMAEhSnyXLy9VlQrQ="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAyozhKvvy5e3P2IH7TARBj9KsEvBDPplu9gpuC5i9/RwIgMYyYpy7OQDTJcC/DCFBjg80Ij7EpxE8ADu1nR0mB/oMwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAh1KlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ7ohb0CF+RMqtZYW9fxRcNw=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEA1IKlF64xXn5622DkmUo797+Vd+Md6sJUamlxZ4p1z/4CIHMr6UmLy6VztU7HeaXLol8M5GVseD1TWdxxjrnaB15xMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIeCpUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEGkOkf728E9QnuSEGc1tuSM="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBqsXQ+n/qiCfWlQN8Ig0ACr8pvPCOLe5Qx6iCsjMHTSAIgJ/OgzshDoi027FE/FKTFOLTmrWnOyk1KpzdNxFaq8yYwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAh8KlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQdG1tqFukQcqPB56KJWOsLQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiA6OvsInfwsmBH7wfhJ+rJESv8HoNsVlU+AgwphqzqHoQIhAO9FeQDcRAa0iFSLAV630YVqZ156d8aRziMOll6MKp9WMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIfypUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEJ9D+CAbn0RJmSKmdHIqdZc="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBKE+BtUtfZg4LIJTs2JhvBD9gy8CL3JNpiuOj2LUbXUAIhALMLfBu37tAhEnn56gzuce9bqWI/yJn29CiPzFZkM7ohMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIgypUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEP+HKRYsxkKPhjtD06AT87U="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAWwcGJR3Dssu7dRMsV8wWp0ZBga6AvmRsmtEJIgJUksAIgDJGPAoeBY/XX3llETvQfVFgwJCk1a5XPEGHpExAP7TcwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAiGKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ4Z1/r/eQTMmEfU1iCInijA=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiAX56d3c5GYCCF2h5084qqZv1hBt+vwpYAXQ5rimKZC0wIhAJiOCCqwewRxtDnnB8ScoLrNwBFXoCX1lit8JnPXa7r8MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIiypUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMiiYz9+R016mVAUt0fCUQw="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA4d5/YaedW2thMew+3eAYgNEdm2Xk+BIvPnuxXLs51goCIQDYQQkFV54Of6TGCZrpimRmjz4imVXJK1OFr7yFwi6lXzBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECI8qVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBAtUY7b0X5C6ruykOaAHzgE"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiB1kGPLbG87hCSY0wfm3zBlRbgxkMTnIHgoYKgytGEJhwIgbUtQ/G52sz05egP4lUtqzcryb1IF58AxjE55jN+MGN8wbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAiTKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQWe+RMMC1QceP2YYa4DFhsA=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiB4F0GJ60oO29SBLbRwsc1sw3Xt2POtOfuYt/ILEOFkAgIhAItSapczb2nehNOvzXeay7ZAlzLmm/3PterTGb8GcoUlMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIvypUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEGGb8hszj0Wcmj99al71gHQ="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEA8pfDVs/yRNgCzM+DavQGZTPR4oZ4pWqMgfCIwVZda9MCIQD6mYS19IJHSl7UAnfnHOiCwAnxJF9cLmar/ynfg/0UjTBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECMMqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDfZs9MQD1B2ZJvazrw84lk"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBxLyvBlMjLAYTDNzbz/kupIY4TUVksW7ik1lMVCGOIoAIgdqvRUz2W5iSSu3PBTSLBD1Y9g38VDXsqz74Tvn24jw0wbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAjIKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ/1ktW3LVTpu0aPt6AbzaRQ=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBZAN0QYv9LMOo7HHQTr6jHcxZPuyKoJdkdvNuBheoIGQIgNF00cORlB7qoZN7/+8q1moe5XWX7Ca/u4A/RSSAymrMwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAjLKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQQhbBMJhsRsKnSrOnsnWZzA=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiA5wovSyuDZyStOLTRpyjjsPWoZ/BU6xu4d/JJr3dYw1AIhAJkTy5ztbgF7435kiUGPPZqMbSoSgLjZYtMjcgvO02adMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQIzipUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEAMVdT2qqUQ2gpgaTo4zt1M="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAwFhu8HuZDQ9rJOrDnG8kzTEjrbBVmX3zdZ79MB+B0mcCIQDbeMSpaLzbv1KY4nMID+GsVg2ogTeadLgxysKqOgrZMTBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECNIqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBDkUWbbxCBDy6ujfyhRVOlG"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiA1qoHA76iSEobVDmYruoYkxQSbHwIbTTOZfZpUtfp+zAIhAPND/t+cS3io+OxG0zj8W2ymm/pEGoWeZSItr/sJLbknMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI1ipUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMJyEnX5P0WHgBfZW6aZfb4="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAimP/9U6CIX0wy0fflHPwzXNBV2MIRFz1gIOuYRSai94CIQDk+EFhV/UwJuGaBNOrKZaYKXPv4BMNebGWRczemv14STBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECNoqVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBC82C/cOUBEFYS7TlLNXxra"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBAWej/HX9ngzn+YJDhPr5UrdojD4NbhEL8MpBGsNpmNQIhAK60O1jzpeo+6/+98Sj4y3/tQFKEf3ynv3rXic4G+y39MGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI3ipUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEHzJ05aLDkoapMCZDSupWl0="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBijdIMnZrVvAIf6J07Z9augRYDDM08WyGJRY5NhtvdUwIged5RTDSZWOPaVJdqmSJUW6AGeo3/etxn+MKk9eEEqBcwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAjiKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQ1uHe0Db7QDiQ6FsNRS/d2w=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiEAjQXNiHJ1vG5zSTk5XxwaZhXMPpPdJWcUbOi704eMAEcCIAQYS84atmAUek1XzqPSqxGqFoYI3341p7435l7CCOYaMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI5ipUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEEMMpzOSqT0RomcJHECB5o4A="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG/ME8CAQECAQEERzBFAiBc5IBC6WnWdikXH2kpHxODFgye7tnC/NnZfai/UGi+GwIhALyumzx7av1qe/RfJS2z0hJ9NtAeGE1Vo82TiQpsBDUpMGwCAQICAQEEZDFiMAkCAWYCAQEEAQIwEAIBZQIBAQQI6ypUo5UBAAAwEQICAMoCAQEECAAAAAAAAAAIMBYCAgDJAgEBBA04Mjg2NDktODMzODI5MBgCAWcCAQEEELAYwP1/TEIquxZbLShIho4="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYHAMFACAQECAQEESDBGAiEAzz4itk1nqCZgVHoNDbGxNZmbKkurbg612Ye1txJk+VACIQDHDFcK8bj2Zp2LpGTEAvY6pRfjqeTZItJa0XQfNZAgezBsAgECAgEBBGQxYjAJAgFmAgEBBAECMBACAWUCAQEECO4qVKOVAQAAMBECAgDKAgEBBAgAAAAAAAAACDAWAgIAyQIBAQQNODI4NjQ5LTgzMzgyOTAYAgFnAgEBBBBgKel/X8xO14j5rHZmd1yX"
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiBIWwkUUVXtiIGG5AvdfvDn3kqbVB7YnU7QVUhmFtUuqQIgao3ly5Up4kixNP0qB9DkN8E1Hc8eYCg4kmhBtQ/fDS4wbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAjzKlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQWMq2/ofWS6Sv3iZLhXAw8Q=="
+            },
+            {
+              "tokenId": "REDACTED",
+              "Base64-encoded Token": "MYG+ME4CAQECAQEERjBEAiAjk07x5Oy6lRuXBCUUyGFwqZvCTai/f16MapMO8KcEeQIgL4H19Y4+zer5BgITmrNruh02s0dHSARbaxhr8ktmA3cwbAIBAgIBAQRkMWIwCQIBZgIBAQQBAjAQAgFlAgEBBAj3KlSjlQEAADARAgIAygIBAQQIAAAAAAAAAAgwFgICAMkCAQEEDTgyODY0OS04MzM4MjkwGAIBZwIBAQQQAW1AVbqCS6mn1iz5CLkuiw=="
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "versionId": "bc1596fd-40fa-4773-b17e-7c58a3b4bafc",
+  "activeVersionId": "bc1596fd-40fa-4773-b17e-7c58a3b4bafc",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2025-01-15T03:32:29.525Z",
+      "createdAt": "2025-01-15T03:32:29.525Z",
+      "id": "1hUZvBcNYoIuabfp",
+      "name": "Apple"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-01-28T17:03:13.959Z",
+      "createdAt": "2025-01-28T17:03:13.959Z",
+      "role": "workflow:owner",
+      "workflowId": "1vpHYTqraKRmUUDL",
+      "projectId": "0d97Lvjp068I3AuE",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:35.314Z",
+        "createdAt": "2025-01-28T17:01:01.194Z",
+        "id": "0d97Lvjp068I3AuE",
+        "name": "3.Apple",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🍎"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

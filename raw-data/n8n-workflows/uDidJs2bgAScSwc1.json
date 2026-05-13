@@ -1,0 +1,486 @@
+{
+  "updatedAt": "2025-08-13T03:13:18.590Z",
+  "createdAt": "2025-05-08T02:13:40.427Z",
+  "id": "uDidJs2bgAScSwc1",
+  "name": "get_component_info",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/sync/getComponentInfo",
+        "authentication": "jwtAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -48
+      ],
+      "id": "9183d683-f8a3-499b-8223-a19b2ee07d40",
+      "name": "Webhook",
+      "webhookId": "f88f389c-51b1-4de6-8b5f-53cbff4241f9",
+      "credentials": {
+        "jwtAuth": {
+          "id": "Dtc2pVVBtgFiFKvP",
+          "name": "JWT Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "fb19a4d0-fd24-444d-98d7-9c776f90bd9d",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "467a1752-d764-4c14-b866-44db9be89e31",
+      "name": "判断参数校验的结果",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 40001,\n  \"msg\":\"error\",\n  \"errors\":{{JSON.stringify($json.errors.join(\" \"))}}\n}",
+        "options": {}
+      },
+      "id": "fabac054-cef4-49e1-9922-dedae143a493",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 根据规范校验数据对象（允许productionDate为空）\n * @param {Object} data - 需要校验的数据对象\n * @returns {Object} - 包含是否有效和错误数组的校验结果\n */\nfunction validateData(data) {\n    const result = { isValid: true, errors: [] };\n\n    // ================== 基础结构验证 ==================\n    if (data === null || typeof data !== 'object') {\n        result.errors.push('数据必须是非空对象');\n        return invalidateResult(result);\n    }\n\n    // ================== 数据类型验证 ==================\n    // 当productionDate存在时，检查其类型是否为字符串\n    if (Object.hasOwn(data, 'createTimeBegin') && typeof data.createTimeBegin !== 'string') {\n        result.errors.push('createTimeBegin必须为字符串类型!');\n        return invalidateResult(result);\n    }\n    if (Object.hasOwn(data, 'createTimeEnd') && typeof data.createTimeEnd !== 'string') {\n        result.errors.push('createTimeEnd必须为字符串类型!');\n        return invalidateResult(result);\n    }\n\n    // ================== 数据内容验证 ==================\n    // 仅当productionDate存在且非空时进行格式和逻辑校验\n    if (data.createTimeBegin) {\n        // 检查日期格式\n        if (!/^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(data.createTimeBegin)) {\n            result.errors.push('日期格式不正确，应为YYYY-MM-DD');\n            return invalidateResult(result);\n        }\n\n        // 检查日期有效性\n        const [year, month, day] = data.createTimeBegin.split('-').map(Number);\n        const date = new Date(year, month - 1, day);\n        if (\n            date.getFullYear() !== year ||\n            date.getMonth() !== month - 1 ||\n            date.getDate() !== day\n        ) {\n            result.errors.push('存在无效日期（如2月30日等不合理日期）');\n            return invalidateResult(result);\n        }\n    }\n    if (data.createTimeEnd) {\n        // 检查日期格式\n        if (!/^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(data.createTimeEnd)) {\n            result.errors.push('日期格式不正确，应为YYYY-MM-DD');\n            return invalidateResult(result);\n        }\n\n        // 检查日期有效性\n        const [year, month, day] = data.createTimeEnd.split('-').map(Number);\n        const date = new Date(year, month - 1, day);\n        if (\n            date.getFullYear() !== year ||\n            date.getMonth() !== month - 1 ||\n            date.getDate() !== day\n        ) {\n            result.errors.push('存在无效日期（如2月30日等不合理日期）');\n            return invalidateResult(result);\n        }\n    }\n\n    return result;\n}\n\nfunction invalidateResult(result) {\n    result.isValid = false;\n    return result;\n}\n\n// ================== 主处理流程 ==================\nconst processItems = items => items.map(item => {\n    const validation = validateData(item.json.query || {});\n    \n    if (validation.isValid) {\n        item.json.body = { ...item.json.query }; // 浅拷贝保持数据不变性\n    }\n    \n    return validation;\n});\n\nconst getFinalResult = validations => ({\n    isValid: validations.every(r => r.isValid),\n    errors: validations.flatMap(r => r.errors)\n});\n\nreturn getFinalResult(processItems($input.all()));"
+      },
+      "id": "1d928596-e6d2-4ee8-a9f9-bb6f6537aada",
+      "name": "参数校验，判断每个参数值是否为空",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "14a8a009-f4a9-41fc-b6bf-7b93be4c776d",
+              "leftValue": "={{$json.productionDate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        -144
+      ],
+      "id": "d98a3432-33fb-46a0-bccc-f8b797107a0e",
+      "name": "判断日期参数是否为空"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "yf_pcba_data",
+          "mode": "list",
+          "cachedResultName": "yf_pcba_data"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "order_status",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "material_code",
+            "material_description",
+            "production_quantity",
+            "type",
+            "production_date",
+            "order_status",
+            "production_end_date",
+            "work_order_number",
+            "order_create_time",
+            "base_bom_code",
+            "is_update",
+            "zecnl4"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        -48
+      ],
+      "id": "c3739454-f59f-446a-9960-9e265825c274",
+      "name": "返回所有记录",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, material_code, material_description, base_bom_code,production_quantity, type, production_date, order_status, production_end_date, work_order_number, order_create_time,is_update,zecnl4\nFROM sync.yf_pcba_data\nWHERE order_create_time >= '{{ $json.productionDate }}'\n  and order_status=2,\n  AND order_create_time <= COALESCE(NULLIF('{{ $json.productionEndDate }}', ''), '9999-12-31');\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        -240
+      ],
+      "id": "8f2959ba-feaa-453e-9635-bcaa9d644919",
+      "name": "返回大于这个日期的记录",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 0,\n  \"msg\":\"success\",\n  \"data\":{{ JSON.stringify($json.result) }}\n}",
+        "options": {}
+      },
+      "id": "3a90b739-e642-4231-a95e-44d867c72c03",
+      "name": "响应成功数据",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1488,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76d65fb3-1b73-4712-9375-40cb275f4558",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        -128
+      ],
+      "id": "4d5a7254-1e93-4fbb-b695-58b7fb8f90ef",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 400004,\n  \"msg\":\"success\",\n  \"errors\":\"该工单不存在PCB板拼板描述！\"\n}",
+        "options": {}
+      },
+      "id": "fc9e46a8-3ba8-4c6a-a1cd-bd7205ffeae3",
+      "name": "响应成功数据1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1488,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "result",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        -128
+      ],
+      "id": "39576053-20b7-4482-9cfc-cfd9e444b0e8",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $(\"Webhook\").all()[0].json.query;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -144
+      ],
+      "id": "90fec3de-03f5-4196-9959-b421ad0b874d",
+      "name": "返回请求参数"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数校验，判断每个参数值是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数校验的结果": {
+      "main": [
+        [
+          {
+            "node": "返回请求参数",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数校验，判断每个参数值是否为空": {
+      "main": [
+        [
+          {
+            "node": "判断参数校验的结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断日期参数是否为空": {
+      "main": [
+        [
+          {
+            "node": "返回大于这个日期的记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回所有记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "响应成功数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "响应成功数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回大于这个日期的记录": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回所有记录": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回请求参数": {
+      "main": [
+        [
+          {
+            "node": "判断日期参数是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "218.16.102.226",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "authorization": "REDACTED",
+            "user-agent": "Apache-HttpClient/4.3 (java 1.5)",
+            "accept-encoding": "gzip,deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/sync/getComponentInfo",
+          "executionMode": "production",
+          "jwtPayload": {
+            "my_field_1": "value 1",
+            "my_field_2": "value 2",
+            "iat": 1735094662
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "ca63d7d2-8d12-4f61-8386-119914efeb46",
+  "activeVersionId": "ca63d7d2-8d12-4f61-8386-119914efeb46",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-08T02:13:40.427Z",
+      "createdAt": "2025-05-08T02:13:40.427Z",
+      "role": "workflow:owner",
+      "workflowId": "uDidJs2bgAScSwc1",
+      "projectId": "Y6ZOz21cjq2fKS18",
+      "project": {
+        "updatedAt": "2025-08-07T02:20:43.893Z",
+        "createdAt": "2025-02-07T02:43:11.522Z",
+        "id": "Y6ZOz21cjq2fKS18",
+        "name": "5.YF_MES_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

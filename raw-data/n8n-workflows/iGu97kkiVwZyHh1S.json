@@ -1,0 +1,395 @@
+{
+  "updatedAt": "2025-04-24T06:15:24.937Z",
+  "createdAt": "2024-09-10T06:52:21.660Z",
+  "id": "iGu97kkiVwZyHh1S",
+  "name": "updateResourceDevice",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "caba9c42-ec8b-4245-af53-469a07ac0343",
+              "leftValue": "={{ $json.body.deviceIds }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6518872e-a0b9-4b7b-a801-78cffa9e7a1f",
+      "name": "check params is not null",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        700,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "13e63008-1ea0-490f-803f-2f8345ff0291",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7ba38d3b-cf5b-4235-bfb2-7c27d473cbaf",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.deviceIds",
+        "options": {
+          "destinationFieldName": "deviceList"
+        }
+      },
+      "id": "5720110d-d0c3-4fd1-ad6f-6e56826ec723",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        900,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.deviceList.id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "resource_info"
+          ]
+        }
+      },
+      "id": "9ce71178-f792-4877-86c1-6db0513b3b14",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1080,
+        240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "resource_info"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "14c36f4a-5a38-45b3-8b86-d64b549e0b15",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "topic": "/updateDeviceRules",
+        "options": {}
+      },
+      "id": "2ba84c41-1ed1-4a7c-ac31-2bd4e3c85f5c",
+      "name": "MQTT",
+      "type": "n8n-nodes-base.mqtt",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        160
+      ],
+      "credentials": {
+        "mqtt": {
+          "id": "NQxdr68IdOkhoxDi",
+          "name": "MQTT account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet res={};\n  const resourceInfoList=$input.all()[0].json.resource_info;\n   res.resourceInfoList=resourceInfoList.filter(itm=>itm.deviceType==2);\nres.mac=$('Webhook').all()[0].json.body.mac\nreturn res;"
+      },
+      "id": "6794f181-7cd0-4735-a7eb-a243d3b6737f",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f67e7bb9-2764-43f0-908a-a1e391754d13",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/resource/updateDevice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "dc6393bf-b1cc-4c29-b1c5-9899a01d2c5d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        500,
+        320
+      ],
+      "webhookId": "e923fe40-0348-4f22-a5a1-0083a68a49ca"
+    }
+  ],
+  "connections": {
+    "check params is not null": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "MQTT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MQTT": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check params is not null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "154",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "deviceIds": [
+              {
+                "id": 76,
+                "type": "工业高清摄像头"
+              },
+              {
+                "id": 70,
+                "type": "鼠标"
+              },
+              {
+                "id": 71,
+                "type": "键盘"
+              },
+              {
+                "id": "",
+                "type": ""
+              }
+            ],
+            "mac": "d8:47:8f:90:57:b5"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/updateDevice",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "aa9a47d0-908c-4a26-b775-f988cf57bdf3",
+  "activeVersionId": "aa9a47d0-908c-4a26-b775-f988cf57bdf3",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:48:53.456Z",
+      "createdAt": "2025-04-24T05:48:53.456Z",
+      "role": "workflow:owner",
+      "workflowId": "iGu97kkiVwZyHh1S",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

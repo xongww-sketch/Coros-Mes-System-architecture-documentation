@@ -1,0 +1,167 @@
+{
+  "updatedAt": "2024-07-04T02:53:16.025Z",
+  "createdAt": "2024-07-04T02:43:29.502Z",
+  "id": "s2zX6ViwohWtOVtU",
+  "name": "get_weight_config_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.configId = 1;\n}\n\nreturn $input.all();"
+      },
+      "id": "e2e7539d-285f-4a34-b800-23f7753f428d",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "temp_config",
+          "mode": "list",
+          "cachedResultName": "temp_config"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.body.configId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e70319ef-8262-4a96-855a-3907010aec2b",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1140,
+        420
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n\"code\":\"200\",\n\"config\":{{ JSON.stringify($json.config) }}\n} ",
+        "options": {}
+      },
+      "id": "181782e2-4d3e-4b60-aaea-df91ebc631f7",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1420,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "path": "getWeightConfig",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9de85972-556e-42fd-88c8-ba3bfa44573e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        600,
+        420
+      ],
+      "webhookId": "f8012524-485f-43b0-b7c7-01fc08f870b4"
+    }
+  ],
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b2af131f-341c-47b9-b416-dce37792d855",
+  "activeVersionId": "b2af131f-341c-47b9-b416-dce37792d855",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-07-04T02:43:29.502Z",
+      "createdAt": "2024-07-04T02:43:29.502Z",
+      "role": "workflow:owner",
+      "workflowId": "s2zX6ViwohWtOVtU",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

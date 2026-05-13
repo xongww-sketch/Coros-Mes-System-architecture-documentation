@@ -1,0 +1,170 @@
+{
+  "updatedAt": "2025-04-24T07:23:01.103Z",
+  "createdAt": "2025-02-11T09:34:24.006Z",
+  "id": "eM59T7onSCaGEM0w",
+  "name": "/getToken",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/getToken",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "801e1f00-c83c-4006-a775-cc51cfe5f65e",
+      "name": "Webhook",
+      "webhookId": "f57040e3-3a44-49ce-bee3-86445a0c28a8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.token = Math.floor(Math.random() * 101);\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "cd28d61a-99f2-48a0-b5f7-6cf3a69b8ace",
+      "name": "generator token"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "REDACTED",
+        "value": "test",
+        "expire": true,
+        "ttl": 600
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "93e02055-a7b7-4362-bc5d-dd24f971cea3",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "MVUAC2wFL3dgbgoU",
+          "name": "Local Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        0
+      ],
+      "id": "c25a8c71-ecac-4a91-94f3-ad4ba7610b08",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "generator token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generator token": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getToken",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "ed31e9ae-52eb-458b-bb5d-124999675c84",
+  "activeVersionId": "ed31e9ae-52eb-458b-bb5d-124999675c84",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:04:42.463Z",
+      "createdAt": "2025-04-24T03:04:42.463Z",
+      "role": "workflow:owner",
+      "workflowId": "eM59T7onSCaGEM0w",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

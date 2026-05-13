@@ -1,0 +1,363 @@
+{
+  "updatedAt": "2025-04-24T05:59:26.617Z",
+  "createdAt": "2024-07-29T09:52:15.315Z",
+  "id": "cZaMttcSHnTh3r3y",
+  "name": "downloadprocedure_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ab54d48f-9bf0-4340-bcef-38fc45639ecc",
+              "name": "file_name",
+              "value": "={{ $json.version }}{{ $json.sop }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "90ac3059-b9e9-44cf-aa8f-8847ee64632d",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        780,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "id": "f5ed9ff5-168e-429a-b311-50325109f753",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n    let itemJson = item.json;\n\n    res.push(itemJson);\n}\n\nreturn {\n    result: res\n};\n"
+      },
+      "id": "f947e603-f91b-41a8-afb8-f4029efde61a",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"查询成功\",\n  \"result\":{{JSON.stringify($json.result)}}\n}",
+        "options": {}
+      },
+      "id": "fa2c348c-9c2d-4d18-bf45-bd9f401f8a0b",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1640,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "path": "downloadprocedure_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "05af11a4-ae84-456b-8ba3-e0023c3f8f45",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        320
+      ],
+      "webhookId": "1edbb93b-45a4-42e5-870b-f13e67f57457"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_detail",
+          "mode": "list",
+          "cachedResultName": "history_procedure_detail"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "history_procedure_id",
+              "value": "={{ $json.query.history_procedure_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "286f1101-c78d-4630-9b21-06d37b0730d7",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        380,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "6f5fd8da-95d7-4904-9748-eb1d9c54f147",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "99aef832-8544-4ec4-ab4e-d50b3b618439",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"无法查询到对应工序\"\n}",
+        "options": {}
+      },
+      "id": "3dce6bd6-73cf-4d82-ae9f-3766db9e5791",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "path": "=/mes/procedureSop/{{ $json.file_name }}"
+      },
+      "id": "8a7419db-c105-4f7b-a4b3-7cfd4f1210a6",
+      "name": "下载文档",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        980,
+        320
+      ],
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "下载文档",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载文档": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "history_procedure_id": "18"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/downloadprocedure_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "261e7143-6d83-4560-92ee-823de9e6f17f",
+  "activeVersionId": "261e7143-6d83-4560-92ee-823de9e6f17f",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:49:34.500Z",
+      "createdAt": "2025-04-24T05:49:34.500Z",
+      "role": "workflow:owner",
+      "workflowId": "cZaMttcSHnTh3r3y",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

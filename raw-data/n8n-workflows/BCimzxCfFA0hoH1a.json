@@ -1,0 +1,275 @@
+{
+  "updatedAt": "2025-04-24T06:23:36.202Z",
+  "createdAt": "2025-01-07T09:25:02.410Z",
+  "id": "BCimzxCfFA0hoH1a",
+  "name": "getConfigList",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "9dce713d-51cc-459a-98c3-3a8bd841bf81",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{\n    \"configList\":{{ JSON.stringify($json.data) }},\n\"total_count\":{{ $('Postgres1').first().json.total_count ? $('Postgres1').first().json.total_count :0}}\n  }\n}",
+        "options": {}
+      },
+      "id": "7f2a9d34-7cab-49f2-a32a-071786f1d799",
+      "name": "Respond package List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1180,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "allFieldsExcept",
+        "fieldsToExclude": "total_count",
+        "options": {}
+      },
+      "id": "d370f682-4a87-4ed3-9890-bb385d2a70c2",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        700,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  p.id, \n  p.process_name,\n  p.config,\n   \n  COUNT(*) OVER() AS total_count \nFROM \n  mes.process_config p \nWHERE \n  p.is_deleted = 0 {{ $json.sqlStr }} order by p.create_time DESC limit {{$json.pageSize}} OFFSET {{ $json.offset }};",
+        "options": {}
+      },
+      "id": "0d4cea80-2ab4-4bc0-b0dc-04c1e5ccceb2",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        460,
+        640
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//判断查询的条件是否存在\n//构建查询的SQL语句\nconst sqlParams={};\nfor (const item of $input.all()) {\n  const process_name = item.json.query.process_name; //工序名\nlet conditions = [];\n\nif (process_name) {\n  conditions.push(`p.process_name='${process_name}'`);\n}\n   \nsqlParams.sqlStr = conditions.length ? `and ${conditions.join(' and ')}` : '';\nconst offset=(item.json.query.pageNo-1)*item.json.query.pageSize;\nsqlParams.offset=offset;\nsqlParams.pageSize=item.json.query.pageSize;\n}\n\nreturn sqlParams;"
+      },
+      "id": "4c328ef5-72c1-43c8-a871-8482949936da",
+      "name": "build sql statement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cfd53608-a3cf-412b-a866-43e23ce5176d",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bd2e711d-09c9-49b7-9f66-a6d11bf7a855",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        920,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "path": "/config/getConfigList",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "eb1a0e75-42d4-441a-8ffe-9d0ef1896ce3",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        640
+      ],
+      "webhookId": "1d388967-8bf4-4d56-ad3a-2db33a5b6329"
+    }
+  ],
+  "connections": {
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build sql statement": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond package List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "build sql statement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {
+            "pageSize": "10",
+            "pageNo": "1"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/config/getConfigList",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "d81fd1c0-8ce9-48f4-b318-0911c7852cd3",
+  "activeVersionId": "d81fd1c0-8ce9-48f4-b318-0911c7852cd3",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:54:20.961Z",
+      "createdAt": "2025-04-24T05:54:20.961Z",
+      "role": "workflow:owner",
+      "workflowId": "BCimzxCfFA0hoH1a",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,6023 @@
+{
+  "updatedAt": "2026-01-30T07:38:52.832Z",
+  "createdAt": "2024-03-01T06:19:29.952Z",
+  "id": "Kp0WhtmxfjuIu0YG",
+  "name": "仓库扫码出库",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "00cff54f-5448-4703-b96b-c7d0edf9dd9e",
+      "name": "Crypto",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -6784,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7498a9a5-ff4f-4541-bdd5-4ab2f41703dd",
+              "leftValue": "={{ JSON.parse($json.data).delivery }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "122222ac-1628-4126-ac4a-420cc5f6a389",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -6512,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "f19bb34c-17f0-4bd2-8ee7-8dc6bd0a3557",
+      "name": "Respond to Webhook3",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -12480,
+        2288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7ac7e65f-c2cf-44fb-be08-8e1d4f51e668",
+              "leftValue": "={{$input.all()[0].json.remainSnList}}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cec54190-038b-4030-bd25-48abb111b905",
+      "name": "判断上传的sn是否都存在表中",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -11264,
+        1840
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2001\",\n  \"message\":\"上传的sn存在错误！\",\n  \"data\":{\n    \"errSN\":\"{{$json.errSN}}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "d8f3028d-8d83-4c52-9919-81cf52370f88",
+      "name": "Respond to Webhook4",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -12976,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "8d22fe4c-6656-48df-bd5f-423d079ee096",
+              "leftValue": "={{ $json.noFindPriceSN }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d847472f-d8a9-41ca-9a10-7267516da56d",
+      "name": "判断上传的机型是否符合订单的机型要求",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -4496,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b65956d4-4db0-4b3f-ab70-72549c39006d",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "50376adf-3c0e-4093-96cb-cb57c95d1d40",
+      "name": "存在订单数据进行更新，不存在则新增订单数据",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3184,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "9e53f974-f2e3-4e1b-b3ea-af2b9d3d036b",
+              "leftValue": "={{ $json.excessSku }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "06d79964-3a1d-4edb-9f5e-dfb3e2abe9a3",
+      "name": "小于添加上传的机型信息，大于报错",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2496,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2001\",\n  \"msg\":\"请填写所有必填项！\"\n}",
+        "options": {}
+      },
+      "id": "9c429d2e-e245-4a43-86cd-93212277de05",
+      "name": "错误信息：sn或单据编号不能为空",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -14640,
+        1984
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "6ec5d7b5-0752-4e54-96d5-b2e8152c117d",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -10880,
+        1744
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "9025fbbb-fedd-44f6-b812-384c5ccb614d",
+              "leftValue": "={{ $('给出库的sn绑定价格').all()[0].json.errQuantityWtype }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ab940d2b-6219-463f-8beb-00bf1e04d763",
+      "name": "判断一次上传的sn是否小于订单数量",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -4112,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfunction putOrIncrement(map,key,num) {\n  if(map.has(key)){\n    let value=map.get(key);\n    map.set(key,value+num);\n  }else{\n    map.set(key, num);\n  }\n  \n}\n\nconst result=[];\nconst excessSku=[];\n//统计该订单已经发货的数量\nconst shippedWtypeMap=new Map();\nfor(const item of $input.all()){\n  putOrIncrement(shippedWtypeMap,item.json.sku_code,1);\n}\n\n//统计该订单将要发货的数量\nconst shipWtypeMap=new Map();\n$('给出库的sn绑定价格').all()[0].json.watch_info.forEach(el=>{\n    putOrIncrement(shipWtypeMap,el.sku_code,1);\n  })\n\nconst orderSkuMap=new Map();\n//统计订单中同一机型颜色的发货数量\n$('给出库的sn绑定价格').all()[0].json.orderDetails.forEach(el=>{    \n     putOrIncrement(orderSkuMap,el.sku_code,el.quantity)\n    \n  })\norderSkuMap.forEach((value,key)=>{\n  let shippedSum=shippedWtypeMap.get(key)+shipWtypeMap.get(key);\n  if(shippedSum>value){\n    excessSku.push(key);\n  }\n})\nresult.push({\n  platform_code:$('给出库的sn绑定价格').all()[0].json.platform_code,\n  watch_info:$('给出库的sn绑定价格').all()[0].json.watch_info.map(el=>{\n    return `'${JSON.stringify(el)}'`\n  }).join(','),\n  excessSku:excessSku\n})\nreturn result;"
+      },
+      "id": "5e56b3be-b94a-4ee6-b0dc-6aa440f3a5d9",
+      "name": "判断当前已经出库的机型和数量是否小于订单中的机型和数量",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2672,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.detail.get"
+            },
+            {
+              "name": "express_no",
+              "value": "={{$('Webhook').all()[0].json.body.code}}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b74f5377-cf25-4d83-b5e9-2c8b5491e6c7",
+      "name": "管易通过单据编号查询到对应订单信息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -6640,
+        1184
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2003\",\n  \"msg\":\"管易接口调用错误！\"\n}",
+        "options": {}
+      },
+      "id": "2af1db10-e0f3-4ee8-ace6-48ddde940444",
+      "name": "管易接口调用出错",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -6352,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2004\",\n  \"msg\":\"快递单号不存在\"\n}",
+        "options": {}
+      },
+      "id": "6996274d-d82b-409d-94b8-c3324561d292",
+      "name": "订单号不存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -6016,
+        1696
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2005\",\n  \"msg\":\"上传的机型不符合要求订单要求！\",\n  \"data\":{\n    \"noFindPriceSN\":\"{{$json.noFindPriceSN}}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "c263e2f2-bdfb-4d28-9331-7ba229d0492c",
+      "name": "上传的机型不符合要求订单要求",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -4144,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2006\",\n  \"msg\":\"上传的sn数量超过订单数量！\",\n  \"data\":{\n    \"errQuantityWtype\":\"{{ $json.errQuantityWtype }}\"\n  }\n} ",
+        "options": {}
+      },
+      "id": "a2b2894c-f8ef-44f3-bee1-db4cd71eb960",
+      "name": "判断一次上传的sn是否超过订单数量",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -3792,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"出库成功！\",\n  \"data\":{\n    \"snList\":{{JSON.stringify($json.snList)}}\n  }\n}",
+        "options": {}
+      },
+      "id": "d2e30913-10fe-4f71-9d8a-efa2c7067fa0",
+      "name": "出库成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        464,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b11ffcec-3efe-486a-a40e-44ec909d8e57",
+              "name": "retroIdList",
+              "value": "={{$('Code13').all()}}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8e8db76e-0063-4225-a19c-654538beaa52",
+      "name": "获取到需要出库的SN1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -8400,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "retroIdList",
+        "options": {}
+      },
+      "id": "e955115c-f374-46cc-8922-995ba14c2336",
+      "name": "Split Out1",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -8208,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6d99307a-741f-4309-8db5-6298abc935eb",
+      "name": "循环进行数据更新1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -7664,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a0836b4-a5bf-4414-af04-60f976ccfd99",
+              "name": "retroid",
+              "value": "={{ $json.json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "7d48bb8f-9e70-4abc-bc16-706739797d55",
+              "name": "json.order_number",
+              "value": "={{ $('If1').all().filter(item => item.json.body.snIds==$json.json.retroid)[0].json.body.code }}",
+              "type": "string"
+            },
+            {
+              "id": "0ff98337-4549-4513-bea0-45969abdd29b",
+              "name": "create_time",
+              "value": "={{ $now.format(\"yyyy-MM-dd HH:MM:ss.\")}}{{ new Date().getMilliseconds().toString().padStart(3, '0');}}",
+              "type": "string"
+            },
+            {
+              "id": "553f03c6-4b05-4bc1-b6d8-76d78deb5078",
+              "name": "tag",
+              "value": "={{ $json.json.tag }}",
+              "type": "string"
+            },
+            {
+              "id": "800345b6-fe73-40dc-81d1-57e37c26426c",
+              "name": "channel",
+              "value": "={{ $('If1').all().filter(item => item.json.body.snIds==$json.json.retroid)[0].json.body.channelId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c8a70ee7-9913-4a92-8768-98401b47e5f1",
+      "name": "给每个出库的SN绑定订单号1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -7888,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "1b36bfc1-62ac-49e1-af45-8cf779094bf9",
+              "leftValue": "={{JSON.parse($json.data).delivery.warehouse_name}}",
+              "rightValue": "试用样机仓",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7a01a4f6-41b6-4593-af93-1bf10870204a",
+      "name": "判断是不是试用机",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -6016,
+        1456
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM YFConsumer.dbo.consm_barcodebindinfo_CorosChannel WHERE Channel ='{{ $json.body.channelId }}';\n"
+      },
+      "id": "1849f97a-1953-409a-8c22-46dafd125fac",
+      "name": "查询渠道号是否正确",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -13936,
+        1840
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7ac7e65f-c2cf-44fb-be08-8e1d4f51e668",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4b20eb4a-72e4-46fd-a25f-686f58e36bdc",
+      "name": "判断渠道号是否存在",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -13744,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2002\",\n  \"msg\":\"渠道号不存在\"\n}",
+        "options": {}
+      },
+      "id": "a8123732-f10f-4cb3-88d6-a4f2abe0655d",
+      "name": "错误信息：渠道号不存在！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -13520,
+        1984
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "a83e2521-03fe-4bb9-822c-60a426aff004",
+              "leftValue": "={{ $('Webhook').all()[0].json.body.code.slice(0,2) }}",
+              "rightValue": "SF",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2c108935-9720-4a30-bd8e-f52d052b8ad1",
+              "leftValue": "={{ $('Webhook').all()[0].json.body.code.length }}",
+              "rightValue": 15,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "39f832c2-a24b-4577-a726-748c286b5f7f",
+              "leftValue": "={{ $('Webhook').all()[0].json.body.code.trim().slice(0,4) }}",
+              "rightValue": "JDVC",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "6d2acf97-9d35-450b-a031-5a42cc47bb79",
+      "name": "判断出库的手表是否是管易出货",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -8656,
+        1616
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nlet code=$('Webhook').all()[0].json.body.code;\nlet res={};\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.trade.deliverys.detail.get\",\n  \"express_no\":code\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nresult.push(res);\nreturn result;"
+      },
+      "id": "773269a2-0c21-44b5-9058-748408364089",
+      "name": "生成管易签名",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6944,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "28756229-9779-4bff-99f7-67d21aaaa2ce",
+              "leftValue": "={{ $json.errSN }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "651ba849-4471-4732-b51d-50fdc1b296bd",
+              "leftValue": "={{ $json.remainSnList }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b150246b-92e6-491c-8e08-8aa4a59c1389",
+      "name": "判断前两个校验是否出问题",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -10544,
+        1744
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2002\",\n  \"msg\":\"上传的sn不在数据库表中\",\n  \"data\":{\n    \"snList\":{{JSON.stringify($json.remainSnList)}}\n  }\n}",
+        "options": {}
+      },
+      "id": "9160f5a1-e895-4a32-b909-b1b3dad62d66",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -10448,
+        2160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "55555623-fed3-470f-bf1d-341a8d9e581f",
+      "name": "错误信息：数据库错误！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -13760,
+        1984
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE YFConsumer.dbo.consm_barcodebindinfo\nSET modifytime='{{$json.create_time}}',Channel='{{$('Webhook').all()[0].json.body.channelId}}'\nOUTPUT inserted.*\nWHERE retroid='{{$json.retroid}}';\n"
+      },
+      "id": "d8d22218-5125-4440-a777-a49614ed77d1",
+      "name": "更新出库时间2",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -7024,
+        2080
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4P",
+          "name": "MES_SQL_SERVER_MES2024"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库出错！\"\n}",
+        "options": {}
+      },
+      "id": "5473e08e-8e59-4acc-b6d5-8961abe79070",
+      "name": "错误信息:数据库错误！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库出错！\"\n}",
+        "options": {}
+      },
+      "id": "aaa1b916-42df-4fef-8121-230cddc6b598",
+      "name": "错误信息:数据库错误！1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        256,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "0af7f966-8b89-4f89-aa06-55cfd55e4144",
+      "name": "sn码已经存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2ea3264e-b665-435b-808b-fe033b7fc6a6",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f5311b06-2749-47af-b10d-4bfbb9ebbbd0",
+      "name": "判断订单表中是否存在数据",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2672,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "3a9ece37-3bf3-4be0-85d6-fd4cc7e44959",
+      "name": "错误信息：数据库错误！4",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -6560,
+        2096
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('给出库的sn绑定价格').all()[0].json.watch_info;"
+      },
+      "id": "2e2c8ae2-c31f-476e-b72e-17b3ce585b78",
+      "name": "处理上传的手表信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2256,
+        336
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor(const item of $input.all()){\n \n}\n $('给出库的sn绑定价格').all()[0].json.watch_info.map(el=>{\n  el.order_number=$('给出库的sn绑定价格').all()[0].json[\"platform_code\"]\n})\nreturn $('给出库的sn绑定价格').all()[0].json.watch_info;"
+      },
+      "id": "f3e2c4d5-33ab-4478-b20d-409648463609",
+      "name": "给每个绑定订单号",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1520,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "127ed8b0-bbe7-4804-8563-3fa6aeed297c",
+      "name": "循环更新出库时间",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -960,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT cbb.*,cb.ordernumber2,cb.jobnumber2 FROM YFConsumer.dbo.consm_barcodebindinfo as cbb join  YFConsumer.dbo.consm_barcodeinfo as cb on cbb.retroid=cb.uuid WHERE cbb.retroid in ({{ $json.snList }});"
+      },
+      "id": "6e32ceeb-bf7d-44d2-a39c-23c419c4c8f7",
+      "name": "查询上传的sn是否存在数据库表中",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -13040,
+        2096
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "59e6b372-05bf-4b27-a2b0-b5aa7c247742",
+              "leftValue": "={{ $json }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "af684d1c-d105-47b0-afd3-77199184bd57",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1776,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2008\",\n  \"msg\":\"该SN已存在出库信息!\",\n  \"data\":{\n    \"hasOrderNumber\":{{JSON.stringify($json.hasorderNumber)}}\n  }\n}",
+        "options": {}
+      },
+      "id": "196318d6-abc0-43c9-aaf5-3588ed8039b3",
+      "name": "SN已存在出货信息",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nlet resJson=[];\nfor (const item of $input.all()) {\n  resJson.push({\n    retroid:item.json.retroid,\n    order_number:item.json.order_number\n  })\n}\nresult.push({\n  hasorderNumber:resJson\n})\nreturn result;"
+      },
+      "id": "db642edf-91ca-4186-985d-aff540043d35",
+      "name": "构建存在出货信息的列表",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1584,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst result=[];\nconst resJson=[];\nconst now = new Date();\n const utcOffset = now.getTimezoneOffset() * 60000; // 获取UTC偏移量并转成毫秒\n  const chinaOffset = 8 * 60 * 60 * 1000;\n  const chinaTime=new Date(now.getTime() + utcOffset + chinaOffset);\n$('给出库的sn绑定价格').all()[0].json.watch_info.forEach(el=>{\n  resJson.push({\n    retroid:el.retroid,\n    channelId:$('Webhook').all()[0].json.body.channelId,\n    createTime:chinaTime\n  })\n})\nresult.push({\n  snList:resJson\n})\nreturn result;"
+      },
+      "id": "c31e407f-488f-467a-92f9-4fc4ecfbc02b",
+      "name": "出库成功返回这次出库信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select wo.order_number, wi.retroid,wi.uuid,wi.watchtype,wi.price,wi.watch_status,sku_code from delivery_order wo right join delivery_order_details wi on wo.order_number=wi.order_number where wo.order_number='{{ $json.platform_code }}'",
+        "options": {}
+      },
+      "id": "115351ec-c848-40ef-be66-a2177fe3a40d",
+      "name": "判断数据库中是否有该订单数据",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -3504,
+        336
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order",
+          "mode": "list",
+          "cachedResultName": "delivery_order"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "order_number",
+              "value": "={{$('给出库的sn绑定价格').item.json[\"platform_code\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "15994785-1b4e-4ca1-a2b5-f43852239980",
+      "name": "查询订单数据",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -2912,
+        352
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.retroid }}"
+            },
+            {
+              "column": "watch_status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "026a262c-a810-4e28-968c-806b5f38994c",
+      "name": "查上传的sn是否已经出库",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -1984,
+        336
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "2c7e0758-dfd8-43e7-a4da-fe089d9d59e6",
+              "leftValue": "={{ $json.errSN }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "47f350ce-ad36-4764-87ca-b20d69fffe10",
+      "name": "判断sn的长度是否为10",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -13280,
+        1600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "25e73832-fb5b-4423-a5cc-bb5be15c0241",
+              "leftValue": "={{ $json.body.code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c453ae3d-3c51-433f-af4d-5feaca275229",
+              "leftValue": "={{ $json.body.snIds }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7c7a0e4c-40ad-494e-8f74-35d086ca6493",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -14912,
+        1792
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 保持原有的去重函数不变\nfunction uniqueArray(arr) {\n  return arr.reduce((acc, curr) => {\n    if (!acc.hasOwnProperty(curr)) {\n      acc[curr] = true;\n    }\n    return acc;\n  }, {});\n}\n\n// 1. 获取所有输入项，而不仅仅是 [0]\nconst items = $('If1').all();\n\n// 2. 使用 map 遍历每一个 item\nreturn items.map(item => {\n  const res = {};\n  const errSN = []; // 注意：必须在循环内初始化，确保每条数据的错误列表是独立的\n  \n  // 获取当前 item 的 body\n  const body = item.json.body;\n\n  res.channelId = body.channelId;\n  res.orderId = body.orderId;\n\n  // 3. 安全性处理：防止 body.snIds 为空导致 match 报错\n  const snIdsText = body.snIds || \"\";\n  // 匹配正则，如果没有匹配到任何内容，默认为空数组 []\n  const matches = snIdsText.match(/[A-Za-z0-9]{10}/g) || [];\n\n  const snList = matches.filter(el => el !== '').map(el => {\n    // 虽然正则限制了{10}，但保留你的原有逻辑\n    if(el.length !== 10){\n      errSN.push(el);\n    }\n    return `'${el}'`;\n  });\n\n  res.snList = Object.keys(uniqueArray(snList));\n  res.errSN = errSN;\n\n  // 4. 返回符合 n8n 格式的对象\n  // n8n 的 Function 节点通常需要返回一个包含 json 属性的对象数组\n  return {\n    json: res\n  };\n});"
+      },
+      "id": "1ddb0531-19f5-467f-b958-49367d3b7272",
+      "name": "对snList做处理",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -13536,
+        1744
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取 '对snList做处理' 节点的所有数据（即总码池），并合并为一个大数组\n// 这样即使源节点输出了多条 item，我们也能把它们所有的 snList 收集起来\nlet fullSnList = [];\nconst sourceItems = $('对snList做处理').all();\n\nsourceItems.forEach(item => {\n  // 确保 snList 存在且是数组\n  if (item.json.snList && Array.isArray(item.json.snList)) {\n    // 保留你原本的逻辑：截取字符串 (去除头尾的引号 'ABC...' -> ABC...)\n    const cleanList = item.json.snList.map(e => e.slice(1, 11));\n    fullSnList = fullSnList.concat(cleanList);\n  }\n});\n\n// 2. 获取当前节点 ($input) 所有已使用的 retroid\n// 防止 retroid 字段不存在导致报错\nconst usedRetroids = $input.all().map(item => item.json.retroid).filter(id => id);\n\n// 3. 计算剩余的 List (从总表中过滤掉已使用的)\n// 使用 filter 替代 splice，更加安全且逻辑清晰\nconst remainSnList = fullSnList.filter(sn => !usedRetroids.includes(sn));\n\n// 4. 返回结果\n// n8n 的 Function 节点通常返回数组包对象: [{json: {...}}]\nreturn [{\n  json: {\n    remainSnList: remainSnList,\n    totalCount: fullSnList.length, // (可选) 总数\n    remainCount: remainSnList.length // (可选) 剩余数\n  }\n}];"
+      },
+      "id": "45f78968-126f-45e2-a806-5de9d4cbc725",
+      "name": "将sn字符串转为数组",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11472,
+        1840
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "order_number",
+              "value": "={{ $json.order_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9abf4533-4857-4bf8-9d06-8ac34abfe657",
+      "name": "删除创建的订单数据",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -800,
+        736
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "price": "={{ $json.price }}",
+            "retroid": "={{ $json.retroid }}",
+            "watchtype": "={{ $json.watchType }}",
+            "uuid": "={{ $json.uuid }}",
+            "create_time": "={{ new Date() }}",
+            "order_number": "={{ $json.order_number}}",
+            "watch_status": 1,
+            "sku_code": "={{ $json.sku_code }}",
+            "uuid_unique": "={{ $json.uuid_unique }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "watchtype",
+              "displayName": "watchtype",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "watch_status",
+              "displayName": "watch_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c0b9a115-9216-4cda-bbfa-4ddc9b83b719",
+      "name": "存储出货订单",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -2048,
+        736
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order",
+          "mode": "list",
+          "cachedResultName": "delivery_order"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "create_time": "={{ new Date() }}",
+            "order_number": "={{$('给出库的sn绑定价格').item.json[\"platform_code\"]}}",
+            "payment_amount": "={{$('给出库的sn绑定价格').item.json[\"pay_amount\"]}}",
+            "order_details": "={{ $('给出库的sn绑定价格').item.json[\"orderDetails\"] }}",
+            "channel_id": "={{$('Webhook').all()[0].json.body.channelId}}",
+            "express_no": "={{$('Webhook').all()[0].json.body.code}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "trial_status",
+              "displayName": "trial_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payment_amount",
+              "displayName": "payment_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_details",
+              "displayName": "order_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel_id",
+              "displayName": "channel_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6dff4b10-4ab7-4317-9d36-c0d06b62f425",
+      "name": "存储仓库出库的有赞订单信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -2432,
+        480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"出库成功！\",\n  \"data\":{\n    \"snList\":{{JSON.stringify($json.snList)}}\n  }\n}",
+        "options": {}
+      },
+      "id": "65a287a8-fea4-4f59-9c3e-52d1a5d853bb",
+      "name": "出库成功3",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -6352,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst result=[];\nconst resJson=[];\nconst now = new Date();\n const utcOffset = now.getTimezoneOffset() * 60000; // 获取UTC偏移量并转成毫秒\n  const chinaOffset = 8 * 60 * 60 * 1000;\n  const chinaTime=new Date(now.getTime() + utcOffset + chinaOffset);\n$('Merge1').all()[0].json.snList.forEach(el=>{\n  resJson.push({\n    retroid:el.slice(1, -1),\n    channelId:$('Webhook').all()[0].json.body.channelId,\n    createTime:chinaTime\n  })\n})\nresult.push({\n  snList:resJson\n})\nreturn result;"
+      },
+      "id": "d663351b-082f-44cb-b3d9-257f6c9ffe1e",
+      "name": "出库成功返回这次出库信息3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6576,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_caches",
+          "mode": "list",
+          "cachedResultName": "delivery_order_caches"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "express_no",
+              "value": "={{ $('Webhook').all()[0].json.body.code.trim() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bcf06e98-0f98-4859-9829-809f4046eb91",
+      "name": "从数据缓存中查找是否存在交货单记录",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -7328,
+        1488
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cb9936ee-9c96-4186-a8b9-4c3b3d658493",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d7dd1a24-b291-433c-84bf-f416444cc75f",
+      "name": "If3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -7056,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_log",
+          "mode": "list",
+          "cachedResultName": "delivery_log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "isstateok": "={{ $json.isstateok }}",
+            "ischeck": "={{ $json.ischeck }}",
+            "procedurevalue": "={{ $json.procedurevalue }}",
+            "channel": "={{ $json.channel }}",
+            "jobnumber": "={{ $json.jobnumber }}",
+            "ordernumber": "={{ $json.ordernumber }}",
+            "productcode": "={{ $json.productcode }}",
+            "clientcode": "={{ $json.clientcode }}",
+            "retroid": "={{ $json.retroid }}",
+            "baseline": "={{ $json.baseline }}",
+            "uuid": "={{ $json.uuid }}",
+            "baselinebatch": "={{ $json.baselinebatch }}",
+            "batterybatch": "={{ $json.batterybatch }}",
+            "createtime": "={{ $json.createtime }}",
+            "modifytime": "={{ $json.modifytime }}",
+            "uuid_unique": "={{ $json.uuid_unique }}",
+            "order_number": "={{ $('Code1').all()[0].json.order_number }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "jobnumber",
+              "displayName": "jobnumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ordernumber",
+              "displayName": "ordernumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "productcode",
+              "displayName": "productcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "clientcode",
+              "displayName": "clientcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "baseline",
+              "displayName": "baseline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "baselinebatch",
+              "displayName": "baselinebatch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "batterybatch",
+              "displayName": "batterybatch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedurevalue",
+              "displayName": "procedurevalue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "isstateok",
+              "displayName": "isstateok",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ischeck",
+              "displayName": "ischeck",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "modifytime",
+              "displayName": "modifytime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ffacd514-ae46-401e-806a-0448449cfbc3",
+      "name": "记录更新日志2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -288,
+        16
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $input.all();"
+      },
+      "id": "9fa9a334-0754-431b-887b-9977a20eeea5",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "mes_delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "mes_delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "uuid": "={{ $json.uuid }}",
+            "order_number": "={{ $json.order_number }}",
+            "express_no": "={{$('Webhook').all()[0].json.body.code}}",
+            "create_time": "={{ new Date() }}",
+            "delivery_status": 1,
+            " uuid_unique": "={{ $json.uuid_unique }}",
+            "channel": "={{$('Webhook').all()[0].json.body.channelId}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " uuid_unique",
+              "displayName": " uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3fbfeb19-e8d3-400f-b37b-a6319d51b038",
+      "name": "mes存储出库信息2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -16,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE YFConsumer.dbo.consm_barcodebindinfo\nSET modifytime='{{ $json.create_time }}',Channel='{{$('Webhook').all()[0].json.body.channelId}}'\nOUTPUT inserted.*\nWHERE retroid='{{$json.retroid}}';\n"
+      },
+      "id": "2ba1f98d-4772-4d7d-afb1-657bb7a38396",
+      "name": "更新出库时间",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        256
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4P",
+          "name": "MES_SQL_SERVER_MES2024"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "uuid": "={{ $json.uuid }}",
+            "watchtype": "={{ $json.watchType }}",
+            "price": "={{ $json.price }}",
+            "order_number": "={{ $json.order_number }}",
+            "create_time": "={{ $now }}",
+            "watch_status": 1,
+            "sku_code": "={{ $json.sku_code }}",
+            "sku_name": "={{ $json.sku_name }}",
+            "uuid_unique": "={{ $json.uuid_unique }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "watchtype",
+              "displayName": "watchtype",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "watch_status",
+              "displayName": "watch_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_name",
+              "displayName": "sku_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "45b236fc-ddb1-4a80-a2de-d954fb919163",
+      "name": "存储出货订单1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -1232,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "uuid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ce4aec29-6b6c-480d-9d8f-4e316cf85933",
+      "name": "Aggregate1",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -7552,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2002\",\n  \"msg\":\"数据库错误！\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "cbf8001f-ecd7-4e9f-b685-03ffa04b9d14",
+      "name": "错误信息：数据库错误！5",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        1872
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"出库成功！\",\n  \"data\":{\n    \"snList\":{{JSON.stringify($json.snList)}}\n  }\n}",
+        "options": {}
+      },
+      "id": "6bfd277b-35dc-449f-b180-140cdd8d92be",
+      "name": "出库成功4",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        1504
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst result=[];\nconst resJson=[];\nconst now = new Date();\n const utcOffset = now.getTimezoneOffset() * 60000; // 获取UTC偏移量并转成毫秒\n  const chinaOffset = 8 * 60 * 60 * 1000;\n  const chinaTime=new Date(now.getTime() + utcOffset + chinaOffset);\n$('Merge1').all().forEach(el=>{\n  resJson.push({\n    retroid:el.json.snList[0].slice(1, -1),\n    channelId:$('Webhook').all()[0].json.body.channelId,\n    createTime:chinaTime\n  })\n})\nresult.push({\n  snList:resJson\n})\nreturn result;"
+      },
+      "id": "97c90460-509c-45cb-9bd7-9123b8a865b6",
+      "name": "出库成功返回这次出库信息4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        1504
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "order_number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6b04f71-aa02-49e3-9d3a-aedb6077d2c5",
+      "name": "Aggregate2",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        1568
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a0836b4-a5bf-4414-af04-60f976ccfd99",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "7d48bb8f-9e70-4abc-bc16-706739797d55",
+              "name": "order_number",
+              "value": "={{JSON.parse($('If2').all()[0].json.data).delivery.platform_code }}",
+              "type": "string"
+            },
+            {
+              "id": "0ff98337-4549-4513-bea0-45969abdd29b",
+              "name": "modifytime",
+              "value": "={{ $now.format('yyyy-MM-dd HH:mm:ss.')}}{{ new Date().getMilliseconds().toString().padStart(3, '0')}}",
+              "type": "string"
+            },
+            {
+              "id": "5a41a2d2-7b9f-4c2d-baf3-5ebbaa55aaf0",
+              "name": "Channel",
+              "value": "={{$('Webhook').all()[0].json.body.channelId}}",
+              "type": "string"
+            },
+            {
+              "id": "0baa7422-8f99-4dce-b551-7bf43ff4bb73",
+              "name": "tag",
+              "value": "={{ $json.tag }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "91cb9ecc-318c-4412-9f06-502202cb7426",
+      "name": "给每个出库的SN绑定订单号3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -3040,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a0836b4-a5bf-4414-af04-60f976ccfd99",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "7d48bb8f-9e70-4abc-bc16-706739797d55",
+              "name": "order_number",
+              "value": "={{JSON.parse($('If2').all()[0].json.data).delivery.express_no }}",
+              "type": "string"
+            },
+            {
+              "id": "0ff98337-4549-4513-bea0-45969abdd29b",
+              "name": "modifytime",
+              "value": "={{ $now.format(\"yyyy-MM-dd HH:MM:ss.\")}}{{ new Date().getMilliseconds().toString().padStart(3, '0');}}",
+              "type": "string"
+            },
+            {
+              "id": "5a41a2d2-7b9f-4c2d-baf3-5ebbaa55aaf0",
+              "name": "Channel",
+              "value": "={{$('Webhook').all()[0].json.body.channelId}}",
+              "type": "string"
+            },
+            {
+              "id": "ed49dd65-3860-41d6-8e25-f6340acd0cc3",
+              "name": "tag",
+              "value": "={{ $json.tag }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ea617b28-54ea-4761-be43-b32156ff50fa",
+      "name": "给每个出库的SN绑定订单号2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -3040,
+        1760
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $('Code13').all();"
+      },
+      "id": "b3d73f6e-85e4-4e3d-b2dd-c2dfe5c7e7a3",
+      "name": "Code3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        1568
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "warehouseOutgoing",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "91389bb3-5ca9-4fd0-8580-23cdb674fa8c",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -15744,
+        1776
+      ],
+      "webhookId": "dcb2eb0f-1357-4282-bee6-6b2125034722"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "retroIdList",
+        "options": {}
+      },
+      "id": "cb5707ca-d446-4f12-bd8a-2a0387f21e78",
+      "name": "Split Out2",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -3696,
+        1648
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_log",
+          "mode": "list",
+          "cachedResultName": "delivery_log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "isstateok": "={{ $json.isstateok||true }}",
+            "ischeck": "={{ $json.ischeck || true }}",
+            "procedurevalue": "={{ $json.procedurevalue }}",
+            "channel": "={{Number($('Webhook').all()[0].json.body.channelId)}}",
+            "jobnumber": "={{ $json.jobnumber }}",
+            "ordernumber": "={{ $json.ordernumber }}",
+            "productcode": "={{ $json.productcode }}",
+            "clientcode": "={{ $json.clientcode }}",
+            "retroid": "={{ $json.retroid }}",
+            "baseline": "={{ $json.baseline }}",
+            "uuid": "={{ $json.uuid }}",
+            "baselinebatch": "={{ $json.baselinebatch }}",
+            "batterybatch": "={{ $json.batterybatch }}",
+            "createtime": "={{ $json.createtime || $now }}",
+            "modifytime": "={{ $json.modifytime || $now }}",
+            "uuid_unique": "={{ $json.uuid_unique }}",
+            "order_number": "={{ $('Aggregate2').all()[0].json.order_number[0] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "jobnumber",
+              "displayName": "jobnumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ordernumber",
+              "displayName": "ordernumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "productcode",
+              "displayName": "productcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "clientcode",
+              "displayName": "clientcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "baseline",
+              "displayName": "baseline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "baselinebatch",
+              "displayName": "baselinebatch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "batterybatch",
+              "displayName": "batterybatch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedurevalue",
+              "displayName": "procedurevalue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "isstateok",
+              "displayName": "isstateok",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ischeck",
+              "displayName": "ischeck",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "modifytime",
+              "displayName": "modifytime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a2af67f3-83cf-470a-9973-d2e18b2a3035",
+      "name": "记录更新日志3",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -1056,
+        1568
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\n$('Code13').all().forEach(el=>{\n  result.push({\n    retroid:el.json.retroid,\n    uuid:el.json.uuid,\n    watchType: el.json.watchtype,\n    uuid_unique:el.json.uuid_unique,\n    tag:el.json.tag\n  })\n})\n\nreturn result;"
+      },
+      "id": "7419b091-b9b9-48ec-9957-d6b89208905b",
+      "name": "根据sn在数据库中查找对应的sn记录",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7840,
+        1536
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b11ffcec-3efe-486a-a40e-44ec909d8e57",
+              "name": "retroIdList",
+              "value": "={{$('根据sn在数据库中查找对应的sn记录').all()}}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d91e899d-0f1e-4b13-839e-0f1a63520303",
+      "name": "获取到需要出库的SN2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -4016,
+        1664
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "842a3994-782a-4343-9884-d45485cb7fa4",
+              "leftValue": "={{JSON.parse($('If2').all()[0].json.data).delivery.platform_code.split(';').length}}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "75507ff0-82cb-4307-a45e-ac1401a7ea43",
+      "name": "判断当前的订单是否属于合并订单1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3472,
+        1648
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2002\",\n  \"msg\":\"SN查询物料主数据接口失败！\"\n}",
+        "options": {}
+      },
+      "id": "e017820e-93eb-4682-a7bb-4dab5c1adca4",
+      "name": "错误信息：SN查询物料主数据失败2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -8672,
+        1856
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.mes.coros.team/prod/getMatialCodeBySn",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "env",
+              "value": "prod"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"snList\": {{ JSON.stringify($json.snList.map(item => item.replace(/'/g, \"\"))) }}\n}",
+        "options": {
+          "timeout": 50000
+        }
+      },
+      "id": "68900298-dee2-4e93-a055-02fb73d60a41",
+      "name": "根据SN绑定物料号1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -8912,
+        1616
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "a80A19TxoDI7zi13",
+          "name": "sap-dt Auth"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2007\",\n  \"msg\":\"该订单中此机型已全部发货！\"\n}",
+        "options": {}
+      },
+      "id": "34d6686c-355e-4ff0-b9fd-e8e190c1b56a",
+      "name": "订单已全部发货",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfunction addOrIncrement(map, key) {\n  if (map.has(key)) {\n    // 如果键存在,将对应的值加一\n    const value = map.get(key);\n    map.set(key, value + 1);\n  } else {\n    // 如果键不存在,添加键并将值设为1\n    map.set(key, 1);\n  }\n}\nconst orderNumber=$(\"查询上传的sn是否存在数据库表中\").all()[0].json.ordernumber2|| $(\"新mes查询sn\").all()[0].json.order_number;\nconsole.log(orderNumber)\nconst colorCodes = new Map([\n  ['M18P', '深蓝'],\n  ['M18B', '白'],\n  ['M18E', '深蓝'],\n  ['M18J', '钢青'],\n  ['M18L', '浅灰'],\n  ['B20A', '灰'],\n  ['B20B', '黑'],\n  ['B20C', '绿'],\n  ['B20D', '霞慕尼'],\n  ['B20E', 'K天王深蓝'],\n  ['B20F', 'K天王锖白'],\n  ['B20G', '戈壁款'],\n  ['B20H', '藕粉'],\n  ['B21A', '黑'],\n  ['B21B', '灰'],\n  ['B21C', '咖啡'],\n  ['B21D', '珊瑚金'],\n  ['B21E', '白'],\n  ['B21F', '灰'],\n  ['B21G', '黑'],\n  ['B21H', '珊瑚金'],\n  ['B21I', '藕粉'],\n  ['F05A', '灰'],\n  ['P05A', '灰'],\n  ['V19A', '岩黑'],\n  ['V19B', '闪电'],\n  ['V19P', '闪电'],\n  ['W31A', '黑'],\n  ['W31B', '白'],\n  ['W31C', '红'],\n  ['W31D', 'EK'],\n  ['W31E', '无锡马拉松'],\n  ['W31F', '碧水绿'],\n  ['W31G', '柠檬黄'],\n  ['W31H', '流光紫'],\n  ['W31J', '红'],\n  ['H31A', '灰'],\n  ['W32A', '黑灰'],\n  ['W32B', '灰白'],\n   ['W32C', '黑'],\n  ['V09A', '月球黑'],\n  ['V09B', '地球蓝'],\n  ['V09C', '星空黑'],\n  ['C01A','DURA'],\n  ['W92A', '绿'],\n    ['W92B', '深灰'],\n  ['W92C', '深灰'],\n]);\nconst result=[];\n//未找到价格的SN\nconst noFindPriceSN=[];\n//数量错误的SN\nconst errQuantityWtype=[];\nconst watchTypeMap=new Map();\nlet pay_amount;\nfor (const item of $('判断是不是试用机').all()) {\n  let temp=JSON.parse(item.json.data);\n  pay_amount=temp.delivery.payment;\n  let watchInfo=$('根据sn在数据库中查找对应的sn记录').all();\n let orderDetails=temp.delivery.details.map(el=>{\n    return {\n      sku_code:el.sku_code,\n      sku_name:el.sku_name,\n      quantity:el.qty,\n      price:el.price,\n      amount:el.amount\n    }\n  })\n\n  //给每个SN绑定价格\n  let watchInfoList=watchInfo.map(el=>{\n    //先判断接口返回的数据是否存在该sku_code\n    if($('根据SN绑定物料号1').all()[0].json.CODE==\"S\"&&$('根据SN绑定物料号1').all()[0].json[\"SN_MATNR\"].hasOwnProperty(el.json.retroid)&&orderNumber.slice(0,2)!='SH'){\n       //先通过SN查询物料的接口，判断是否存在对于料号，不存在则继续使用颜色规则匹配\n    //W31B机型存在错误需要修改\n      let sku_code=$('根据SN绑定物料号1').all()[0].json[\"SN_MATNR\"][el.json.retroid];\n     orderDetails.forEach(e=>{\n    if(e.sku_code===sku_code){\n      el.json.price=e.price;\n      el.json.sku_name=e.sku_name;\n      el.json.sku_code=e.sku_code.trim();\n      //存储已经上传的SN对应的sku_code的数量，用于做sn上传的数量与订单中sku数量的比较\n      addOrIncrement(watchTypeMap,e.sku_code);\n    }\n  })\n    }else{\n      \n       let color=colorCodes.get(el.json.retroid.slice(0,4));\n  orderDetails.forEach(e=>{\n    if(e.sku_code.includes(el.json.watchType)&&e.sku_code.trim().slice(0,2)=='GS'&&e.sku_name.includes(color)){\n      el.json.price=e.price;\n      el.json.sku_name=e.sku_name;\n      el.json.sku_code=e.sku_code.trim();\n      //存储已经上传的SN对应的sku_code的数量，用于做sn上传的数量与订单中sku数量的比较\n      addOrIncrement(watchTypeMap,e.sku_code);\n    }\n  })\n  }\n                       \n    \n   \n  return el.json;\n  })\n\n  //给上传的SN添加价格，根据物料编码给上传的SN添加价格\n// let newWatchInfo=watchInfo.map(el=>{\n//   //根据SN找到对应的颜色\n//   let color=colorCodes.get(el.json.retroid.slice(0,4));\n//   orderDetails.forEach(e=>{\n//     if(e.sku_code.includes(el.json.watchType)&&e.sku_code.slice(0,2)=='GS'&&e.sku_name.includes(color)){\n//       el.json.price=e.price;\n//       el.json.sku_code=e.sku_code;\n//       //存储已经上传的SN对应的sku_code的数量，用于做sn上传的数量与订单中sku数量的比较\n//       addOrIncrement(watchTypeMap,e.sku_code);\n//     }\n//   })\n//   return el.json;\n// });\n //  判断当前的SN是否符合订单的机型\n watchInfoList.forEach(el=>{\n   if(!el.price){\n     noFindPriceSN.push(el.retroid);\n   }\n })\n  //判断当前输入的sn数量是否等于订单上的sn数量\norderDetails.forEach(el=>{\n  console.log(el.sku_code)\n  console.log(watchTypeMap.get(el.sku_code))\n  if(watchTypeMap.get(el.sku_code)>el.quantity){\n    errQuantityWtype.push(el.sku_code);\n  }\n})\n  result.push({\n    platform_code:temp.delivery.platform_code==''?$('Webhook').all()[0].json.body.code:temp.delivery.platform_code,\n    watch_info:watchInfoList,\n    orderDetails:orderDetails,\n    warehouse_name:temp.delivery.warehouse_name,\n    noFindPriceSN:noFindPriceSN,\n    errQuantityWtype:errQuantityWtype,\n    pay_amount:pay_amount\n  })\n}\n\nreturn result;"
+      },
+      "id": "da97aa12-2500-4a2f-99c0-cbc1ef67a804",
+      "name": "给出库的sn绑定价格",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5536,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select r.retroid, r.retroid_id, j.joborder_number, j.order_number from mes.retroid r JOIN mes.joborder j on r.joborder_id = j.joborder_id \nwhere r.retroid ={{ $json.snList }} and  r.status !=3 ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -13152,
+        1776
+      ],
+      "id": "525c4070-3af2-49e1-9f1e-7fa0a2b15f1e",
+      "name": "新mes查询sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2bb87c26-68ae-4add-8508-9e82f25c6441",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "604ce227-6294-44b8-970a-0cb3140bec12",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "daf7e29f-b1b7-483d-bb5b-6ed36fbf6472",
+              "name": "uuid_unique",
+              "value": "={{ $json.uuid_unique }}",
+              "type": "string"
+            },
+            {
+              "id": "0f1fb74b-1553-40ea-b506-7673e72cf3da",
+              "name": "watchtype",
+              "value": "={{ $json.watchType }}",
+              "type": "string"
+            },
+            {
+              "id": "c62c8d67-55a6-43d7-a081-e81c7f567306",
+              "name": "tag",
+              "value": "old",
+              "type": "string"
+            },
+            {
+              "id": "0ecef623-5162-496d-9611-6846549216ec",
+              "name": "jobnumber",
+              "value": "={{ $json.ordernumber }}",
+              "type": "string"
+            },
+            {
+              "id": "21664e0d-4c17-4e27-8afa-0b20292ee9a8",
+              "name": "ordernumber",
+              "value": "={{ $json.ordernumber }}",
+              "type": "string"
+            },
+            {
+              "id": "ae98f983-91ef-4579-8a3c-9311cb6659b3",
+              "name": "clientcode",
+              "value": "={{ $json.clientcode }}",
+              "type": "string"
+            },
+            {
+              "id": "3de1f01a-1adb-4952-8859-c9423f72dfb9",
+              "name": "productcode",
+              "value": "={{ $json.productcode }}",
+              "type": "string"
+            },
+            {
+              "id": "28ed3909-f17f-4a3d-832f-d65ce4fd7f44",
+              "name": "baseline",
+              "value": "={{ $json.baseline }}",
+              "type": "string"
+            },
+            {
+              "id": "9fba766b-d386-418f-b64f-550c69688f3b",
+              "name": "baselinebatch",
+              "value": "={{ $json.BaseLineBatch }}",
+              "type": "string"
+            },
+            {
+              "id": "f9cc612a-5f40-445a-bef8-51506b0c7c81",
+              "name": "procedurevalue",
+              "value": "={{ $json.procedurevalue }}",
+              "type": "string"
+            },
+            {
+              "id": "79275080-9a74-42f3-ae3b-3e698c97f1c7",
+              "name": "isstateok",
+              "value": "={{ $json.isstateok }}",
+              "type": "string"
+            },
+            {
+              "id": "00864f31-c8f2-4c67-afc5-8dbfb7b65f8a",
+              "name": "ischeck",
+              "value": "={{ $json.ischeck }}",
+              "type": "string"
+            },
+            {
+              "id": "60e2d95b-8799-4df2-9edf-c71b21fecda9",
+              "name": "createtime",
+              "value": "={{ $json.createtime }}",
+              "type": "string"
+            },
+            {
+              "id": "7836eb66-dd86-4a20-93c5-b02f44c144e4",
+              "name": "modifytime",
+              "value": "={{ $json.modifytime }}",
+              "type": "string"
+            },
+            {
+              "id": "eb4f558b-12bc-4fe3-9661-0ec3cc116ac1",
+              "name": "channel",
+              "value": "={{ $json.Channel }}",
+              "type": "string"
+            },
+            {
+              "id": "c30aefba-6c23-4547-9937-0a232b08c73d",
+              "name": "batterybatch",
+              "value": "={{ $json.BatteryBatch }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -12560,
+        1984
+      ],
+      "id": "0dd09b3f-c8d1-4609-86ff-5ca4a3c36809",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -12032,
+        1840
+      ],
+      "id": "1279d3b7-882f-4ad3-a8e6-42e80512b0e6",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and merge original data with new fields\nlet result = [];\n$input.all().forEach(el => {\n  // Create a new object combining original data and new fields\n  let mergedItem = {\n    ...el.json, // Spread the original JSON data\n    watchType: el.json.ordernumber.slice(0, -6) === \"HR\" ? \"HR\" : el.json.ordernumber.slice(0, -4),\n    uuid_unique: el.json.uuid.substring(0, 6) + el.json.uuid.substring(el.json.uuid.length - 12)\n  };\n  \n  result.push(mergedItem);\n});\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -12816,
+        1936
+      ],
+      "id": "0ea9632d-e933-4241-b90b-2c7fe5e7429e",
+      "name": "处理watch_type",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有查询结果\nconst allSnItems = $input.all();\n\n\n// 定义映射表\nconst keyValueMap = {\n  \"M1D\": \"M04\",\n  \"B20\": \"B20\",\n  \"B21\": \"B21\",\n  \"B18\": \"M18\",\n  \"B19S\": \"V09\",\n  \"W331\": \"W31\",\n  \"W332\": \"W32\",\n  \"B15D\": \"B05\",\n  \"FD05\": \"F05\",\n  \"HR31\": \"H31\",\n  \"BY01\": \"C01\",\n  \"FD02\": \"F02\",\n  \"FD03\": \"F03\",\n  \"W942\": \"W92\",\n  \"S501\": \"S51\",\n  \"W541\": \"W51\",\n  \"W542\": \"W52\",\n  \"W335\": \"W35\"\n  \n};\n\n// 处理所有SN记录\nconst results = allSnItems.map(item => {\n  const originalSn = item.json.sn;\n  const uuid = item.json.uuid\n  const uuid_unique = item.json.uuid_unique\n  \n  // 安全处理可能的空值\n  if (!originalSn) {\n    return {\n      json: {\n        original_sn: null,\n        processed_sn: null,\n        mapped_key: null,\n        error: \"Empty retroid value\"\n      }\n    };\n  }\n\n  // 截取前3位（添加安全判断）\n  const snCut = originalSn.length >= 3 ? originalSn.slice(0, 3) : originalSn;\n  \n  // 查找映射关系\n  const matchedKey = Object.keys(keyValueMap).find(\n    key => keyValueMap[key] === snCut\n  );\n\n  return {\n    json: {\n      original_sn: originalSn,\n      processed_sn: snCut,\n      mapped_key: matchedKey || null,\n      uuid:uuid,\n      uuid_unique:uuid_unique\n      // 保留原始数据结构\n    }\n  };\n});\n\n// 返回所有处理结果\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -12528,
+        1776
+      ],
+      "id": "407dee61-defb-4773-b7d3-0b9ab5c49e77",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ce955e6a-f591-4279-967e-ac54aaf374de",
+              "name": "retroid",
+              "value": "={{ $json.original_sn }}",
+              "type": "string"
+            },
+            {
+              "id": "e9fceedb-be0a-4c06-8fe3-fd9377beee3f",
+              "name": "uuid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "4f39f3b9-882b-4357-a1bf-77068ef9c85d",
+              "name": "uuid_unique",
+              "value": "={{ $json.uuid_unique }}",
+              "type": "string"
+            },
+            {
+              "id": "bccc7fad-6621-4396-8e1f-dace15bb46e1",
+              "name": "watchtype",
+              "value": "={{ $json.mapped_key }}",
+              "type": "string"
+            },
+            {
+              "id": "166af5f0-0bf1-425b-ac33-17bb5543738d",
+              "name": "tag",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "a6c10908-4332-4478-b3a4-3f9020cb51db",
+              "name": "jobnumber",
+              "value": "={{ $('新mes查询sn').item.json.joborder_number }}",
+              "type": "string"
+            },
+            {
+              "id": "785b951e-7e37-40ab-bd9e-2403bfc5a089",
+              "name": "ordernumber",
+              "value": "={{ $('新mes查询sn').item.json.order_number }}",
+              "type": "string"
+            },
+            {
+              "id": "86f058ab-8c9b-4877-a1a6-9cd3a89e299f",
+              "name": "productcode",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "8f923983-58e5-486b-9181-e08cd643671b",
+              "name": "clientcode",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "f5c8bcfb-4110-403a-abe0-b4e5ee4fc863",
+              "name": "baseline",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "dd34989e-83fa-4187-99db-7745fff8f090",
+              "name": "baselinebatch",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "46793378-8ac9-40b5-a054-1cd2a676071b",
+              "name": "batterybatch",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "cf545f89-0033-497c-8812-c611a067c1e4",
+              "name": "procedurevalue",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "b4076155-c04c-4a68-936c-1a20c39f3704",
+              "name": "isstateok",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "83003703-1927-4d93-8597-2890a402f366",
+              "name": "ischeck",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "4f0e24a6-7c96-438f-b862-7dda93312d4c",
+              "name": "createtime",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "60ebce33-42c5-46e8-8cbd-1bd3d9860c85",
+              "name": "modifytime",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "b2209af7-f1a3-4c0e-8175-8ffa570c9b37",
+              "name": "channel",
+              "value": "={{ $('Webhook').item.json.body.channelId }}",
+              "type": "string"
+            },
+            {
+              "id": "7d94b6d0-b778-4c8e-9ebc-01b34c639346",
+              "name": "order_number",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -12288,
+        1776
+      ],
+      "id": "2299bc00-8357-4df4-8df2-1aed7b480e04",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select md.data ->>'uuid' as uuid, md.data ->> 'uuid_unique' as uuid_unique,md.data ->> 'sn' as sn, md.retroid_id  from mes.machine_data md \nwhere md.retroid_id = {{ $json.retroid_id }}\nand md.procedure_detail_id ='39'\norder by md.createtime desc\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -12720,
+        1728
+      ],
+      "id": "e2e9c739-38ba-4706-9bdf-ea90c035eecb",
+      "name": "查询对应的uuid",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Code13').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3216,
+        1552
+      ],
+      "id": "11137f32-3dac-40d2-b0ec-657250a31197",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Code13').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3216,
+        1760
+      ],
+      "id": "f1e1bbfa-6ffe-418a-bf03-5eef3da44f5b",
+      "name": "Code7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d0adc3f6-5b7e-4499-91d9-8b4bc78c0ce2",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": "old",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -2640,
+        1440
+      ],
+      "id": "6bcc26be-9ebc-4430-8e8d-0682766c71df",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Code9').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1920,
+        1552
+      ],
+      "id": "6b5f6947-7dd0-4630-ad1f-83916388e5e0",
+      "name": "Code8"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2816,
+        1632
+      ],
+      "id": "b1dbd5a0-5041-4f45-adfb-549bfa76b59e",
+      "name": "Code9"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "=public",
+          "mode": "name"
+        },
+        "table": {
+          "__rl": true,
+          "value": "mes_delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "mes_delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{$json.retroid}}",
+            "uuid": "={{$json.uuid}}",
+            "order_number": "={{ $('Code8').all()[0].json.order_number }}",
+            "create_time": "={{ new Date() }}",
+            "delivery_status": 1,
+            " uuid_unique": "={{ $json.uuid_unique }}",
+            "channel": "={{$('Webhook').all()[0].json.body.channelId}}",
+            "sku_code": "={{ $('根据SN绑定物料号1').all().filter(item => item.json.SN_MATNR[$json.retroid])[0].json.SN_MATNR[$json.retroid] }}",
+            "express_no": "={{$('Webhook').all()[0].json.body.code}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " uuid_unique",
+              "displayName": " uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "03ccd156-17af-43ac-a12f-6a20e022eba6",
+      "name": "Insert rows in a table",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -640,
+        1552
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "=consm_barcodebindinfo",
+        "updateKey": "retroid",
+        "columns": "modifytime,Channel"
+      },
+      "id": "027a0f79-f851-4dc9-9aae-5283e6a785bb",
+      "name": "Microsoft SQL1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -2464,
+        1376
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "FNgMAIvmy5GiZUlV",
+          "name": "Microsoft SQL_mes_YFConsumer"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假设 snList 是一组 SN 字符串或者包含 value 的对象\nconst snList = $('给每个出库的SN绑定订单号1').all(); \nlet skuMap = new Map();\n\n// 1. 将 SN 和料号的关系加入到 Map 中\n$input.all().forEach(e => {\n  //以此判断防止 e.json 或 SN_MATNR 为空导致报错\n  const snData = e.json && e.json.SN_MATNR; \n  \n  if (snData) {\n    // 顺着你写的思路，使用 Object.keys\n    Object.keys(snData).forEach(key => {\n      // key 是 SN，value 是料号\n      const value = snData[key]; \n      skuMap.set(key, value);\n    });\n\n    /* \n    // 或者使用更简洁的 Object.entries 写法：\n    Object.entries(snData).forEach(([key, value]) => {\n      skuMap.set(key, value);\n    });\n    */\n  }\n});\n\n// 2. 接着处理 snList，去 Map 里匹配数据\n// 假设 snList 里的元素本身就是 SN 字符串，或者是对象且有字段需要匹配\nconst result = snList.map(item => {\n   item.json.sku_code=skuMap.get(item.json.retroid);\n  return item;\n \n});\nreturn {\n  res:result\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7216,
+        1904
+      ],
+      "id": "7cf76567-e45d-4c5e-921f-4c1af541976d",
+      "name": "Code10"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "mes_delivery_order_details",
+          "mode": "list",
+          "cachedResultName": "mes_delivery_order_details"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{$json.json.retroid}}",
+            "uuid": "={{ $json.json.json.uuid }}",
+            "order_number": "={{ $json.json.json.order_number }}",
+            "create_time": "={{ new Date() }}",
+            "delivery_status": 1,
+            "channel": "={{ $json.json.channel }}",
+            "sku_code": "={{ $json.json.sku_code }}",
+            "express_no": "={{ $json.json.json.order_number }}",
+            " uuid_unique": "={{ $json.json.json.uuid_unique }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " uuid_unique",
+              "displayName": " uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku_code",
+              "displayName": "sku_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b457a8ba-dd9a-44f9-8dca-459bf6100fae",
+      "name": "Insert rows in a table1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -6784,
+        1904
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('根据SN绑定物料号1').all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7440,
+        1904
+      ],
+      "id": "589df727-7423-4fa9-b0ec-f4e021dfb1d9",
+      "name": "Code11"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Code13').all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        0
+      ],
+      "id": "9923b599-a3dc-4518-be10-5de53b5afc7a",
+      "name": "Code12"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5eea3b38-6756-4744-a293-df4a625951dd",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -12976,
+        1792
+      ],
+      "id": "1e52e089-67bb-4fcc-a7f9-d903d7c0ef55",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5f9a4a9e-2bd7-4188-bd7f-68306068c07e",
+              "leftValue": "={{ $json.retroid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "deba1cae-9e6a-442d-9c2d-fb993a8e86a0",
+              "leftValue": "={{ $json.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -11856,
+        1840
+      ],
+      "id": "f730b2ec-0fe6-462b-999c-04bdddab3798",
+      "name": "Filter3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11648,
+        1840
+      ],
+      "id": "2a523ddb-2148-43fd-8751-4f1888ecb7f5",
+      "name": "Code13"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n  let res={};\n\nfor (const item of $input.all()) {\n   const data = JSON.parse(item.json.data);\n   const deliveryDetails=data.delivery.details;\n  const snList=$('判断前两个校验是否出问题').all()[0].json.snList.map(e=>e.replace(/'/g,''));\n  if($(\"根据SN绑定物料号1\").all()[0].json.CODE=='S'){\n     let snObj=$(\"根据SN绑定物料号1\").all()[0].json?.SN_MATNR;\n     let newSnList=snList.map(e=>{\n        return {\n          sn:e,\n          sku:snObj[e]\n        }\n     })\n     res.snList=newSnList.map(e=>{\n       deliveryDetails.forEach(el=>{\n         if(el.sku_code==e.sku){\n           e.barcode=el.barcode\n         }\n       })\n       return e\n     });\n  }\n}\n\nreturn res;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6160,
+        1152
+      ],
+      "id": "40cc2d90-2791-4401-bda8-687f12050fa2",
+      "name": "通过物料号查找到对应的69码"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "snList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -5936,
+        1152
+      ],
+      "id": "34caa46e-4358-4392-9f1d-8dc9c8088d16",
+      "name": "Split Out3"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "0fb3c1e0-dbc4-4214-9410-bf31f1517ef4",
+      "name": "Crypto1",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -5488,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.items.uniquecode.add"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "barcode",
+              "value": "={{ $json.data.barcode }}"
+            },
+            {
+              "name": "uniqueCode",
+              "value": "={{ $json.data.sn }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f781cff8-7db9-4149-a117-dcd729182c2f",
+      "name": "管易通过单据编号查询到对应订单信息1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -5248,
+        816
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nfor (const item of $input.all() ) {\n   let res={};\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.items.uniquecode.add\",\n  \"barcode\": item.json.barcode,\n  \"uniqueCode\": item.json.sn,\n}\n  let secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nres.data=item.json\nresult.push(res);\n}\n\n\nreturn result;"
+      },
+      "id": "66a74337-7a26-430b-a211-fcb2cf1396b7",
+      "name": "生成管易签名1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5776,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d0adc3f6-5b7e-4499-91d9-8b4bc78c0ce2",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": "new",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -2512,
+        1632
+      ],
+      "id": "c14ed81b-68b3-409c-804f-f6c594e081ad",
+      "name": "Filter4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ff4efc08-5edf-419d-81f1-cd309cbed8d1",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": "old",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -7440,
+        2080
+      ],
+      "id": "3256163f-458b-418e-ad8b-9fafaeefe153",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ff4efc08-5edf-419d-81f1-cd309cbed8d1",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": "old",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        176
+      ],
+      "id": "9587cebf-9f8a-4430-aaab-e0e8d302af91",
+      "name": "If7"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2224,
+        1552
+      ],
+      "id": "33a7ca60-e0c6-425c-b492-1cda312959eb",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        1552
+      ],
+      "id": "c0cd510f-1a24-4af1-9f2a-1f8400910299",
+      "name": "Aggregate3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -7632,
+        1200
+      ],
+      "id": "97c120b3-9f71-4513-be82-1733f55b27cd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order",
+          "mode": "list",
+          "cachedResultName": "delivery_order"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "create_time": "={{ new Date() }}",
+            "order_number": "REDACTED",
+            "payment_amount": "=11000",
+            "order_details": "={{ JSON.parse($json.data).delivery.details.map(el=>{\n    return {\n      sku_code:el.sku_code,\n      sku_name:el.sku_name,\n      quantity:el.qty,\n      price:el.price,\n      amount:el.amount\n    }\n  }) }}",
+            "channel_id": "=10764",
+            "express_no": "=SF3188164472512"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "trial_status",
+              "displayName": "trial_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payment_amount",
+              "displayName": "payment_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_details",
+              "displayName": "order_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel_id",
+              "displayName": "channel_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "cb6f692d-1fe9-455b-8abc-0982cad58487",
+      "name": "存储仓库出库的有赞订单信息1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -2864,
+        -32
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_caches",
+          "mode": "list",
+          "cachedResultName": "delivery_order_caches"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "express_no",
+              "value": "=SF3188164472512"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "be487c62-2fa0-4a26-8933-246715969f0c",
+      "name": "从数据缓存中查找是否存在交货单记录1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -3136,
+        -32
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "snList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -13360,
+        1792
+      ],
+      "id": "f411449d-725c-4944-83ef-6b172397d51a",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78dc663a-fc42-4258-b49d-39daf29789cb",
+              "name": "snList",
+              "value": "={{ $json.snList.join(',') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -13344,
+        1936
+      ],
+      "id": "fe9339ea-f9eb-456d-a3f1-dd36b5c61d23",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86a1aa9a-2544-4c30-81d1-1957fe7d67eb",
+              "name": "data",
+              "value": "={{ JSON.parse($json.data) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -5776,
+        1600
+      ],
+      "id": "2419c9f9-3c2d-4ad4-b0d4-c1008e0687c8",
+      "name": "获取到交货单中的料号和数量"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.delivery.details",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -5616,
+        1600
+      ],
+      "id": "15a6f4ce-fe8c-4ea0-916e-0088f5250937",
+      "name": "获取到订单信息中的主机和料号数据"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9c4df128-1c5b-45c8-a841-fd9216c38c2b",
+              "name": "qty",
+              "value": "={{ $json.qty }}",
+              "type": "number"
+            },
+            {
+              "id": "fe10829d-9fce-407d-bf53-77554fcdc452",
+              "name": "itemCategoryName",
+              "value": "={{ $json.itemCategoryName }}",
+              "type": "string"
+            },
+            {
+              "id": "4754e0f6-baa2-4e64-a7f0-775a47a6f4f8",
+              "name": "sku_code",
+              "value": "={{ $json.sku_code }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -5424,
+        1600
+      ],
+      "id": "496e3999-7255-40c7-8614-923f179677ae",
+      "name": "获取到订单中的具体字段信息"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3aa3839-e20b-421a-8a54-d2826406a8f2",
+              "leftValue": "={{ $json.itemCategoryName }}",
+              "rightValue": "coros主机",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5216,
+        1600
+      ],
+      "id": "5d00833b-fdbf-44f3-9b20-771c7ed75a7e",
+      "name": "获取到主机数据"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst snList=$('根据SN绑定物料号1').all()[0].json;\n\n// 1. 初始化 Map\nconst countMap = new Map();\n\n// 2. 获取包含料号数据的对象 (数组第一个元素中的 SN_MATNR)\nconst targetData = snList.SN_MATNR;\n\n// 3. 提取所有的值（即料号），并进行统计\nObject.values(targetData).forEach(matnr => {\n  // 如果Map中已经有了这个料号，取出当前数量+1\n  // 如果没有，设置为1\n  const currentCount = countMap.get(matnr) || 0;\n  countMap.set(matnr, currentCount + 1);\n});\n\n\nfunction validateStock(requiredMap, stockArray) {\n  const result = {\n    isPass: true,     // 最终是否通过\n    errors: [],       // 记录具体的错误信息\n    missingSkus: [],  // 记录数组里根本没找到的料号\n    shortageSkus: []  // 记录找到了但数量不够的料号\n  };\n\n  // 1. 优化性能：将库存数组转为以 sku_code 为 key 的 Map 或对象\n  // 这样查找的时间复杂度从 O(n) 降为 O(1)\n  const stockMap = new Map();\n  stockArray.forEach(item => {\n    // 假设 sku_code 唯一，如果有重复需要累加 qty\n    const currentQty = stockMap.get(item.sku_code) || 0;\n    stockMap.set(item.sku_code, currentQty + item.qty);\n  });\n\n  // 2. 遍历需求 Map 进行比对\n  requiredMap.forEach((reqQty, reqSku) => {\n    \n    // A. 校验是否存在\n    if (!stockMap.has(reqSku)) {\n      result.isPass = false;\n      result.missingSkus.push(reqSku);\n      result.errors.push(`【缺失】料号 ${reqSku} 在订单中不存在。`);\n      return; // 进入下一次循环\n    }\n\n    // B. 校验数量是否足够 (需求量 <= 库存量)\n    const stockQty = stockMap.get(reqSku);\n    if (reqQty > stockQty) {\n      result.isPass = false;\n      result.shortageSkus.push({ sku: reqSku, required: reqQty, stock: stockQty });\n      result.errors.push(`【缺货】料号 ${reqSku} 库存不足。扫描: ${reqQty}, 需求: ${stockQty}`);\n    }\n  });\n\n  return result;\n}\nlet stockList=[]\n//判断料号是否存在与输入的数组中，并且传入的数量是否小于等于订单中的数量\nfor (const item of $input.all()) {\n  stockList.push(item.json);\n}\nconst validationResult = validateStock(countMap, stockList);\nconsole.log(validationResult)\nreturn validationResult;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4928,
+        1520
+      ],
+      "id": "f4f49479-d959-4621-ae49-e5f204cb09c6",
+      "name": "判断料号和数量是否正确"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d53df7bc-39ae-41f0-8fc5-71716b395390",
+              "leftValue": "={{ $json.isPass }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4352,
+        1504
+      ],
+      "id": "c4b4cc83-e35a-40b3-928b-00603f2566da",
+      "name": "判断扫描的SN是否符合订单条件"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"2005\",\n  \"msg\":\"{{$json.errors.join(' ')}}\"\n}",
+        "options": {}
+      },
+      "id": "3f57ca49-ec13-47d0-9c7d-f63da49d0b83",
+      "name": "料号不正确",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -4128,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c7123ae8-4143-4ffb-8e0e-bdf9083da9a4",
+              "leftValue": "={{ $json.body.snList }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -15504,
+        1776
+      ],
+      "id": "5de7fea4-f970-45b3-833a-37e2e3e73503",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0b5a2259-5f92-490c-b64a-8bf780317c60",
+              "name": "body.code",
+              "value": "={{ $json[\"工单号\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5f549329-e05f-4ecc-ad37-63bfa1595bd4",
+              "name": "body.channelId",
+              "value": "={{ $json[\"渠道码\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "2efd1957-b991-42b0-a7ad-6447d7d8feb2",
+              "name": "body.snIds",
+              "value": "={{ $json[\"新机序列号\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -15104,
+        1664
+      ],
+      "id": "bc58da20-b6cf-4753-bbc3-4de4f7609e1f",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.snList[0]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -15312,
+        1664
+      ],
+      "id": "18c350b7-06f7-4ec3-9f3e-2d9db9fbd1cd",
+      "name": "Split Out4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -13184,
+        1952
+      ],
+      "id": "dbbfdf78-8b9d-46e5-a178-73ed9ac710e0",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -12848,
+        2192
+      ],
+      "id": "708fbea6-7a96-4401-90af-80cb71b6af31"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 过滤掉 json 为空对象 {} 的数据\nreturn $input.all().filter(e => Object.keys(e.json).length > 0);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -12992,
+        1936
+      ],
+      "id": "0a5e74e1-4858-4049-8b94-b763d22722ff",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet res=[];\nfor (const item of $input.all()) {\n   const inputSn=$('If1').all();\n  inputSn.map(e=>{\n     if(item.json.json.retroid==e.json.body.snIds)\n  })\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7904,
+        2416
+      ],
+      "id": "17eb4705-72fb-4584-b65c-295df793512a",
+      "name": "给出库的每个SN绑定订单号"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "json.retroid",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -8064,
+        2032
+      ],
+      "id": "e442b83f-8928-4814-bfd0-8d9afde6a00e",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "res",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -6944,
+        1904
+      ],
+      "id": "d964d80b-b8d2-434a-b641-17169ba742d6",
+      "name": "Split Out5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入数据\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const originBody = item.json.body;\n  const rawSnIds = originBody.snIds;\n\n  // 1. 数据防错处理：如果没有 snIds，直接跳过\n  if (!rawSnIds) continue;\n\n  // 2. 清洗字符串：去掉所有的中文逗号、英文逗号和空格\n  // 原字符串：\"S51AP10485W92C006187，\" -> \"S51AP10485W92C006187\"\n  const cleanString = rawSnIds.toString().replace(/[，,\\s]/g, '');\n\n  // 3. 按照固定长度 10 拆分\n  // match(/.{1,10}/g) 会把字符串每10位切成数组的一个元素\n  const snArray = cleanString.match(/.{1,10}/g) || [];\n\n  // 4. 生成新数据（拆分出几条SN，就生成几条数据）\n  for (const sn of snArray) {\n    results.push({\n      json: {\n        body: {\n          code: originBody.code,           // 保留原 code\n          channelId: originBody.channelId, // 保留原 channelId\n          snIds: sn                        // 放入切分好的单个 SN\n        }\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "id": "d62f350f-8a59-4fab-9afe-81d8e0f56107",
+      "name": "将snIds拆成单个SN",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -15312,
+        1888
+      ]
+    }
+  ],
+  "connections": {
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "判断是不是试用机",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "订单号不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断上传的sn是否都存在表中": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断上传的机型是否符合订单的机型要求": {
+      "main": [
+        [
+          {
+            "node": "判断一次上传的sn是否小于订单数量",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "上传的机型不符合要求订单要求",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存在订单数据进行更新，不存在则新增订单数据": {
+      "main": [
+        [
+          {
+            "node": "判断当前已经出库的机型和数量是否小于订单中的机型和数量",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询订单数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "小于添加上传的机型信息，大于报错": {
+      "main": [
+        [
+          {
+            "node": "订单已全部发货",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "处理上传的手表信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "判断前两个校验是否出问题",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断一次上传的sn是否小于订单数量": {
+      "main": [
+        [
+          {
+            "node": "判断数据库中是否有该订单数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断一次上传的sn是否超过订单数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断当前已经出库的机型和数量是否小于订单中的机型和数量": {
+      "main": [
+        [
+          {
+            "node": "小于添加上传的机型信息，大于报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "管易接口调用出错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到需要出库的SN1": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环进行数据更新1": {
+      "main": [
+        [
+          {
+            "node": "Code11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "给每个出库的SN绑定订单号1": {
+      "main": [
+        [
+          {
+            "node": "循环进行数据更新1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是不是试用机": {
+      "main": [
+        [
+          {
+            "node": "给出库的sn绑定价格",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取到交货单中的料号和数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询渠道号是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断渠道号是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断渠道号是否存在": {
+      "main": [
+        [],
+        [
+          {
+            "node": "错误信息：渠道号不存在！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断出库的手表是否是管易出货": {
+      "main": [
+        [
+          {
+            "node": "根据sn在数据库中查找对应的sn记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取到需要出库的SN1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断前两个校验是否出问题": {
+      "main": [
+        [
+          {
+            "node": "根据SN绑定物料号1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新出库时间2": {
+      "main": [
+        [
+          {
+            "node": "循环进行数据更新1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误！4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断订单表中是否存在数据": {
+      "main": [
+        [
+          {
+            "node": "处理上传的手表信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "存储仓库出库的有赞订单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理上传的手表信息": {
+      "main": [
+        [
+          {
+            "node": "查上传的sn是否已经出库",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "删除创建的订单数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "给每个绑定订单号": {
+      "main": [
+        [
+          {
+            "node": "存储出货订单1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环更新出库时间": {
+      "main": [
+        [
+          {
+            "node": "Code12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询上传的sn是否存在数据库表中": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "构建存在出货信息的列表",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "给每个绑定订单号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建存在出货信息的列表": {
+      "main": [
+        [
+          {
+            "node": "SN已存在出货信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "出库成功返回这次出库信息": {
+      "main": [
+        [
+          {
+            "node": "出库成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据库中是否有该订单数据": {
+      "main": [
+        [
+          {
+            "node": "存在订单数据进行更新，不存在则新增订单数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息:数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询订单数据": {
+      "main": [
+        [
+          {
+            "node": "判断订单表中是否存在数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息:数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查上传的sn是否已经出库": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "删除创建的订单数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn的长度是否为10": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "对snList做处理",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：sn或单据编号不能为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "对snList做处理": {
+      "main": [
+        [
+          {
+            "node": "判断sn的长度是否为10",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将sn字符串转为数组": {
+      "main": [
+        [
+          {
+            "node": "判断上传的sn是否都存在表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存储出货订单": {
+      "main": [
+        [],
+        [
+          {
+            "node": "sn码已经存在",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "删除创建的订单数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存储仓库出库的有赞订单信息": {
+      "main": [
+        [
+          {
+            "node": "处理上传的手表信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息:数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "出库成功返回这次出库信息3": {
+      "main": [
+        [
+          {
+            "node": "出库成功3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从数据缓存中查找是否存在交货单记录": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "记录更新日志2": {
+      "main": [
+        [
+          {
+            "node": "mes存储出库信息2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息:数据库错误！1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mes存储出库信息2": {
+      "main": [
+        [
+          {
+            "node": "出库成功返回这次出库信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息:数据库错误！1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新出库时间": {
+      "main": [
+        [
+          {
+            "node": "循环更新出库时间",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息:数据库错误！1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存储出货订单1": {
+      "main": [
+        [
+          {
+            "node": "循环更新出库时间",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "删除创建的订单数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "sn码已经存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "从数据缓存中查找是否存在交货单记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "出库成功返回这次出库信息4": {
+      "main": [
+        [
+          {
+            "node": "出库成功4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "给每个出库的SN绑定订单号3": {
+      "main": [
+        [
+          {
+            "node": "Code9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "给每个出库的SN绑定订单号2": {
+      "main": [
+        [
+          {
+            "node": "Code9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "记录更新日志3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "判断当前的订单是否属于合并订单1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "记录更新日志3": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误！5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据sn在数据库中查找对应的sn记录": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到需要出库的SN2": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断当前的订单是否属于合并订单1": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据SN绑定物料号1": {
+      "main": [
+        [
+          {
+            "node": "判断出库的手表是否是管易出货",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：SN查询物料主数据失败2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "给出库的sn绑定价格": {
+      "main": [
+        [
+          {
+            "node": "判断上传的机型是否符合订单的机型要求",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "新mes查询sn": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理watch_type": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应的uuid": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "给每个出库的SN绑定订单号3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code7": {
+      "main": [
+        [
+          {
+            "node": "给每个出库的SN绑定订单号2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code8": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code9": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "出库成功返回这次出库信息4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误！5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误！5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code10": {
+      "main": [
+        [
+          {
+            "node": "Split Out5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table1": {
+      "main": [
+        [
+          {
+            "node": "出库成功返回这次出库信息3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误！4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code11": {
+      "main": [
+        [
+          {
+            "node": "Code10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code12": {
+      "main": [
+        [
+          {
+            "node": "记录更新日志2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "查询对应的uuid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Filter3": {
+      "main": [
+        [
+          {
+            "node": "Code13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code13": {
+      "main": [
+        [
+          {
+            "node": "将sn字符串转为数组",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "通过物料号查找到对应的69码": {
+      "main": [
+        [
+          {
+            "node": "Split Out3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out3": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto1": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名1": {
+      "main": [
+        [
+          {
+            "node": "Crypto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter4": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "更新出库时间2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "循环进行数据更新1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "更新出库时间",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "循环更新出库时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate3": {
+      "main": [
+        [
+          {
+            "node": "Code8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "从数据缓存中查找是否存在交货单记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从数据缓存中查找是否存在交货单记录1": {
+      "main": [
+        [
+          {
+            "node": "存储仓库出库的有赞订单信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "新mes查询sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到交货单中的料号和数量": {
+      "main": [
+        [
+          {
+            "node": "获取到订单信息中的主机和料号数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到订单信息中的主机和料号数据": {
+      "main": [
+        [
+          {
+            "node": "获取到订单中的具体字段信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到订单中的具体字段信息": {
+      "main": [
+        [
+          {
+            "node": "获取到主机数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到主机数据": {
+      "main": [
+        [
+          {
+            "node": "判断料号和数量是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "判断料号和数量是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断扫描的SN是否符合订单条件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断扫描的SN是否符合订单条件": {
+      "main": [
+        [
+          {
+            "node": "获取到需要出库的SN2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "料号不正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Split Out4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "将snIds拆成单个SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询上传的sn是否存在数据库表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "处理watch_type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "给每个出库的SN绑定订单号1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out5": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将snIds拆成单个SN": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 600
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "1623",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "channelId": "10931",
+            "code": "SF5124764917905",
+            "snIds": "W52B007880W52B007888W52B007829W52B006733W52B007684W52B007812W52B007724W52B007698W52B007876W52B007665W51B016087W51B015569W51B017349W51B015420W51B016644H31AG55210H31AG55672H31AG56094H31AG55212H31AG56319H31AG56667H31AG55544H31AG57689H31AG55442H31AG55569\nW35B058698W35B058290W35B059628W35B059341W35B058772W35B057465W35B058067W35B059557W35B058351W35B058210W35B057625W35B058534W35B059749W35B058484W35B059287W35B058267W35B057546W35B059685W35B058034W35B058230W35B057405W35B057086W35B057423W35B059679W35B059611W35B057629W35B057577W35B057520W35B059660W35B059672W35B057727W35B059671W35B057934W35B059706W35B057766W35B056949\nW35B059460W35B059049W35B059289W35B056484W35B058626W35B059179W35B059062W35B059088W35B057688W35B056542W35B056233W35B058958W35B058849W35B057052W35B058587W35B058416W35B055904W35B059748W35B058478W35B059134W35B059114W35B056278W35B059165W35B056155W35B056262W35B059472W35B056315W35B056102W35B056554W35B056303W35B056646W35B056380W35B056332W35B055926W35B055956W35B059090\nW35B059439W35B058220W35B058563W35B057702W35B057967W35B059643W35B057023W35B057709W35B057981W35B058249W35B059157W35B059738W35B057029W35B057065W35B057996W35B057678W35B057245W35B058364W35B057156W35B059028W35B058454W35B056919W35B059253W35B058566W35B057764W35B057762W35B059119W35B059629W35B057667W35B056921W35B058631W35B057102W35B058257W35B058553W35B058467W35B058334\nW32AA10506W32AA09401W32AA14395W32AA09588W32AA13345W32AA12277W32AA12650W32AA13242W32AA13423W32AA08831W32AA12288W32AA12732W32AA10849W32AB00089W32AB00041W32AA14347W32AA07775W32AA10896W32AA10447W32AA13412\n，",
+            "boxId": "",
+            "snList": []
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/warehouseOutgoing",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "5a97db94-9487-4d82-bfe6-314f565c325b",
+  "activeVersionId": "5a97db94-9487-4d82-bfe6-314f565c325b",
+  "versionCounter": 100,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:11:31.290Z",
+      "createdAt": "2024-04-24T09:11:31.290Z",
+      "id": "iWa6cFsaNCZZuvFh",
+      "name": "仓库出货API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-01T06:19:29.955Z",
+      "createdAt": "2024-03-01T06:19:29.955Z",
+      "role": "workflow:owner",
+      "workflowId": "Kp0WhtmxfjuIu0YG",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    },
+    {
+      "updatedAt": "2025-11-04T02:55:10.742Z",
+      "createdAt": "2025-11-04T02:55:10.742Z",
+      "role": "workflow:editor",
+      "workflowId": "Kp0WhtmxfjuIu0YG",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

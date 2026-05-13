@@ -1,0 +1,160 @@
+{
+  "updatedAt": "2024-04-19T10:29:44.027Z",
+  "createdAt": "2024-04-19T10:25:57.904Z",
+  "id": "drfnL9ZgnABuRiyf",
+  "name": "退款失败手动退款",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "7aa2b03a-263e-4721-a364-23208929191a",
+        "options": {}
+      },
+      "id": "168c52fe-8301-4345-8d18-39a578f83c3c",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        620,
+        340
+      ],
+      "webhookId": "7aa2b03a-263e-4721-a364-23208929191a"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "refund",
+          "mode": "list",
+          "cachedResultName": "refund"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.body.retroid }}"
+            },
+            {
+              "column": "order_number",
+              "value": "={{ $json.body.order_number }}"
+            },
+            {
+              "column": "refund_price",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2aa877f2-530e-4c8f-83f2-9601900df2a8",
+      "name": "查询所有退款失败的记录",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        840,
+        340
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/api/youzan.trade.refund.seller.active/3.0.1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $('获取有赞token').all()[0].json.data.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"bizValue\":\"3807489865938108430\",\n  \"refund_fee\":\"{{ $json.total_price }}\",\n  \"oid\":\"{{ $json.oid }}\",\n  \"tid\":\"{{ $json.orderId }}\",\n\t\"desc\":\"退款\"\n}  ",
+        "options": {}
+      },
+      "id": "548340e9-9aec-43d7-800f-c9c1266aa1b1",
+      "name": "根据订单号以及金额进行退款",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1080,
+        340
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "查询所有退款失败的记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询所有退款失败的记录": {
+      "main": [
+        [
+          {
+            "node": "根据订单号以及金额进行退款",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c8efdf03-e952-4412-b05a-8f5b274c76dc",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-04-19T10:25:57.904Z",
+      "createdAt": "2024-04-19T10:25:57.904Z",
+      "role": "workflow:owner",
+      "workflowId": "drfnL9ZgnABuRiyf",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

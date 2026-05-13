@@ -1,0 +1,390 @@
+{
+  "updatedAt": "2025-12-30T10:56:29.261Z",
+  "createdAt": "2025-12-30T06:34:53.794Z",
+  "id": "TNjCxvSvE3up5OBZ",
+  "name": "test飞书试用机退款流程",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        272
+      ],
+      "id": "028a50cc-794b-4ad6-a2e3-9fe944d55d56",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/auth/token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "d89d72c2af4c35b010"
+            },
+            {
+              "name": "client_secret",
+              "value": "REDACTED"
+            },
+            {
+              "name": "authorize_type",
+              "value": "silent"
+            },
+            {
+              "name": "grant_id",
+              "value": "40929169"
+            },
+            {
+              "name": "refresh",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3aa0f654-de09-4e77-8b1c-864e7afabb42",
+      "name": "获取有赞token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -64,
+        -368
+      ],
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        -384
+      ],
+      "id": "e3013a9a-d687-4510-8027-b3add4955c9c",
+      "name": "测试数据"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        432,
+        272
+      ],
+      "id": "ceaa412b-b085-475e-8ff8-85e11cb2ae64",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 遍历所有输入的items\nfor (const item of $input.all()) {\n  // 从当前item中获取orderId（如果orderId在其他层级，可调整取值路径，比如item.json.orderId）\n  const orderId = item.json.orderId;\n  \n  // 根据orderId返回不同的响应\n  if (orderId === 'E20251213141351044706185') {\n    // 匹配第一个orderId，返回成功响应\n    item.json = {\n      \"trace_id\": \"yz7-0a34f812-1766973335936-225786\",\n      \"code\": 200,\n      \"data\": {\n        \"is_success\": true,\n        \"refund_id\": \"202512290955350020200447\"\n      },\n      \"success\": true,\n      \"message\": \"successful\"\n    };\n  } else if (orderId === 'E20230526153831018600079') {\n    // 匹配第二个orderId，返回失败响应\n    item.json = {\n      \"trace_id\": \"yz7-0a34f81f-1766973335928-336094\",\n      \"code\": 1020000013,\n      \"success\": false,\n      \"message\": \"订单退款时间超过渠道时间限制\"\n    };\n  } \n  else if (orderId === 'E20230526153831018600080') {\n    // 匹配第二个orderId，返回失败响应\n    item.json = {\n      \"trace_id\": \"yz7-0a34f81f-1766973335928-336095\",\n      \"code\": 1020000013,\n      \"success\": false,\n      \"message\": \"订单退款时间超过渠道时间限制\"\n    };\n  } \n  else {\n    // 可选：处理其他未匹配的orderId情况（可根据需求修改）\n    item.json = {\n      \"trace_id\": \"unknown\",\n      \"code\": 404,\n      \"success\": false,\n      \"message\": \"订单ID未匹配\"\n    };\n  }\n}\n\n// 输出处理后的items\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        560
+      ],
+      "id": "fc8dcc1d-b4fd-4dc0-89a4-9611e676dc25",
+      "name": "模拟调用有赞商家退款输出结果"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 直接返回包含2个item的数组\nreturn [\n  {\n    \"orderId\": \"E20251213141351044706185\",\n    \"Matnr\": \"GSW332000014\",\n    \"total_price\": \"800.00\",\n    \"oid\": \"3115660836865966751\"\n  },\n  {\n    \"orderId\": \"E20230526153831018600079\",\n    \"Matnr\": \"GSWL18B18003\",\n    \"total_price\": \"500.00\",\n    \"oid\": \"2942746028917391568\"\n  },\n  {\n    \"orderId\": \"E20230526153831018600080\",\n    \"Matnr\": \"GSWL18B18004\",\n    \"total_price\": \"501.00\",\n    \"oid\": \"2942746028917391567\"\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        272
+      ],
+      "id": "9766bded-5c38-429f-8e8a-56579030810f",
+      "name": "退款订单列表模拟数据"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取Loop Over Items节点的数据\nconst requestData = $('Loop Over Items').first().json;\n// 2. 获取上一个节点的响应结果（接口返回数据）\nconst responseData = $input.first().json;\n// 3. 深度合并请求参数和响应结果（避免嵌套对象丢失）\nconst mergedData = {\n  ...requestData,  // 原始请求参数（orderId、Matnr等）\n  ...responseData  // 接口响应结果（trace_id、code等）\n};\n\n// 4. 输出拼接后的item，保持n8n标准格式\nreturn [\n  {\n    json: mergedData\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        560
+      ],
+      "id": "b15e9b09-4661-4e3f-b2df-c66db5b0b67b",
+      "name": "组合订单号和响应数据"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从n8n的输入数据中获取上一个节点的输出\nconst inputData = $input.all();\n\n// 用于存储提取出的refund_id\nconst result = [];\n\n// 遍历所有输入项\nfor (const item of inputData) {\n  // 检查当前项的code是否为200\n  if (item.json.code === 200) {\n    // 提取refund_id并添加到结果数组中\n    const refundId = item.json.data?.refund_id;\n    if (refundId) {\n      result.push({\n        json: {\n          trace_id: item.json.trace_id, // 保留trace_id便于溯源\n          refund_id: refundId\n        }\n      });\n    }\n  }\n}\n\n// 将结果输出到下一个节点\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -208
+      ],
+      "id": "5d09042b-3f68-4bc3-9090-fc5aa260fd3f",
+      "name": "提取售后单编码"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/api/youzan.trade.refund.get/3.0.1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $('获取有赞token').all()[0].json.data.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "refund_id",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        752,
+        -208
+      ],
+      "id": "88873727-1117-4ced-a20e-4843422a6564",
+      "name": "查询有赞售后单详情"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取所有输入的item\nconst inputItems = $input.all();\n\n// 2. 遍历处理每个item，生成successList的子项\nconst successList = inputItems.map(item => {\n  // 提取当前item的核心数据\n  const data = item.json;\n  \n  // 确定退款金额和提示语：成功则取total_price，失败则为0；提示语适配场景\n  const refund_price = data.success ? data.total_price : 0;\n  const message = data.success ? \"退款成功\" : data.message;\n\n  // 返回格式化后的子项\n  return {\n    orderId: data.orderId,\n    Matnr: data.Matnr,\n    total_price: data.total_price,\n    oid: data.oid,\n    refund_price: refund_price,\n    message: message\n  };\n});\n\n// 3. 按要求格式输出（外层是包含successList的单个item）\nreturn [\n  {\n    json: {\n      successList: successList\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        368
+      ],
+      "id": "96c4bfb2-a5d5-4395-a452-37187ee6f516",
+      "name": "处理退款是否成功进行数据回写"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取所有输入的item\nconst inputItems = $input.all();\n\n// 2. 提取所有退款失败的orderId，并存入Set自动去重\nconst failedOrderIds = new Set();\ninputItems.forEach(item => {\n  const data = item.json;\n  // 仅筛选success为false的订单，且确保orderId存在\n  if (data.success === false && data.orderId) {\n    failedOrderIds.add(data.orderId);\n  }\n});\n\n// 3. 将去重后的订单ID拼接为字符串（逗号分隔）\nconst errMsg = Array.from(failedOrderIds).join(\",\");\n\n// 4. 按要求格式输出（单个item包含errMsg字段）\nreturn [\n  {\n    json: {\n      errMsg: errMsg\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        128
+      ],
+      "id": "b5e77861-dc2f-430b-9453-7800f36607ab",
+      "name": "输出错误"
+    },
+    {
+      "parameters": {
+        "content": "处理明细行回写出现匹配不上的情况，比如有商品A、B，A是800元、B是500元，A退款成功、B因订单退款时间超过渠道时间限制退款失败，但会写到飞书表单中出现A退款失败、B退款成功的情况。\n\n主要原因是批量调用商家退款接口，但如果是code不是200的情况，没有返回订单等信息可以关联，当前的做法是按拿到的数据、进行反序匹配，这种做法不可靠。\n\n因此本次修改为一行明细只调用一次，完成后拼接请求参数和响应参数、再继续下一次调用，从并发改为串行。",
+        "height": 288,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -16,
+        432
+      ],
+      "typeVersion": 1,
+      "id": "b40b4bd9-9e4f-4bda-bd19-5abfb9b66c27",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "退款订单列表模拟数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取有赞token": {
+      "main": [
+        [
+          {
+            "node": "测试数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "测试数据": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "处理退款是否成功进行数据回写",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "输出错误",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "模拟调用有赞商家退款输出结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模拟调用有赞商家退款输出结果": {
+      "main": [
+        [
+          {
+            "node": "组合订单号和响应数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "退款订单列表模拟数据": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组合订单号和响应数据": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取售后单编码": {
+      "main": [
+        [
+          {
+            "node": "查询有赞售后单详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询有赞售后单详情": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "获取有赞token": [
+      {
+        "json": {
+          "success": true,
+          "code": 200,
+          "data": {
+            "expires": 1767665656000,
+            "scope": "item item_advanced item_super item_category item_category_advanced item_category_super trade trade_super trading_setting_advanced user user_advanced account_advanced utility utility_advanced utility_super shop_super statistics_advanced logistics coupon_advanced reward_advanced present_advanced wish_advanced peerpay_advanced gift_advanced crm_advanced fenxiao_advanced pay_advanced union_advanced wxd_app aixuedai_app oauth_advanced account_super shop weixin_advanced oauth_super shop_compatible feature_advanced pay_qrcode wsc_app store mars trade_virtual coupon pf nine bbs offline notice_center store_api_normal youren courier points_store time_limited_discount salesman seller_data_center cross_boarder niece multi_store reviews wechat_program_mars weapp_wsc open_market wm app_sdk dzt_crm union_pay pay_trans cy buyer_cart buyer_bill buyer_trade buyer_refund points storage pay_fund_channel meeting cash retail ka_customization panama beauty silently_create_account trade-delivery content_delivery trade_selffetch retail_goods retail_headquater retail_trade beauty_partner spotlight h5_resource_accelerator retail_store dsp_api app_engine oa_api retail-ump retail-peripheral retail-scrm retail-pay retail-data e_commerce_app buyer_address new_wxd_app sharing_tech_mobile seller_refund trade_invoice_platform customer electronic_invoice ebiz-owl stored_value_card gift_card beauty_staff tag beauty_item beauty_appointment beauty_member beauty_order beauty_cashier beauty_stock beauty_shop sougou cloud_api cms extension_analysis business_profile shop_advanced mei_promoter item_hotel item_standard circle selffetchcode virtualticket tags trade_advanced retail_product retail_stock retail_shop retail_supplier supplier data stored_value_card_operation retail_finance general_data level_membership project pay-customs-declaration account_import retail_permission multi_precard pay-gateway open_education_curriculum open_education_line open_education_customer open_education_student open_education_classroom open_education_class open_education_schedule open_education_order open_education_signin open_education_order open_tickets open_education_message open_education_column open_education_content open_education_broadcast rds迁移 open_beauty_service_log open_beauty_work_order open_fenxiao open_fenxiao_trade fin-consumerfin-prod 测试分组删除 open_education_order pay-gateway pay-login pay-ucashier retail_tag retail_tag retail_user retail_logistics retail_virtualcode retail_crossborder retail_reviews retail_reviews retail_crm retail_giftcard retail_address retail_scrm_customer retail_valuecard retail_scrm_tag retail_virtualticket retail_user retail_growth appstore_data retail_pay showcase_api MicroPageAPI open_beauty_verification open_education_coursegroup IoT iot-printer open_msg test open_robot open_clue_manage mei_open_partner material-callback enable_im crm_api transfer-portal youzan_cloud_api retail_peripheral mei_open_ka open_youzan_mcn yunying retail_finance open_isv open_bill data_center callback retail_store retail_ump retail_trade retail_SupplyChain open_trade_fenxiao pay",
+            "access_token": "REDACTED",
+            "authority_id": "40929169"
+          },
+          "message": null
+        }
+      }
+    ],
+    "测试数据": [
+      {
+        "json": {
+          "trace_id": "yz7-0a34f812-1766973335936-225786",
+          "code": 200,
+          "data": {
+            "is_success": true,
+            "refund_id": "REDACTED"
+          },
+          "success": true,
+          "message": "successful"
+        }
+      },
+      {
+        "json": {
+          "trace_id": "yz7-0a34f81f-1766973335928-336094",
+          "code": 1020000013,
+          "success": false,
+          "message": "订单退款时间超过渠道时间限制"
+        }
+      }
+    ]
+  },
+  "versionId": "5e1d4aec-429a-4c90-9c4c-3503efb9a659",
+  "activeVersionId": null,
+  "versionCounter": 6,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-12-30T06:34:53.794Z",
+      "createdAt": "2025-12-30T06:34:53.794Z",
+      "role": "workflow:owner",
+      "workflowId": "TNjCxvSvE3up5OBZ",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

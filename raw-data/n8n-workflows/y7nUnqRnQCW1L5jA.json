@@ -1,0 +1,448 @@
+{
+  "updatedAt": "2025-02-24T11:25:43.749Z",
+  "createdAt": "2025-02-24T08:37:11.610Z",
+  "id": "y7nUnqRnQCW1L5jA",
+  "name": "定时刷新京东Token",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        140,
+        0
+      ],
+      "id": "9fd8aeca-634e-419e-b09d-23ed231324ab",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "daa2103e-d7ad-4cb1-a0f4-9b1e40078a9f",
+              "leftValue": "={{ Number($json.jd_express_in) }}",
+              "rightValue": "={{ $now.toMillis() }}",
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        0
+      ],
+      "id": "943d0953-9dba-4668-a760-7f1cb3518e57",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3e2d99f-9939-4ffc-b4f2-435194d9d710",
+              "name": "jd_refresh_access_token",
+              "value": "={{ $vars.jd_refresh_access_token }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1080,
+        0
+      ],
+      "id": "a753e083-8465-40e6-ae81-52a878c39282",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet ids;\nfor (const item of $input.all()) {\n  const jdAccesstoken='jd_access_token';\n  \n  ids=item.json.data.filter(e=>{\n    if(e.key===jdAccesstoken){\n      return e\n    }\n  });\n   \n  \n}\n\nreturn {ids};"
+      },
+      "id": "6a2894f3-4a1a-4f2b-862e-33e99cdedaea",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://n8n.mes.coros.team/api/v1/variables/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {}
+      },
+      "id": "107ab999-9485-4d8d-935f-84e094e2488a",
+      "name": "delete token variables",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        0
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $(\"刷新access_token\").all();"
+      },
+      "id": "3be7583e-baeb-47c5-960f-4223e508f341",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "ids",
+        "options": {}
+      },
+      "id": "945843ce-e35d-4e90-ba05-6a5aa19eb535",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  飞书token获取失败: n8nAPI调用失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "29fa171a-13b1-4e55-9917-30663badb9fa",
+      "name": "Send Warn Email1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2840,
+        440
+      ],
+      "retryOnFail": false,
+      "webhookId": "e6abd871-b169-477e-854e-c0dace198081",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://n8n.mes.coros.team/api/v1/variables",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {}
+      },
+      "id": "03230aa7-c22d-4069-b298-bed80be43867",
+      "name": "get variables Ids",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1620,
+        0
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.mes.coros.team/api/v1/variables",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"key\": \"jd_access_token\",\n  \"value\": \"{{ $json.access_token }}\"\n}",
+        "options": {}
+      },
+      "id": "e73444d0-ed04-4ca8-a050-dec750344e34",
+      "name": "create variables",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2600,
+        0
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a0883f8-44dc-4e5f-abcb-a32883923ae4",
+              "name": "=jd_access_token",
+              "value": "={{ $vars.jd_access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "639f3bc7-1aac-422f-bc87-f8ed2c7dc65d",
+              "name": "=jd_express_in",
+              "value": "=1740385714824",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ],
+      "id": "2e7c6973-f0cd-4ac8-a8fa-e9d3e6f580fe",
+      "name": "获取JD的token"
+    },
+    {
+      "parameters": {
+        "url": "=https://open-oauth.jd.com/oauth2/refresh_token?app_key=B9218A6D3A374CF1FD73BD9918F9F816&app_secret=a244f5d4b0a44a4e88984b0862fd7864&grant_type=refresh_token&refresh_token={{ $json.jd_refresh_access_token }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        0
+      ],
+      "id": "7b9a33c0-e5e7-4845-8c09-a8c627a97fbb",
+      "name": "刷新access_token"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "获取JD的token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "刷新access_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete token variables": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "create variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "delete token variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get variables Ids": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create variables": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取JD的token": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "刷新access_token": {
+      "main": [
+        [
+          {
+            "node": "get variables Ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "230d3986-5e7e-44d1-83f0-7d4608259a02",
+  "activeVersionId": "230d3986-5e7e-44d1-83f0-7d4608259a02",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-02-24T08:37:11.610Z",
+      "createdAt": "2025-02-24T08:37:11.610Z",
+      "role": "workflow:owner",
+      "workflowId": "y7nUnqRnQCW1L5jA",
+      "projectId": "3aQnrVmrPM3uNcK5",
+      "project": {
+        "updatedAt": "2025-09-08T04:25:23.564Z",
+        "createdAt": "2025-02-18T02:58:48.619Z",
+        "id": "3aQnrVmrPM3uNcK5",
+        "name": "2.国补接口",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "toolbox"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

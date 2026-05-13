@@ -1,0 +1,260 @@
+{
+  "updatedAt": "2025-11-24T09:23:12.417Z",
+  "createdAt": "2025-11-24T09:20:34.811Z",
+  "id": "3gsWsHRrzrFv0i7H",
+  "name": "get_sap_material",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_sap_material",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        96
+      ],
+      "id": "ca78ec87-8efe-406e-befc-53df455aa1d2",
+      "name": "Webhook",
+      "webhookId": "3ef9484a-f48e-4e57-a2b7-75c4d446b4be"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\": {{ $json.data.toJsonString() }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        -64
+      ],
+      "id": "37e22d10-c5ca-4dd7-9208-070368d68f67",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "collection": "material",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        96
+      ],
+      "id": "0c2ed133-faa7-44a7-a41c-e20f634d15c8",
+      "name": "MongoDB",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "znvarMtJG8UUgY5T",
+          "name": "MongoDB account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0edd9d1-dab3-4de6-bff4-5a39d0477de1",
+              "leftValue": "{{$json[\"data\"][\"ITEM\"].length > 0}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        32
+      ],
+      "id": "43869304-1eb8-4e13-8b14-352976d5fcde",
+      "name": "If",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "errorMessage": "no data"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        96,
+        544
+      ],
+      "id": "18b86890-8233-4ea3-be25-19eddba0c9a9",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"数据库报错\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        224
+      ],
+      "id": "5a5efff5-c22b-4a87-9011-b05bb2ea5f54",
+      "name": "数据库报错"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -64
+      ],
+      "id": "6bcfc370-7d30-4109-8fc1-f08e69e38229",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.227",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/get_sap_material",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "1bb083a7-83e2-46c0-87a3-23a03aaf35e0",
+  "activeVersionId": "1bb083a7-83e2-46c0-87a3-23a03aaf35e0",
+  "versionCounter": 38,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-24T09:20:34.811Z",
+      "createdAt": "2025-11-24T09:20:34.811Z",
+      "role": "workflow:owner",
+      "workflowId": "3gsWsHRrzrFv0i7H",
+      "projectId": "pu9QnguCIBxFDyPo",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:06.924Z",
+        "createdAt": "2025-05-15T05:57:29.519Z",
+        "id": "pu9QnguCIBxFDyPo",
+        "name": "SAP_JOB_CACHE",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "layer-group"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

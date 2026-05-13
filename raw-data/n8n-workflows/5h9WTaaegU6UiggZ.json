@@ -1,0 +1,231 @@
+{
+  "updatedAt": "2025-07-02T06:30:42.999Z",
+  "createdAt": "2025-07-01T08:10:37.518Z",
+  "id": "5h9WTaaegU6UiggZ",
+  "name": "update_print_template",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/postPDF",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        -140
+      ],
+      "id": "fdb564fe-dbf2-43ac-a4e8-0e0b10f95604",
+      "name": "Webhook",
+      "webhookId": "7f68c8e7-6e8e-405b-a6da-51acfdae4f08"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "path": "=/mes/printinfo/{{$input.all()[0].binary.pdf.fileName}}",
+        "binaryPropertyName": "pdf"
+      },
+      "id": "c6b1a3a7-30ad-4eb9-b6f6-f94dcb693a0b",
+      "name": "上传文档",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        600,
+        -140
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1bc741df-e5eb-4bef-989d-ad6d0a6312b4",
+              "leftValue": "={{ $input.all()[0].binary.pdf }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        820,
+        -240
+      ],
+      "id": "6c65def8-c0f7-4a90-b7aa-e66b9bd030da",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"打印模板上传失败，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "8ad4bc3b-d523-427d-839e-5fa712388ceb",
+      "name": "报错信息：模板插入失败",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1140,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"打印模版更新成功\"\n}",
+        "options": {}
+      },
+      "id": "830692f1-b61d-43c8-9052-b924a51d9b00",
+      "name": "成功更新",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1140,
+        -260
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "上传文档",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传文档": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：模板插入失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "成功更新",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：模板插入失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "71584",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"137\", \"Chromium\";v=\"137\", \"Not/A)Brand\";v=\"24\"",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundarybaVaWvU9qMaAVQj9",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "null",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "zh-CN,zh;q=0.9"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/postPDF",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "094eb24e-9e5c-4d5f-9c34-8160f1718d91",
+  "activeVersionId": "094eb24e-9e5c-4d5f-9c34-8160f1718d91",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-07-02T06:30:42.883Z",
+      "createdAt": "2025-07-02T06:30:42.883Z",
+      "role": "workflow:owner",
+      "workflowId": "5h9WTaaegU6UiggZ",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

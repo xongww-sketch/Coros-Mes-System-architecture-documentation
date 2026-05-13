@@ -1,0 +1,233 @@
+{
+  "updatedAt": "2025-04-24T06:20:26.258Z",
+  "createdAt": "2024-08-13T02:06:02.723Z",
+  "id": "llp8mklZrukk3Lm1",
+  "name": "getApplicationList",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//判断查询的条件是否存在\n//构建查询的SQL语句\nconst sqlParams={};\nfor (const item of $input.all()) {\n  const applicationName = item.json.query.applicationName;\nconst appVersion = item.json.query.appVersion;\nlet conditions = [];\n\nif (applicationName) {\n  conditions.push(`a.application_name LIKE '%${applicationName}%'`);\n}\nif (appVersion) {\n  conditions.push(`a.application_version='${appVersion}'`);\n}\n\nsqlParams.sqlStr = conditions.length ? `and ${conditions.join(' and ')}` : '';\nconst offset=(item.json.query.pageNo-1)*item.json.query.pageSize;\nsqlParams.offset=offset;\nsqlParams.pageSize=item.json.query.pageSize;\n}\n\nreturn sqlParams;"
+      },
+      "id": "d5cde2a5-a1ec-44a2-89a9-873bde3028c2",
+      "name": "check params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "5e1a3f6f-679b-41cc-822a-47519fa05cbe",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        340,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{\n    \"applicationList\":{{ JSON.stringify($json.data) }},\n\"total_count\":{{ $('Postgres1').first().json.total_count ? $('Postgres1').first().json.total_count :0}}\n  }\n}",
+        "options": {}
+      },
+      "id": "39ad31c2-14a8-40e3-939a-6d1c0d288561",
+      "name": "Respond package List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "allFieldsExcept",
+        "fieldsToExclude": "total_count",
+        "options": {}
+      },
+      "id": "66d5156e-8aab-4605-95b4-c2a460fe73c2",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        340,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH temp_resources AS (\n  SELECT id, resource_name \n  FROM mes.resources \n  WHERE resource_name IS NOT NULL AND is_delete = 0\n)\nSELECT \n  a.application_id,\n  a.application_name, \n  a.application_version,\n  a.device_ids,\n  a.package_id,\n   STRING_AGG(r.resource_name, ',') AS resource_names, \n  p.package_name,\n  COUNT(*) OVER() AS total_count\nFROM \n  mes.application a\nJOIN \n  mes.installation_package p \n  ON a.package_id = p.package_id\nleft join \n  temp_resources r\n  on r.id=ANY(a.device_ids)\nWHERE \n  a.is_delete = 0 AND \n  p.is_delete = 0 {{ $json.sqlStr }}\n  GROUP BY\n    a.application_id,\n    a.application_name, \n    a.application_version,\n    a.device_ids,\n    a.package_id,\n    p.package_name\nLIMIT {{ $json.pageSize }} OFFSET {{ $json.offset }}",
+        "options": {}
+      },
+      "id": "3cc2b8f7-e71d-48cf-b217-bb52ce71bb43",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        120,
+        560
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "path": "application/getApplicationList",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "53c4eec7-892f-46d5-a977-29383c7b2806",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        560
+      ],
+      "webhookId": "80e17e15-bdc7-41a9-9a7c-282270665523"
+    }
+  ],
+  "connections": {
+    "check params": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond package List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "applicationName": "",
+            "appVersion": "",
+            "pageSize": "10",
+            "pageNo": "1"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/application/getApplicationList",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "e1b4436f-5d9f-4507-a313-29535c56237a",
+  "activeVersionId": "e1b4436f-5d9f-4507-a313-29535c56237a",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:46:23.923Z",
+      "createdAt": "2025-04-24T05:46:23.923Z",
+      "role": "workflow:owner",
+      "workflowId": "llp8mklZrukk3Lm1",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

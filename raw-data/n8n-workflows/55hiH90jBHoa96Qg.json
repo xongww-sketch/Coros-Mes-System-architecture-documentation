@@ -1,0 +1,714 @@
+{
+  "updatedAt": "2025-07-26T04:02:46.785Z",
+  "createdAt": "2024-11-26T11:12:51.952Z",
+  "id": "55hiH90jBHoa96Qg",
+  "name": "post_visual_video_info",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM YFConsumer.dbo.consm_barcodebindinfo WHERE uuid='{{ $json.body.uuid }}' or uuid_unique='{{ $json.body.uuid_unique }}';"
+      },
+      "id": "c15917b3-6ee2-4f82-8a85-f35782a7d34c",
+      "name": "Microsoft SQL1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -3120,
+        1584
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "FNgMAIvmy5GiZUlV",
+          "name": "Microsoft SQL_mes_YFConsumer"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7eb86336-4aa3-44d4-bcc7-c362db52dd24",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "910e96a3-faa9-4593-a8e7-2e7eeb20cb05",
+              "name": "path",
+              "value": "=/Video/{{ $('Webhook').item.json.body.filepath }}",
+              "type": "string"
+            },
+            {
+              "id": "33dfde70-57ff-418d-bbc6-c7a3024a2c94",
+              "name": "uuid_unique",
+              "value": "={{ $json.uuid_unique }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "accd8df2-525d-45f6-9a85-c4542db1ae29",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2576,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"视频文件生成成功！\"\n}",
+        "options": {}
+      },
+      "id": "4eb82eda-7ddc-4847-ad0a-46df68007fda",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1488,
+        1568
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\",\n  \"msg\":\"视频文件数据数据库存储失败！\"\n}",
+        "options": {}
+      },
+      "id": "8b60f587-d5e1-4089-b860-46add63ba098",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1424,
+        2080
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "video_info",
+          "mode": "list",
+          "cachedResultName": "video_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "procedure": 2,
+            "retroid": "={{ $json.retroid }}",
+            "path": "={{ $json.path }}",
+            "uuid_unique": "={{ $json.uuid_unique }}",
+            "create_time": "={{ $now.toMillis() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure",
+              "displayName": "procedure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "path",
+              "displayName": "path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuid_unique",
+              "displayName": "uuid_unique",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1677a40-0789-4241-973e-b1da9f57c89a",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1824,
+        1664
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/video/visualVideo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7da67e8a-273d-487a-ba4d-1baa6e492bae",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3408,
+        1632
+      ],
+      "webhookId": "6218c944-5717-4a4f-b9a9-021868c53c44"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_detail",
+          "mode": "list",
+          "cachedResultName": "procedure_detail"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3216,
+        1952
+      ],
+      "id": "8af84fe0-a863-407f-940b-0ca94d441acc",
+      "name": "查询工序数据获取到工序是SN与UUID绑定的ID",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4ea13845-2298-4f02-adf1-05bb32b092a5",
+              "leftValue": "={{ $json.procedure_name }}",
+              "rightValue": "SN与UUID绑定",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -2608,
+        1952
+      ],
+      "id": "99cfd666-87a2-45a2-8e2c-7fe16d91ea27",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "13a029f9-73f8-447a-a4ff-69b90edfa1f5",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2848,
+        1952
+      ],
+      "id": "b6bade87-09b1-4575-a614-417f6125713e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\",\n  \"msg\":\"工序不存在！\"\n}",
+        "options": {}
+      },
+      "id": "e54b70af-6787-4f13-a090-55054caea50f",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2608,
+        2144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7eb86336-4aa3-44d4-bcc7-c362db52dd24",
+              "name": "retroid",
+              "value": "={{ $json.sn }}",
+              "type": "string"
+            },
+            {
+              "id": "910e96a3-faa9-4593-a8e7-2e7eeb20cb05",
+              "name": "path",
+              "value": "=/Video/{{ $('Webhook').item.json.body.filepath }}",
+              "type": "string"
+            },
+            {
+              "id": "33dfde70-57ff-418d-bbc6-c7a3024a2c94",
+              "name": "uuid_unique",
+              "value": "={{ $json.uuid_unique }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb36791f-b7ad-40c6-8c18-af585d33d816",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1984,
+        1792
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8e24309a-e0b9-420c-99f4-9135feb54192",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2176,
+        1840
+      ],
+      "id": "9c6754cb-d2f9-42df-8ec3-6ff877a4482c",
+      "name": "If1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8e24309a-e0b9-420c-99f4-9135feb54192",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2816,
+        1600
+      ],
+      "id": "1d7e0d9c-ad7c-44fe-9603-86d25c6d4d2a",
+      "name": "If2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\",\n  \"msg\":\"SN与UUID未绑定！\"\n}",
+        "options": {}
+      },
+      "id": "d20c4c3c-903d-45aa-a948-4c04dc2715ee",
+      "name": "Respond to Webhook3",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1968,
+        1968
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select data::JSONB->'sn' as sn,data::JSONB->'uuid' as uuid, data ->>'uuid_unique' as uuid_unique FROM mes.mes.machine_data WHERE procedure_detail_id={{ $json.procedure_detail_id }}\n    AND LOWER(data::JSONB->>'uuid') = LOWER('{{ $('Webhook').all()[0].json.body.uuid }}') OR LOWER(data ->>'uuid_unique') = LOWER('{{ $('Webhook').all()[0].json.body.uuid.slice(0, 16) + $('Webhook').all()[0].json.body.uuid.slice(18) }}') order BY createtime DESC limit 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2400,
+        1952
+      ],
+      "id": "785221ca-bd08-4bed-a691-f3241e8777da",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Microsoft SQL1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "查询工序数据获取到工序是SN与UUID绑定的ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Microsoft SQL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工序数据获取到工序是SN与UUID绑定的ID": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.201",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "168",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "code": 2,
+            "filepath": "W331/2025-6-19/7C9D28F7AF290818902908188DF7E5_2025-06-19_13-21-51.mp4",
+            "uuid": "REDACTED",
+            "uuid_unique": "7C9D282908188DF7E5"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/video/visualVideo",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "54228a3c-cb23-464a-9e53-52215557a257",
+  "activeVersionId": "54228a3c-cb23-464a-9e53-52215557a257",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-06-18T07:37:36.386Z",
+      "createdAt": "2025-06-18T07:37:36.386Z",
+      "role": "workflow:owner",
+      "workflowId": "55hiH90jBHoa96Qg",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

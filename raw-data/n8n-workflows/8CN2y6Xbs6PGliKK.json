@@ -1,0 +1,380 @@
+{
+  "updatedAt": "2025-10-20T02:18:36.312Z",
+  "createdAt": "2025-08-13T03:18:51.971Z",
+  "id": "8CN2y6Xbs6PGliKK",
+  "name": "binding_materials_before_processing",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "binding_before_api",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        48
+      ],
+      "id": "736ebdc0-d01a-44aa-924d-70476e4bf2cf",
+      "name": "Webhook",
+      "webhookId": "8716e474-43bd-4456-b2d7-d64b48eef341"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "10c34bb8-67d3-44e9-af8a-9d9afbdc3915",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        48
+      ],
+      "id": "05443484-e8c1-4582-be99-38e535dbde6f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — 工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        48
+      ],
+      "id": "38c2a2aa-1008-4a8a-bd07-30f8709a2f41",
+      "name": "工序查询通用接口"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "MM56rKw8yXYEbFD1",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — 校验工艺流程是否存在该工序"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "89376dad-c50e-41e0-924c-7f885ef9a880",
+      "name": "校验工序是否存在工艺流程中"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "78eb6e44-f498-478e-8cb9-7cc675a09633",
+              "leftValue": "={{ $('校验工序是否存在工艺流程中').item.json[0].tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        -32
+      ],
+      "id": "689c5ce9-a974-4eb0-8484-1c4f1408464a",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1088,
+        -128
+      ],
+      "id": "191faa3e-2939-4780-b0f6-6d4e94c3fce7",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "222cb497-2efd-4e35-a99d-1ce4ebacb440",
+              "leftValue": "={{ $json.body.procedure_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "96bb478a-4d86-4b6c-8b2e-ff526e3b15cd",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a0cc0b24-5d46-4dce-bf29-db6003a2fb8d",
+              "leftValue": "={{ $json.body.material }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9a49b847-f477-4c0d-83f1-71be03325fc8",
+              "leftValue": "={{ $json.body.bind_data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        48
+      ],
+      "id": "9b912a73-600e-4dde-87e5-6150e17b9681",
+      "name": "判断所有必填项是否填写"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"未填写所有必填项\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        192
+      ],
+      "id": "8571af5f-0dc0-43d1-96ae-ace327a5ad7e",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断所有必填项是否填写",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "校验工序是否存在工艺流程中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "工序查询通用接口": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验工序是否存在工艺流程中": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断所有必填项是否填写": {
+      "main": [
+        [
+          {
+            "node": "工序查询通用接口",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.32.165",
+            "host": "n8n",
+            "connection": "close",
+            "content-length": "85",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "user-agent": "PostmanRuntime/7.45.0",
+            "postman-token": "bba1abec-d6dd-45c6-a99a-eb5c0bb81d62",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_name": "LCD与TP id绑定",
+            "joborder_id": "1000004334",
+            "material": "P23615",
+            "bind_data": " LS012B7DD15B2C80001"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/binding_before_api",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "versionId": "7b4f3199-f512-4175-a548-762e52e60750",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-08-13T03:18:51.971Z",
+      "createdAt": "2025-08-13T03:18:51.971Z",
+      "role": "workflow:owner",
+      "workflowId": "8CN2y6Xbs6PGliKK",
+      "projectId": "nibbXVSPf8J6itYk",
+      "project": {
+        "updatedAt": "2025-07-02T06:42:38.028Z",
+        "createdAt": "2025-07-02T06:40:56.794Z",
+        "id": "nibbXVSPf8J6itYk",
+        "name": "Huali Lei <leihuali@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "780e7333-0684-45a2-be3f-59aeedfdd9af"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

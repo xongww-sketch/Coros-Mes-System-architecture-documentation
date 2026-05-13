@@ -1,0 +1,546 @@
+{
+  "updatedAt": "2025-04-24T06:54:25.764Z",
+  "createdAt": "2025-01-08T02:13:54.189Z",
+  "id": "gHHLaCbZrkggPw0Q",
+  "name": "createConfig",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet data={};\nfunction isEmpty(val) {\n  if(val==null) return true; //检查null或者undefined\n  if(typeof val=='string'&& val.trim() === '') return true;\n  if(Array.isArray(val)&&val.length===0) return true;\n  if(typeof val==='object'){\n    for (let key in val) {\n            if (val.hasOwnProperty(key)) {\n                if (!isEmpty(val[key])) {\n                    return false;\n                }\n            }\n  }\n    return true;\n  }\n  return false;\n  \n}\nfor (const item of $input.all()) {\n  const req=item.json.body;\n  let temp=[];\n  //遍历对象，判断对象的属性是否为空\n  Object.keys(req).forEach(key => {\n    if (isEmpty(req[key])) {\n       temp.push(key);\n    }\n});\n  if(temp.length===0){\n    data.code=0;\n    data.req=req;\n  }else{\n    data.code=1;\n    data.message=temp.map(e=>`属性 ${e} 为空！`).join('');\n  }\n}\n\nreturn data;"
+      },
+      "id": "69db9e5a-0ed4-4e23-8346-1be5513266f0",
+      "name": "参数校验",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "42e0e34d-8ffe-4e93-9ef1-6fdc367250fc",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8ca604dc-2565-4ba0-aaa8-f416acca1534",
+      "name": "判断参数是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "process_config",
+          "mode": "list",
+          "cachedResultName": "process_config"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "process_name",
+              "value": "={{ $json.req.process_name }}"
+            },
+            {
+              "column": "is_deleted",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f8eadf56-7ccc-4ee1-89cb-94c67a419d15",
+      "name": "判断是否存在同名的工序配置",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1500,
+        220
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 202,\n  \"message\":\"{{ $json.message }}\"\n}",
+        "options": {}
+      },
+      "id": "6a18d96a-468b-4524-b8ef-4687eff39a2c",
+      "name": "params error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e196e45-44ac-484c-94cc-3eb5050435bf",
+              "name": "req.process_name",
+              "value": "={{ $json.req.process_name }}",
+              "type": "string"
+            },
+            {
+              "id": "40a28c7d-25be-4603-b0e2-722eb5998ef0",
+              "name": "req.config",
+              "value": "={{ $json.req.config }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f1f8d96-cc81-4dcd-9b80-5ad4313ea745",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1300,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/config/createConfig",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "250f95b8-949e-48e4-86fe-01c082950fb6",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ],
+      "webhookId": "678fa877-9e89-4490-8e03-4ba820ac42f7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $('Edit Fields').all()"
+      },
+      "id": "bb5a0c6b-1446-4c20-8b48-00ee86327b52",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "process_config",
+          "mode": "list",
+          "cachedResultName": "process_config"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "process_name": "={{ $json.req.process_name }}",
+            "config": "={{ $json.req.config }}",
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "process_name",
+              "displayName": "process_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "config",
+              "displayName": "config",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "process_id",
+              "displayName": "process_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_deleted",
+              "displayName": "is_deleted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "03605f9b-9258-4878-a05b-75883bfc207a",
+      "name": "插入配置信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2140,
+        140
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ba76f511-0f90-4f82-8fc2-b2796b3787d8",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "46a604c0-8494-4bd2-9dcf-83a704b3f0d4",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1680,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"存在相同工序的配置！\"\n}",
+        "options": {}
+      },
+      "id": "e2594d29-ded8-404e-82f2-d6fcff45f569",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"存在相同工序的配置！\"\n}",
+        "options": {}
+      },
+      "id": "fcb92a46-7afc-4f58-bd99-9a45e93e2068",
+      "name": "database error1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2380,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"插入成功！\"\n}",
+        "options": {}
+      },
+      "id": "c7fe6506-b3f9-4609-9453-4da23274fc0d",
+      "name": "Respond package List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2380,
+        20
+      ]
+    }
+  ],
+  "connections": {
+    "参数校验": {
+      "main": [
+        [
+          {
+            "node": "判断参数是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数是否正确": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "params error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在同名的工序配置": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在同名的工序配置",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数校验",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "插入配置信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入配置信息": {
+      "main": [
+        [
+          {
+            "node": "Respond package List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "91",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "config": [
+              {
+                "orderNumber": "订单号"
+              },
+              {
+                "workNumber": "工单号"
+              }
+            ],
+            "process_name": "打印"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/config/createConfig",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "09ffa88f-b350-413b-80b7-908fe796a78c",
+  "activeVersionId": "09ffa88f-b350-413b-80b7-908fe796a78c",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T06:46:42.379Z",
+      "createdAt": "2025-04-24T06:46:42.379Z",
+      "role": "workflow:owner",
+      "workflowId": "gHHLaCbZrkggPw0Q",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,328 @@
+{
+  "updatedAt": "2025-07-22T06:08:44.506Z",
+  "createdAt": "2025-06-10T06:25:17.374Z",
+  "id": "vUjvfVsPSPUhwFZP",
+  "name": "get_inspection_All_num",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_inspection_All_num",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        0
+      ],
+      "id": "c15adb37-de97-4dcb-909f-855c3cf002a2",
+      "name": "Webhook",
+      "webhookId": "58c6c17c-72bd-41e1-ac91-71bdeb0a0bce"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b44842b5-47b2-4454-9d64-8c9181342473",
+              "leftValue": "={{ $json.body.tag }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "27c06b9a-6e5e-42aa-94b3-4e4b782eacfa",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1440,
+        0
+      ],
+      "id": "4cbab825-0d7f-4f1a-9272-c913c163c21e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":  \"ok\",\n  \"all_num\":\"0\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        -64
+      ],
+      "id": "9a5f78c8-5594-400e-a0cc-65b23337f32b",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"参数不全\",\n  \"all_num\":\"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -864,
+        240
+      ],
+      "id": "62c42a9f-a940-49c5-b7c3-a21299e5d217",
+      "name": "参数不全"
+    },
+    {
+      "parameters": {
+        "jsCode": "const a = $input.all();\n\nlet sum = 0;\nconsole.log(a.length)\n\nfunction count(b){\n  return b.reduce((sum,item)=>{\n    \n    return sum + Number(item.json.inspection_num)\n  },0)\n}\n\n\nconst all_num=count(a)\n\n\n  return {\n  json:{\n        all_num:all_num\n      }\n};\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        -48
+      ],
+      "id": "e48cdcbd-8ded-419c-926d-832789f6057d",
+      "name": "累加检测数量"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4316f1fe-c0d0-4d01-9598-9ecbf8cb767e",
+              "leftValue": "={{ $json.all_num }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        -48
+      ],
+      "id": "af59bc48-84a7-493b-a9f9-9ac03f99f5df",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":  \"ok\",\n  \"all_num\":\"{{$json.all_num}}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        128
+      ],
+      "id": "d25559e2-335d-4c37-9758-07d40ff9d347",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select md.data ->>'inspection_num ' as inspection_num from mes.machine_data md \nwhere md.data ->>'joborder_id' = '{{ $('Webhook').item.json.body.joborder_id }}'\nand md.data ->>'tag' ='{{ $json.body.tag }}'\nand md.data ->>'status'='0'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -944,
+        -32
+      ],
+      "id": "d2015d12-2c0b-4638-874b-1f8fbc1aabca",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "参数不全",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "累加检测数量": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "累加检测数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "35",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "tag": "fqc_tag",
+            "joborder_id": "1"
+          },
+          "webhookUrl": "https://n8n-dev-mes.coros.team/prod/get_inspection_All_num",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "22d9bb23-61fc-41fe-9898-bb962d529989",
+  "activeVersionId": "22d9bb23-61fc-41fe-9898-bb962d529989",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-06-10T06:25:17.374Z",
+      "createdAt": "2025-06-10T06:25:17.374Z",
+      "role": "workflow:owner",
+      "workflowId": "vUjvfVsPSPUhwFZP",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

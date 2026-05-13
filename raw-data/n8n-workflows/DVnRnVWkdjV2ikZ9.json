@@ -1,0 +1,1183 @@
+{
+  "updatedAt": "2026-03-06T03:45:39.423Z",
+  "createdAt": "2024-06-06T07:42:07.045Z",
+  "id": "DVnRnVWkdjV2ikZ9",
+  "name": "upload_weight_info",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst item=$input.all()[0].json.body;\n//声明异常返回对象\nlet errMsg=null;\nconst options = {\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    second: '2-digit',\n    timeZone: 'Asia/Shanghai'\n  };\n\n//机型与SN前3位对应关系\nvar prefixToModelMap = {\n  \"B13\": \"B13\",\n  \"B15\": \"B15\",\n  \"V16\": \"B16\",\n  \"B17\": \"B17\",\n  \"M18\": \"B18\",\n  \"V19\": \"B19\",\n  \"V09\": \"B19S\",\n  \"M04\": \"M1D\",\n  \"B05\": \"B15D\",\n  \"H31\": \"HR31\",\n  \"F05\": \"FD05\",\n  \"P05\": \"FD05充电盒\",\n  \"C01\": \"BY01\",\n  \"B20\": \"B20\",\n  \"B21\": \"B21\",\n  \"M02\": \"M1S\",\n  \"W31\": \"W331\",\n  \"BY0\": \"BY01\",\n  \"W32\":\"W332\",\n  \"F02\":\"FD02\",\n \"F03\":\"FD03\",}\n//1.检查重量是否在上下限范围内\nif ((item.weight > item.config.limitMax || item.weight < item.config.limitMin) && !item.force) {\n  errMsg = '重量超过设置重量上下限！';\n}\n\n//2.检查sn是否是当前工单\nif(item.sn.length===16){\n  if(item.sn.slice(0,10)!==item.config.ticketNo){\n    errMsg='该SN不属于当前工单！';\n  }\n}else{\n  //3.检查这个sn是否属于这个机型\nconst type=prefixToModelMap[item.sn.slice(0,3)];\nconst orderType=item.config.orderNumber.slice(0,-4);\nif (type!==orderType&&orderType.slice(0,2)!=='SH'&&orderType!=='TYYJ') {\n  errMsg='该SN不属于当前订单！'\n}\n}\n\nif(errMsg!=null){\n  return {\n    errMsg:errMsg\n  }\n}else{\n  return {\n    objweight:item.weight+'g',\n    barcode:item.sn,\n    productcode:item.config.type,\n    ordernumber:item.config.orderNumber,\n    ticketNo:item.config.ticketNo,\n    objuplimitweight:item.config.limitMax+'g',\n    objlowlimitweight:item.config.limitMin+'g',\n    createtime:new Date().toLocaleString('zh-CN', options),\n    isusercheck:0,\n    isstateok:1,\n    clientcode:'CasketWeightClient',\n    clientprocedure:1\n  }\n}"
+      },
+      "id": "d172929b-26c7-476b-aa62-0abaeda65d2c",
+      "name": "校验输入参数是否有误",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "df83a32c-dd19-4a2a-b187-2b86bb75e35f",
+              "leftValue": "={{ $json.errMsg }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0a1ac278-3b53-4153-a7cf-bc0566b1c238",
+      "name": "判断校验是否有异常",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "8105899a-4fd8-4b0d-9cae-f1f4ceed3036",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d4c1d643-6b0b-47d6-8180-de66f7c19b45",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1888,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"201\",\n  \"errMsg\":\"{{ $json.errMsg }}\"\n} ",
+        "options": {}
+      },
+      "id": "4e1fa7ec-2893-497e-aa06-243ae4ea196d",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "postDeviceWeight",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9e4bcdc8-c324-4cc7-a62a-eb7903f9d297",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        368
+      ],
+      "webhookId": "afd636dc-15b3-4095-a624-97a47b1a0817"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"202\",\n  \"errMsg\":\"该条码存在上传记录！\"\n}",
+        "options": {}
+      },
+      "id": "bdbe0674-bbc6-4b64-9948-e8f518a8edc5",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2112,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('校验输入参数是否有误').all();"
+      },
+      "id": "120e98e7-8ab4-4169-946e-7479027f2ef3",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"errMsg\":\"上传成功！\"\n}",
+        "options": {}
+      },
+      "id": "1431395c-bfdd-4459-b401-94903097ef1d",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2944,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "options": {}
+      },
+      "id": "02b4805c-13fc-4d50-ad0a-3aac8832a2e5",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        3152,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\",\n  \"errMsg\":\"数据库错误！\"\n} ",
+        "options": {}
+      },
+      "id": "fc2c8ad8-6dc0-43d9-90d4-04f53e3b8404",
+      "name": "Respond to Webhook3",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1888,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "BEGIN TRANSACTION;\n\nBEGIN TRY\n    -- 插入第一条语句\n    INSERT INTO mes2024.dbo.consm_deviceweight(jobnumber,ordernumber,productcode,barcode,objweight,objuplimitweight,objlowlimitweight,isusercheck,createtime)\n    VALUES ('{{ $json.jobnumber }}', '{{ $json.ordernumber }}','{{ $json.productcode }}','{{ $json.barcode }}','{{ $json.objweight }}','{{ $json.objuplimitweight }}','{{ $json.objlowlimitweight }}','{{ $json.isusercheck }}','{{ $json.createtime }}');\n\n    -- 插入第二条语句\n    INSERT INTO mes2024.dbo.consm_barcodeprocedure (jobnumber, ordernumber, productcode, barcode, clientprocedure, clientcode, isstateok, createtime) VALUES('{{ $json.jobnumber }}', '{{ $json.ordernumber }}', '{{ $json.productcode }}', '{{ $json.barcode }}',{{ $json.clientprocedure }}, '{{ $json.clientcode }}', {{ $json.isstateok }}, '{{ $json.createtime }}');\n\n    -- 如果两条插入语句都成功，提交事务\n    COMMIT TRANSACTION;\nEND TRY\n  BEGIN CATCH\n    -- 捕获并立即回滚事务\n    IF @@TRANCOUNT > 0\n    BEGIN\n        ROLLBACK TRANSACTION;\n        PRINT '事务回滚成功';\n    END\n\n    -- 捕获并打印错误信息\n    SELECT \n        ERROR_NUMBER() AS ErrorNumber,\n        ERROR_SEVERITY() AS ErrorSeverity,\n        ERROR_STATE() AS ErrorState,\n        ERROR_PROCEDURE() AS ErrorProcedure,\n        ERROR_LINE() AS ErrorLine,\n        ERROR_MESSAGE() AS ErrorMessage;\nEND CATCH;\n\n\n \n"
+      },
+      "id": "83a000d6-8d3f-40e1-858b-78de19356afc",
+      "name": "Microsoft SQL1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        2752,
+        832
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4P",
+          "name": "MES_SQL_SERVER_MES2024"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "barcode",
+        "options": {}
+      },
+      "id": "d79e6258-6616-404b-8200-3880f397b177",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2624,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"202\",\n  \"errMsg\":\"上传失败！\"\n} ",
+        "options": {}
+      },
+      "id": "db454682-9bd7-461f-a693-406adaeb34c5",
+      "name": "Respond to Webhook4",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3360,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "d2feb866-5f5a-41e6-999f-e219e8154fa3",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2992,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"203\",\n  \"errMsg\":\"上传失败,并且数据删除失败！\"\n} ",
+        "options": {}
+      },
+      "id": "34016314-dead-43f2-8d8b-a40870491fed",
+      "name": "Respond to Webhook5",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3184,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT barcode,ordernumber,jobnumber from YFConsumer.dbo.consm_deviceweight where barcode='{{ $json.barcode }}'"
+      },
+      "id": "9233ae0c-c1d0-4e1b-905a-df816fc7fbb9",
+      "name": "判断数据库中是否存在该条码的称重记录",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        144
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": " \n  INSERT INTO YFConsumer.dbo.consm_deviceweight(jobnumber,ordernumber,productcode,barcode,objweight,objuplimitweight,objlowlimitweight,isusercheck,createtime)\n    OUTPUT inserted.barcode\n    VALUES ('{{ $json.ticketNo }}', '{{ $json.ordernumber }}','{{ $json.productcode }}','{{ $json.barcode }}','{{ $json.objweight }}','{{ $json.objuplimitweight }}','{{ $json.objlowlimitweight }}','{{ $json.isusercheck }}','{{ $json.createtime }}');"
+      },
+      "id": "2787caf3-04a9-451c-8b0b-60de1e7b4ec6",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        2304,
+        -64
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\n   -- 插入第二条语句\n    INSERT INTO YFConsumer.dbo.consm_barcodeprocedure (jobnumber, ordernumber, productcode, barcode, clientprocedure, clientcode, isstateok, createtime) \n   OUTPUT inserted.barcode\n VALUES('{{ $json.ticketNo }}', '{{ $json.ordernumber }}', '{{ $json.productcode }}', '{{ $json.barcode }}',{{ $json.clientprocedure }}, '{{ $json.clientcode }}', {{ $json.isstateok }}, '{{ $json.createtime }}');"
+      },
+      "id": "25ef46fd-f996-4159-b0d3-6737e803132f",
+      "name": "Microsoft SQL2",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        2304,
+        112
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "table": "consm_barcodeprocedure",
+        "deleteKey": "barcode"
+      },
+      "id": "49a49c02-783c-4ea6-8e1e-c655fdada1ac",
+      "name": "Microsoft SQL4",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        2608,
+        48
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4P",
+          "name": "MES_SQL_SERVER_MES2024"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "table": "consm_deviceweight",
+        "deleteKey": "barcode"
+      },
+      "id": "d66bb597-5a89-48a3-ae87-7e6c9d1d984a",
+      "name": "Microsoft SQL3",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        2608,
+        208
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4P",
+          "name": "MES_SQL_SERVER_MES2024"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XKDSZ9CxtACGdPJy",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/XKDSZ9CxtACGdPJy",
+          "cachedResultName": "1.Mes重构 — upload_machine_data"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1312,
+        528
+      ],
+      "id": "2f10899b-818c-4336-9c6f-3eee3d1f6767",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"{{$json.code}}\",\n  \"errMsg\":\"{{$json.message}}\"\n}",
+        "options": {}
+      },
+      "id": "dea331c6-b903-4072-905f-f798f7937c48",
+      "name": "Respond to Webhook6",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst body={};\nfor (const item of $input.all()) {\n  body.machine_id=item.json.body.resource_id;\n  body.user_id=item.json.body.user_id;\n  body.retroid=item.json.body.sn;\n  body.data=item.json.body.config;\n  body.data.weight=item.json.body.weight+'g';\n  \n}\n\nreturn {\n  body:body\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        544
+      ],
+      "id": "4a9bd65f-01f5-4351-9ad7-39c5c1ea2c60",
+      "name": "校验参数是否正确"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9b76185f-580b-4079-b1d6-64f23086d39f",
+              "leftValue": "={{ $json.body.config.orderNumber }}",
+              "rightValue": "={{ $json.body.config.ticketNo }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        384
+      ],
+      "id": "117ef454-6a83-46f9-84f2-829d2e31dc2c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "06007fad-881f-4506-a982-ccede922b66b",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": "200",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "87c5fb6a-978f-41e6-a66c-303094070fc0",
+              "leftValue": "={{ $('Webhook').item.json.body.weight }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        736
+      ],
+      "id": "dc3c8d7e-9c51-479e-9f28-52893dbc68de",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.128.13:8330/dashboard/trigger/update",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "joborder",
+              "value": "={{ $('Webhook').item.json.body.config.ticketNo }}"
+            },
+            {
+              "name": "count",
+              "value": "={{ $('If2').item.json.count }}"
+            },
+            {
+              "name": "productionLine",
+              "value": "={{ $json.production_line }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 500
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3360,
+        672
+      ],
+      "id": "5429673b-8f44-403c-a527-06742705cfaf",
+      "name": "更新数据看板数据",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        -336
+      ],
+      "id": "052b9d2a-ef35-4e75-95ab-1392f471e1bb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.128.13:8330/dashboard/trigger/update",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "joborder",
+              "value": "={{ $('Webhook').item.json.body.config.ticketNo }}"
+            },
+            {
+              "name": "count",
+              "value": "={{ $json.count }}"
+            },
+            {
+              "name": "productionLine",
+              "value": "包装C线"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 500
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3808,
+        -16
+      ],
+      "id": "c7e00b38-1eb1-4659-b3b9-641d0cb00bdc",
+      "name": "更新数据看板数据1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(1) as count FROM YFConsumer.dbo.consm_deviceweight where jobnumber='{{ $('Webhook').all()[0].json.body.config.ticketNo }}'"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        2960,
+        -32
+      ],
+      "id": "7b990724-9981-4d32-aa5b-3df43a3206b8",
+      "name": "Microsoft SQL5",
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $('Webhook').item.json.body.resource_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "production_line"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1920,
+        720
+      ],
+      "id": "3919a8ff-7790-4f08-a202-81fb50ef51a0",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"{{ $json.code }}\",\n  \"errMsg\":\"{{ $json.message }}\"\n}",
+        "options": {}
+      },
+      "id": "5a18046f-f438-4a0b-b4f7-b705fc8fe22e",
+      "name": "Respond to Webhook7",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1936,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.product_quantity AS target_quantity, -- 工单目标数量\n    (\n        SELECT count(DISTINCT m1.retroid_id) \n        FROM mes.machine_data m1\n        WHERE \n            -- 关联条件：使用外层工单号匹配 machine_data 中的 ticketNo\n            m1.data->>'ticketNo' = j.joborder_number\n            -- 传入的工序ID参数\n            AND m1.procedure_detail_id = 79\n            -- 排除旧数据标记\n            AND NOT (m1.data::jsonb) ? 'data_old'\n            -- 排除被标记为删除(retroactive delete)的数据\n            AND NOT EXISTS (\n                SELECT 1 \n                FROM mes.machine_data m2 \n                WHERE \n                    m2.retroid_id = m1.retroid_id \n                    AND m2.procedure_detail_id = 91\n                    AND m2.data->>'procedure_detail_id_old' = '79'\n                    AND m2.createtime > m1.createtime\n            )\n    ) AS current_count -- 实际计算出的数量\nFROM \n    mes.joborder j\nWHERE \n    j.joborder_number = '{{ $json.body.data.ticketNo }}' \n    AND j.status = 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        752,
+        544
+      ],
+      "id": "25aa18e1-4c09-432b-82c0-8f1d1f1805d1",
+      "name": "查询当前工单配置的数量是否大于称重上传的数量",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "155f457b-3da4-4edd-8788-b41f173f23f7",
+              "leftValue": "={{ Number($json.current_count) }}",
+              "rightValue": "={{ $json.target_quantity }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        496
+      ],
+      "id": "0a80435d-34d0-42d8-aab0-05d57b930549",
+      "name": "判断包装数量是否大于工单数量"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('校验参数是否正确').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        528
+      ],
+      "id": "bda6ad78-6b8a-4266-8eef-5866a5f4ac11",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"203\",\n  \"errMsg\":\"超过工单配置包装数量！\"\n}",
+        "options": {}
+      },
+      "id": "7119b3c1-041f-4b48-9f9f-805da7fc35cd",
+      "name": "Respond to Webhook8",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1184,
+        928
+      ]
+    }
+  ],
+  "connections": {
+    "校验输入参数是否有误": {
+      "main": [
+        [
+          {
+            "node": "判断校验是否有异常",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断校验是否有异常": {
+      "main": [
+        [
+          {
+            "node": "判断数据库中是否存在该条码的称重记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Microsoft SQL2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Microsoft SQL5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据库中是否存在该条码的称重记录": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Microsoft SQL4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Microsoft SQL3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL4": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验参数是否正确": {
+      "main": [
+        [
+          {
+            "node": "查询当前工单配置的数量是否大于称重上传的数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "校验输入参数是否有误",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "校验参数是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Microsoft SQL5": {
+      "main": [
+        [
+          {
+            "node": "更新数据看板数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "更新数据看板数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询当前工单配置的数量是否大于称重上传的数量": {
+      "main": [
+        [
+          {
+            "node": "判断包装数量是否大于工单数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断包装数量是否大于工单数量": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.82",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "219",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "weight": "178.8",
+            "sn": "W51A031253",
+            "resource_id": 265,
+            "user_id": 1,
+            "type": "watch",
+            "config": {
+              "ticketNo": "1000006269",
+              "orderNumber": "1000006269",
+              "limitMax": "185",
+              "limitMin": "175",
+              "type": "watch",
+              "isScan": "2"
+            },
+            "force": false
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/postDeviceWeight",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "073fa465-6c72-4d1a-977a-a9262f1566e9",
+  "activeVersionId": "073fa465-6c72-4d1a-977a-a9262f1566e9",
+  "versionCounter": 90,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:32.105Z",
+      "createdAt": "2024-01-26T07:50:15.258Z",
+      "id": "Sagrd0CJUl5QtuS4",
+      "name": "MES相关应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-06-18T08:23:14.843Z",
+      "createdAt": "2025-06-18T08:23:14.843Z",
+      "role": "workflow:owner",
+      "workflowId": "DVnRnVWkdjV2ikZ9",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,3730 @@
+{
+  "updatedAt": "2025-12-29T03:17:04.783Z",
+  "createdAt": "2025-06-12T03:28:32.153Z",
+  "id": "L31smdK9IZzEbpK7",
+  "name": "get_package_info",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "getPackageInfo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1664,
+        528
+      ],
+      "id": "e8c120d4-4b9e-4c59-a999-781658349524",
+      "name": "Webhook",
+      "webhookId": "ce220ab8-a975-4998-b357-38e4d2d2053f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "464814ff-88c9-41ec-9fb9-29a473a07c76",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -448,
+        240
+      ],
+      "id": "46cfe9f2-71a2-4fa6-99a1-857f5f4b9721",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "25e73832-fb5b-4423-a5cc-bb5be15c0241",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "966463c5-ec88-43d3-b019-094ca24e3498",
+      "name": "If3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"sn格式错误！\"\n}",
+        "options": {}
+      },
+      "id": "862ea10a-ac78-4bcb-8104-24941d8f09ac",
+      "name": "错误信息：sn或单据编号不能为空",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.sn }}"
+            },
+            {
+              "column": "status",
+              "condition": "<",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -656,
+        368
+      ],
+      "id": "1b2acce8-019a-460c-b1e2-0c28ae7aee41",
+      "name": "获取retroid",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "cef959cb-bfc9-4935-b83a-4693bb9e29c0",
+      "name": "错误信息：数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        80,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"未找到该SN，请检查SN是否正确！\"\n}",
+        "options": {}
+      },
+      "id": "1890b9fd-944e-48a5-927a-c333f2bc5032",
+      "name": "错误信息：数据库错误1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT md.* \nFROM mes.mes.machine_data AS md \nWHERE md.retroid_id = {{ $json.retroid_id }} \n  AND md.procedure_detail_id = 79\n  AND NOT EXISTS (\n    SELECT 1 \n    FROM mes.mes.machine_data AS md2 \n    WHERE md2.procedure_detail_id = 91 \n      AND md2.createtime > md.createtime\n      AND md2.retroid_id = md.retroid_id\n      AND md2.data->>'procedure_detail_id_old'='79'\n  )",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -224,
+        144
+      ],
+      "id": "d0cb51d7-a210-4a2d-b62b-b60a104f3cdd",
+      "name": "从machine_Data中查询包装数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ec63604b-0302-41c5-bab2-aa18788aeae1",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        128
+      ],
+      "id": "28dd5f14-57cb-4fba-86fa-3e65e0af527a",
+      "name": "判断数据是否为空"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"未查询到该数据，请检查是否上传该数据！\"\n}",
+        "options": {}
+      },
+      "id": "9e8dbcad-b49c-41f3-8e8b-78008dd78fde",
+      "name": "错误信息：数据库错误2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        368,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        544
+      ],
+      "id": "1200f5f9-2661-48b3-b719-4e815c61ed59",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n\n// 假设 $input.all() 是获取所有输入数据的方法\nconst inputData = $input.all().map(item => {\n  const sn=$(\"Webhook\").all()[0].json.body.sn;\n  return {\n    retroid:item.json.sn??sn,\n    retroid_id:item.json.retroid_id,\n    procedure_detail_id:item.json.procedure_detail_id,\n    create_time:item.json.createtime,\n    data:item.json.data\n    \n  }\n}); // 在实际使用中获取数据\nconst response = {\n  code:200,\n  data:inputData\n};\n\n// 返回处理后的结果\nreturn response;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        560
+      ],
+      "id": "64bba8c7-d9ee-40f1-b56f-3c0e478bc73d",
+      "name": "转换格式",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b47e1693-6d06-4556-a037-607025b8f6b1",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        480
+      ],
+      "id": "c70b0834-1763-44b9-8ad3-6fa45fc289f4",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 遍历输入项并处理每条数据\nlet result = {\n    code: 0,\n    message: '处理成功'\n};\n\nfor (const item of $input.all()) {\n    const requestData = item.json.body;\n    \n    // 校验工序ID必填\n    if (!requestData.procedure_detail_id) {\n        return {\n            code: 1,\n            message: '请选择工序！',\n            data: null\n        };\n    }\n    \n    // 判断SN和工单号哪个存在\n    if (requestData.sn) {\n        result = {\n            code: 2,\n            sn: requestData.sn,\n            procedure_id: requestData.procedure_id  // 保留工序ID\n        };\n    } else if (requestData.jobNumber) {  // 修正了原代码中的拼写错误\n        result = {\n            code: 3,\n            jobNumber: requestData.jobNumber,\n            procedure_id: requestData.procedure_id  // 保留工序ID\n        };\n    } else {\n        return {\n            code: 4,\n            message: '必须提供SN或工单号',\n            data: null\n        };\n    }\n    \n    // 如果只需要处理第一条有效数据就跳出循环\n    break;\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1376,
+        528
+      ],
+      "id": "7ee40de2-2ce1-4f9a-9428-271a3fd43c21",
+      "name": "判断查询整个工单号还是查询单独的SN"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT  \n  m.retroid_id,\n  r.retroid as sn,\n  m.data,\n  m.createtime,\n  m.procedure_detail_id \nFROM mes.mes.machine_data m \nJOIN mes.mes.retroid as r on m.retroid_id=r.retroid_id and r.status<3\nWHERE \n  -- 修改处：使用 COALESCE 兼容 jobNumber 和 ticketNo，优先取 jobNumber，没有则取 ticketNo\n  COALESCE(m.data->>'jobNumber', m.data->>'ticketNo') = '{{ $json.jobNumber }}'\n  \n  AND m.procedure_detail_id = {{ $('Webhook').all()[0].json.body.procedure_detail_id }}\n  -- 移除子查询中的 procedure_detail_id 限制，确保检测所有删除标记\n  AND not EXISTS (\n      SELECT * \n    FROM mes.mes.machine_data m2 \n    WHERE \n      m2.retroid_id=m.retroid_id and\n      (m2.data::jsonb) ? 'machine_data_id_old'  -- 删除标记识别条件\n      and (m2.data->>'procedure_detail_id_old')::integer = {{ Number($('Webhook').all()[0].json.body.procedure_detail_id) }}\n      and m2.createtime>m.createtime\n  )\n  ORDER BY m.createtime ASC",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -640,
+        592
+      ],
+      "id": "1990881f-195f-41c2-82a2-bbdc4c72bb9e",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "formTitle": "cs",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "SN",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -1520,
+        928
+      ],
+      "id": "8a6d96f4-6827-4afb-ba7a-ceeaa2b638eb",
+      "name": "On form submission",
+      "webhookId": "d0db8d15-9dab-4c27-a923-64021f89c508"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "cs",
+        "completionMessage": "cs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        -976,
+        928
+      ],
+      "id": "d1926e95-f5d5-4b9e-9ec4-2e1aaa2ea5bc",
+      "name": "Form",
+      "webhookId": "e0320ece-0a69-4351-8685-88b0f38e2686"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "SN",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1312,
+        928
+      ],
+      "id": "cd028e2a-0b88-461d-ab30-9a848ebffd7e",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        800
+      ],
+      "id": "2f9e38ca-56d8-40d8-8652-9eb6c578b2c2",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断查询整个工单号还是查询单独的SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "从machine_Data中查询包装数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：sn或单据编号不能为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取retroid": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从machine_Data中查询包装数据": {
+      "main": [
+        [
+          {
+            "node": "判断数据是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据是否为空": {
+      "main": [
+        [
+          {
+            "node": "转换格式",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "转换格式": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "获取retroid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询整个工单号还是查询单独的SN": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "判断数据是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "获取retroid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "SN": [
+            {
+              "filename": "记录查询.xlsx",
+              "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "size": 17708
+            }
+          ],
+          "submittedAt": "2025-12-05T14:05:56.029+08:00",
+          "formMode": "production"
+        },
+        "binary": {
+          "SN": {
+            "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "fileExtension": "xlsx",
+            "data": "s3",
+            "fileName": "记录查询.xlsx",
+            "id": "s3:workflows/L31smdK9IZzEbpK7/executions/temp/binary_data/d7ca1dca-fb5c-4dd3-a678-08f330fa6bc1",
+            "fileSize": "17.7 kB"
+          }
+        }
+      }
+    ],
+    "Extract from File": [
+      {
+        "json": {
+          "sn": "W92B012970"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B013000"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006922"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B012247"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006929"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A005751"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B015823"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B002264"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B013287"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B012735"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92AF00566"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A002479"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B002964"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B014013"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C006034"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A005860"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B012780"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006163"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006185"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A004731"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A004750"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B013475"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A003313"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006009"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92AE00542"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B013562"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92AP10097"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B012662"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92BP10016"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006013"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92BP10316"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C005611"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006120"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B013870"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92CP10095"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B013629"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C004200"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B014823"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A006594"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C005849"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B004265"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B013054"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B007496"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A003164"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B003426"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92EY20003"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C005065"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006914"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C003381"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92AP10234"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006911"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B004983"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006487"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A006625"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C005723"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006166"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006090"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A004535"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C005147"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006437"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B005345"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A003034"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B003972"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B014512"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A004726"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006411"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92AP50057"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92EY20002"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C004207"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006046"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A004598"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B008329"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B005835"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B001918"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92A002963"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C005349"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B005498"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006899"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006968"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C005795"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006126"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92C006045"
+        }
+      },
+      {
+        "json": {
+          "sn": "W92B006480"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A005978"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A005225"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A006016"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A004857"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51CD22017"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B003701"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B006221"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B004379"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B005789"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B004445"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AD31071"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B005939"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A005261"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A000472"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B004038"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B006465"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B004636"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007713"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007421"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007738"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A006708"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B006549"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007327"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008239"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007639"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B006836"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007973"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007344"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007427"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B005641"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B005240"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007323"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008222"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A006639"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007355"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008116"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008943"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008746"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008992"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009060"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009532"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008500"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008280"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A007557"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B001855"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B006733"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A008887"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B007412"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AD22010"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51CD22018"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009597"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009492"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009598"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A010653"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A010019"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009510"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009780"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009512"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B005629"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B001511"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AD32032"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AD31086"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A009606"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AD31106"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AD31120"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AP10302"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B008418"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A001187"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51A012489"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B007881"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51B009104"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51BD22013"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51AD31109"
+        }
+      },
+      {
+        "json": {
+          "sn": "W51DD31147"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B002793"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B002727"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AP10025"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52DD31085"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AP10181"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AD31044"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52DD31074"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52CD22002"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003091"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003266"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003001"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B004280"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52A005610"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52DP10385"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003563"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003554"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52A004849"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B002614"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003011"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B002971"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003103"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B004106"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52A003840"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AP10031"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B005666"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52DP10070"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B003917"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AD22039"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AD22075"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52A004668"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AP10096"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52BD22065"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B006688"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52A004792"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52DP10007"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52DD31034"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52BD22052"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AD22108"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52AD31033"
+        }
+      },
+      {
+        "json": {
+          "sn": "W52B004569"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000400"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35DA22035"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35DB21016"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35AP40041"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35AP30050"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35DA22078"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006572"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004848"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005021"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006588"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001806"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005835"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001284"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002073"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002291"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002872"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004884"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002602"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003828"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000965"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001987"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008056"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010924"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004388"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001618"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A012204"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003874"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008415"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003837"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006291"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002272"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001373"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002859"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009850"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010668"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001538"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002824"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A012470"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008873"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000938"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002144"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003766"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008307"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006459"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002490"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002537"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001229"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001401"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002385"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008633"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006536"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001327"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005112"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002941"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001382"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008690"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002084"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002328"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001922"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001768"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003214"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002804"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000581"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004058"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A011163"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002965"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003626"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001189"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001077"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002945"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008607"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005847"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000233"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35AP10132"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002876"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000629"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002413"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A012765"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006071"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A012254"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001995"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002141"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001356"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008485"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003841"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000183"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003373"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001058"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000866"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010210"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003228"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001444"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001402"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A011680"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002297"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000310"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003983"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005050"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002041"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001500"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000733"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003827"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001241"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000660"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001404"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002433"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003483"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002116"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007999"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005203"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009263"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003793"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001446"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001456"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003080"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005273"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006102"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003307"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001038"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008960"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009694"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003448"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002472"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000956"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001067"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005830"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010216"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001971"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001720"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004554"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001796"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001812"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002277"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A011880"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003475"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002575"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004241"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002240"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003438"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000999"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004707"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003869"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006539"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006500"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003852"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002422"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003899"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000957"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006830"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001896"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009614"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008058"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002149"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004059"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003308"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008862"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A012184"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001406"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000466"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001612"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003597"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002341"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005213"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005148"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001626"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005526"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007831"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002060"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003742"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002731"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003500"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002110"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003630"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000748"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008721"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001886"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003531"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003641"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002169"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001906"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001602"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001382"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001088"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001384"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002585"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006791"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004532"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002752"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003663"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002299"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002486"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001666"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002228"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004480"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003045"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005167"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001875"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006600"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000907"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002724"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001687"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005504"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009641"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005417"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005579"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004408"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009727"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B001012"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002002"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006293"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003292"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007450"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002106"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002743"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002770"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004970"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006488"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001167"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005240"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000865"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003431"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003698"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003582"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005552"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004237"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010063"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005653"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002251"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005130"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004189"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001434"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004180"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001039"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006215"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004004"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002154"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000805"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003395"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003547"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004770"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004994"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007140"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004081"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006712"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002761"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007013"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004204"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002984"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003856"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003323"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001603"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001399"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007044"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006369"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002955"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006665"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002611"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35BP20109"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002473"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005243"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B000703"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003230"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007725"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005025"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004551"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008841"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007824"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A000321"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004586"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008799"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009270"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003916"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002533"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001969"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005279"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003276"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004656"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004724"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004629"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007001"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002103"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010772"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005365"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003760"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007029"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010431"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002230"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003426"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004074"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002765"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004989"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004851"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007359"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003428"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004499"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010434"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005107"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005735"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007995"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004953"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005351"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008082"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005351"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005492"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005787"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006661"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A017071"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A018323"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009835"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006220"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A017368"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006027"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A016698"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003723"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009334"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005300"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005486"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004931"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005539"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007676"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006987"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006497"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A019826"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A003868"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003977"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005699"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006204"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008354"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35DA21085"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006143"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006204"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006042"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006278"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006227"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005384"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A018658"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006430"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005570"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A019054"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008740"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006507"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004820"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005762"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006281"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A019673"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006420"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003389"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005775"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008770"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A015923"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005807"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004725"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006311"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004558"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A015935"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A001233"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B007758"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005063"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006254"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006918"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A018905"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005512"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006475"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A002724"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B007896"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005358"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003926"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006284"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A018709"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B002688"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004647"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005678"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007915"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006228"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006800"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A014057"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A016240"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A005283"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006639"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005717"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008952"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009689"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005013"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B003414"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A004605"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A010110"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007816"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A006520"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005835"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007918"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009811"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A017773"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005663"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A009229"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007466"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A008057"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006611"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B007755"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A018781"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35A007346"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B006234"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35AP20009"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B005797"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B007872"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B014678"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B007984"
+        }
+      },
+      {
+        "json": {
+          "sn": "W35B004964"
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "59",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "",
+            "procedure_detail_id": 79,
+            "jobNumber": "1000005742"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getPackageInfo",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "2779268f-ec91-47d4-8e33-ffbb7d973894",
+  "activeVersionId": "2779268f-ec91-47d4-8e33-ffbb7d973894",
+  "versionCounter": 42,
+  "triggerCount": 2,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-06-12T03:28:32.153Z",
+      "createdAt": "2025-06-12T03:28:32.153Z",
+      "role": "workflow:owner",
+      "workflowId": "L31smdK9IZzEbpK7",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

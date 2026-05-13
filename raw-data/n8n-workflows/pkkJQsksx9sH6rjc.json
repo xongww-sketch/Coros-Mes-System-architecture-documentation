@@ -1,0 +1,455 @@
+{
+  "updatedAt": "2025-04-24T05:58:56.827Z",
+  "createdAt": "2024-07-26T07:30:38.329Z",
+  "id": "pkkJQsksx9sH6rjc",
+  "name": "deleteprocedure_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"无法找到对应工序\"\n}",
+        "options": {}
+      },
+      "id": "f2283241-ad8f-4d21-8161-38865c410392",
+      "name": "报错信息：无法找到对应工序",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        860,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"数据库报错，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "234c9296-1f5e-4f87-a482-38850b392c59",
+      "name": "报错信息：数据库报错",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "82e0ce80-4332-44c6-92da-970e6df1f667",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "db428c28-5bd8-4c1d-9831-b6e632f1fd03",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f211d4c8-f303-46a1-a38c-6a0c775b191c",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"该工序已经是冻结状态，请勿重复操作\"\n}",
+        "options": {}
+      },
+      "id": "16517666-3e2f-497c-b42e-35d872f8383a",
+      "name": "报错信息：改工序已经是冻结状态",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"修改状态失败\"\n}",
+        "options": {}
+      },
+      "id": "cdcb78eb-9b7a-48b6-ac1e-044d3dd84a1f",
+      "name": "报错信息：修改状态失败",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1500,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_detail",
+          "mode": "list",
+          "cachedResultName": "procedure_detail"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_detail_id",
+              "value": "={{ $json.body.procedure_detail_id }}"
+            },
+            {
+              "column": "status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9d2cc2e3-43fa-4482-baa9-fb489f7fb609",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        840,
+        340
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "=deleteprocedure_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8d56bdc3-d811-4687-add9-52396cc07d4f",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        440,
+        400
+      ],
+      "webhookId": "6632d7ee-928e-47e5-9f30-ed65aed81287"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "5683a066-2869-4a2b-9a0f-955340071faf",
+              "leftValue": "={{ $json.body.procedure_detail_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3108c301-dbd6-4ae7-ac05-823a96d13c34",
+              "leftValue": "={{ $json.body.history_procedure_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "448a5014-7081-4bc0-9b8c-ff73928c0313",
+      "name": "判断必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        620,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d352b050-485d-4edd-be00-04df84983b70",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "05287ed9-9ca5-4a5d-baff-511046f35065",
+      "name": "判断物料状态是否修改成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"改模板已冻结\"\n}",
+        "options": {}
+      },
+      "id": "1db64d24-a51a-4c4b-9c20-4387c11a86a2",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DO $$\nBEGIN\n    -- 查询 status 值\n    IF EXISTS (SELECT 1 FROM mes.procedure_detail WHERE procedure_detail_id = {{ $json.procedure_detail_id }} AND status = 1) THEN\n        -- 如果满足条件，则更新 status 为 2\n        UPDATE  mes.procedure_detail\n        SET status = 2 \n        WHERE procedure_detail_id = {{ $json.procedure_detail_id }};\n    END IF;\nEND $$;\n-- 再查询更新后的状态\nSELECT procedure_detail_id, status\nFROM mes.procedure_detail\nWHERE procedure_detail_id =  {{ $json.procedure_detail_id }};\n",
+        "options": {}
+      },
+      "id": "3f8f92e2-a45b-453c-a537-0270b767860c",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1140,
+        340
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：改工序已经是冻结状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断必填项": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：无法找到对应工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断物料状态是否修改成功": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：修改状态失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "判断物料状态是否修改成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "52",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_detail_id": 2,
+            "history_procedure_id": "2"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/deleteprocedure_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "63e91c5c-ab67-4dde-af4a-572fd4e75be0",
+  "activeVersionId": "63e91c5c-ab67-4dde-af4a-572fd4e75be0",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:40:02.690Z",
+      "createdAt": "2025-04-24T05:40:02.690Z",
+      "role": "workflow:owner",
+      "workflowId": "pkkJQsksx9sH6rjc",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

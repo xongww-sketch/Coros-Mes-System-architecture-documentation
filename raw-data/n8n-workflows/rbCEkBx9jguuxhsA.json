@@ -1,0 +1,5853 @@
+{
+  "updatedAt": "2026-01-29T02:31:23.720Z",
+  "createdAt": "2025-05-15T06:00:11.561Z",
+  "id": "rbCEkBx9jguuxhsA",
+  "name": "定时任务-从sap中获取工单信息",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb1a30c6-4b63-42d9-95e3-26f8a97a32ee",
+              "name": "materialCode",
+              "value": "={{ $json.PLNBEZ}}",
+              "type": "string"
+            },
+            {
+              "id": "c53731cf-d8dc-44e1-b284-49bdd328db71",
+              "name": "jobNumber",
+              "value": "={{ $json.AUFNR }}",
+              "type": "string"
+            },
+            {
+              "id": "49a19e59-6fb9-4f6c-b73a-e2e34a027c71",
+              "name": "materialDescription",
+              "value": "={{ $json.MAKTX}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -944,
+        -288
+      ],
+      "id": "c76fe8fe-2864-4fd2-8247-99a53595a17e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "ET_OUTPUT",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        -288
+      ],
+      "id": "2ee7be93-51b1-416c-9d4d-d755305b7242",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3deaf010-3ca9-4123-8c44-0662275aeec4",
+              "leftValue": "={{ $json.E_TYPE }}",
+              "rightValue": "S",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1616,
+        -112
+      ],
+      "id": "6f5bf04a-e370-46dc-8fe9-ea20efd4939a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3520,
+        -624
+      ],
+      "id": "13a76442-598b-46c7-8d07-a186e6f743b7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "95541e94-91ba-4981-b7e0-3833f3a5bc7a",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4240,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -  SAP工单数据缓存失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "id": "f76e9263-7d09-4356-b544-981304d1e082",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4352,
+        464
+      ],
+      "retryOnFail": false,
+      "webhookId": "a350a08f-a7fc-407e-8fdd-47880088da57",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f35a5534-0ef8-4c31-88d6-41badf05837d",
+              "leftValue": "={{ $json.materialCode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -128,
+        -368
+      ],
+      "id": "a6ec7277-a2ce-4e7f-8eae-41a6d72aa11a",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c4812d7e-00be-4102-9ced-2d08b6aed736",
+              "leftValue": "={{ $json.materialDescription }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -704,
+        -288
+      ],
+      "id": "012cff6a-8ffb-49c2-8b39-bac5471776e6",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.oa.mpnew.com:5678/prod/get-material-by-matnr",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "env",
+              "value": "prod"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"werks\": [\"1010\",\"1050\",\"1060\",\"1070\",\"1080\"],\n  \"matnr\": {{ JSON.stringify($json.matnr) }}\n }",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1168,
+        -144
+      ],
+      "id": "c20d1bd1-3948-4cde-afca-6387d4f7e788",
+      "name": "调用SAP接口，通过物料号获取到物料主数据",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "biJ03Em0zrLidEgN",
+          "name": "sap-dt"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "materialCode",
+              "renameField": true,
+              "outputFieldName": "matnr"
+            }
+          ]
+        },
+        "options": {
+          "mergeLists": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -384
+      ],
+      "id": "fbc915d3-a82d-47f1-ab6a-8e6e7dcebc10",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet matnrArr=[];\nfor (const item of $input.all()) {\n  matnrArr.push(item.json.materialCode)\n}\n\nreturn {\n  matbr:matnrArr\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -64
+      ],
+      "id": "cffd119e-f214-44d8-8c1e-e1fec331460a",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "materialCode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -384
+      ],
+      "id": "63fb0aed-adad-4a52-9eaa-5c83044a585f",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "da2a2eba-fbd0-48be-a86b-1ce5f738a2fc",
+              "leftValue": "={{ $json.CODE }}",
+              "rightValue": "S",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1648,
+        -288
+      ],
+      "id": "fa2ee422-6dff-4345-9975-7aae5d441653",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst jobList=$(\"移除重复工单\").all().map(e=>e.json);\nfor (const item of $input.all()) {\n  const list=item.json.list;\n  list.map(e=>{\n    if(e.MTART=='Z001'){\n       const sale_location=checkString(e.MAKTX_ZH);\n      jobList.map(el=>{\n        if(el.materialCode==e.MATNR){\n          el.sale_location=sale_location;\n        }\n      })\n      \n    }\n  })\n}\n//检查是否包含国内或者海外字段\nfunction checkString(str) {\n          const hasDomestic = str.includes('国内')||str.includes('无锡款');\n    const hasOverseas = str.includes('海外')||str.includes('日韩');\n    \n    if (hasDomestic && hasOverseas) {\n        // 如果同时包含\"国内\"和\"海外\"，根据需求决定返回值\n        // 这里假设优先返回\"国内\"的值\n        return 1;\n    } else if (hasDomestic) {\n        return 1;\n    } else if (hasOverseas) {\n        return 2;\n    } else {\n        return 0;\n    }\n}\nreturn {\n  jobList:jobList.filter(e=>e.sale_location)\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        -528
+      ],
+      "id": "70e4e97e-77b2-4ca0-bb2f-69ebdfe43883",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "jobNumber",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -352
+      ],
+      "id": "1c0c0bac-d82f-443a-af3f-026dc8b0f7b9",
+      "name": "移除重复工单"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "jobList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        -528
+      ],
+      "id": "bdea4bef-f827-4ab0-ba19-78163dcb15f1",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "sap_job_info_cache",
+          "mode": "list",
+          "cachedResultName": "sap_job_info_cache"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "crete_time": "={{ $now }}",
+            "sale_location": "={{ $json.sale_location }}",
+            "material_code": "={{ $json.materialCode }}",
+            "job_number": "={{ $json.jobNumber }}",
+            "item_code": "={{ $json.item_code }}"
+          },
+          "matchingColumns": [
+            "job_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "material_code",
+              "displayName": "material_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "crete_time",
+              "displayName": "crete_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "item_code",
+              "displayName": "item_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sale_location",
+              "displayName": "sale_location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2752,
+        -656
+      ],
+      "id": "dd131416-df06-4ad9-b392-c64c162410f9",
+      "name": "将数据插入到缓存表中",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -480
+      ],
+      "id": "239b2232-ba03-40fc-8109-0d77ca248ad2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT j.order_number,pi.product_code FROM mes.joborder as j JOIN mes.product_info as pi on  j.product_id=pi.product_id WHERE pi.status=1 AND j.joborder_type='PACK' and j.status=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2048,
+        -912
+      ],
+      "id": "744b654b-3e87-4e1c-8a85-b96aacf95dc6",
+      "name": "查询工单号和物料信息",
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "39cf4ee0-c576-401c-b95e-a5074c11bb92",
+              "name": "jobNumber",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            },
+            {
+              "id": "7eb165a8-890d-46d0-8343-13341c669455",
+              "name": "materialCode",
+              "value": "={{ $json.product_code.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "55082094-8ecb-45f0-b2c0-7d5af6d0bbf8",
+              "name": "sale_location",
+              "value": 2,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2384,
+        -896
+      ],
+      "id": "04eddcc0-91fe-45e2-9eec-92bb794c5169",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vhggsps4ci.sap.coros.com:44300/sap/zrestsrv/zrestful",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "sap-client",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "sndprn",
+              "value": "MES"
+            },
+            {
+              "name": "zrfcid",
+              "value": "MES001"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ZSFWJ\":\"否\",\n\"ZSFXD\":\"是\",\n\"DWERKS\": \"1010\"\n }",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1840,
+        48
+      ],
+      "id": "3bdcf63f-d748-42d1-93ec-7efa0b15cd42",
+      "name": "调用SAP接口，通过日期获取到新增工单",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Cm2mEZNoCXemPYwx",
+          "name": "SAP "
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vhggsps4ci.sap.coros.com:44300/sap/zrestsrv/zrestful",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "sap-client",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "sndprn",
+              "value": "WMS"
+            },
+            {
+              "name": "zrfcid",
+              "value": "WMS001"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"WERKS\": \"1050\",\n    \"ZSTATU\": \"W\"\n }",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2096,
+        -640
+      ],
+      "id": "927da5db-85bf-4d15-bb7c-14bd1f794d2c",
+      "name": "调用SAP接口，通过工厂获取到工单和料号的信息",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Cm2mEZNoCXemPYwx",
+          "name": "SAP "
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aab4138b-773e-495c-b7f8-510092ff12d0",
+              "name": "data",
+              "value": "={{ $json.ET_EKPO }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1424,
+        -752
+      ],
+      "id": "67ca89cd-af07-4516-9bbd-c0bf11a640ee",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1c2fb13a-804e-4023-9a6f-784aed509762",
+              "leftValue": "={{ $json.ES_RET.CODE }}",
+              "rightValue": "S",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1888,
+        -736
+      ],
+      "id": "1f05d206-135f-4ebb-85d2-16c6bd770d05",
+      "name": "判断查询结果"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        -752
+      ],
+      "id": "77ed385d-949f-4ce0-aaae-e6258bc0945b",
+      "name": "Split Out3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50f23844-7df1-4db2-9102-a8287090d4f3",
+              "name": "jobNumber",
+              "value": "={{ $json.EBELN.concat($json.EBELP) }}",
+              "type": "string"
+            },
+            {
+              "id": "8e04b5c9-53c6-4401-8124-dd4fa7326dc0",
+              "name": "materialCode",
+              "value": "={{ $json.MATNR }}",
+              "type": "string"
+            },
+            {
+              "id": "58ae0928-41c9-48de-ae15-2fb651b567c6",
+              "name": "sale_location",
+              "value": "2",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -688,
+        -752
+      ],
+      "id": "7c7eb473-8706-4d1b-8b23-2f68bdaf21a2",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "content": "# 越南和日本工单数据",
+        "height": 448,
+        "width": 2352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2656,
+        -880
+      ],
+      "typeVersion": 1,
+      "id": "4c273eec-20b3-4e13-9fe0-24710bcfdd48",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# 国内工单数据",
+        "height": 768,
+        "width": 2432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2768,
+        -304
+      ],
+      "typeVersion": 1,
+      "id": "e236a738-dcc8-4e1f-bf55-537054df6357",
+      "name": "Sticky Note1"
+    }
+  ],
+  "connections": {
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "调用SAP接口，通过工厂获取到工单和料号的信息",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "调用SAP接口，通过日期获取到新增工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "移除重复工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "调用SAP接口，通过物料号获取到物料主数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        []
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用SAP接口，通过物料号获取到物料主数据": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "移除重复工单": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "将数据插入到缓存表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将数据插入到缓存表中": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "移除重复工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工单号和物料信息": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "将数据插入到缓存表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用SAP接口，通过日期获取到新增工单": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用SAP接口，通过工厂获取到工单和料号的信息": {
+      "main": [
+        [
+          {
+            "node": "判断查询结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询结果": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Split Out3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "将数据插入到缓存表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 3600
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        0
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "CODE": "S",
+          "list": [
+            {
+              "MATNR": "120060000601",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "12006",
+              "WGBEZ": "Inand/EMMC闪存(组件)",
+              "MAKTX_ZH": "EMMC组件_BY01_EMMC_32GB_组件(烧录)",
+              "MAKTX_EN": "EMMC组件",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "120060001001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "12006",
+              "WGBEZ": "Inand/EMMC闪存(组件)",
+              "MAKTX_ZH": "EMMC组件_W542_EMMC_32GB_烧录组件",
+              "MAKTX_EN": "EMMC组件",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "120060001501",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "12006",
+              "WGBEZ": "Inand/EMMC闪存(组件)",
+              "MAKTX_ZH": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件",
+              "MAKTX_EN": "EMMC组件",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "120060001701",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "12006",
+              "WGBEZ": "Inand/EMMC闪存(组件)",
+              "MAKTX_ZH": "EMMC组件_W942_32GBMB_KASK62T1-01TA000组件_烧录",
+              "MAKTX_EN": "EMMC组件",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "120060001901",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "12006",
+              "WGBEZ": "Inand/EMMC闪存(组件)",
+              "MAKTX_ZH": "EMMC组件_R4T_KAS041S1-01T1000_9*7.5_烧录组件",
+              "MAKTX_EN": "EMMC组件",
+              "LABOR": "129",
+              "LBTXT": "R4T",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "120060002001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "12006",
+              "WGBEZ": "Inand/EMMC闪存(组件)",
+              "MAKTX_ZH": "EMMC组件_W541_EMMC_32GB_烧录组件_金士顿",
+              "MAKTX_EN": "EMMC组件",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "120060002101",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "12006",
+              "WGBEZ": "Inand/EMMC闪存(组件)",
+              "MAKTX_ZH": "EMMC组件_W942_32G_EMMC32G-KC30-GC_烧录_日本",
+              "MAKTX_EN": "EMMC组件",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "13M000004001",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "PCBA_BY01_ALS_V2_自制",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000005601",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_BY01_FPC_USB_V6_自制",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000005701",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_BY01_FPC_USB_V6_分板测试",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000009005",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_W942_PPG_XB2_V3.3_AP5",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000009102",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "PCBA_W942_PPG_XB1_V3_AP5",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000009205",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "RFPCA_W942_PPG组件_V3.3_AP5_激光焊接",
+              "MAKTX_EN": "RFPCA",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000012403",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "PCBA_R4_PPG_XB1_V3_AP5_红板",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000012508",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000012605",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计",
+              "MAKTX_EN": "RFPCA",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000015001",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_W542_XB3_SBS_V4_红板_自制",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000015101",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_W541_SPK_XB3_V3_AP5_自制",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000015501",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "PCBA_W541_W542_PPG_XB1_V3_AP5",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000016001",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_W541_PPG_XB2_V4.2_AP5",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000016301",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "RFPCA_W541_PPG组件_V4.2_MINIMIC_AP5_激光焊接",
+              "MAKTX_EN": "RFPCA",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000016801",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_W542_XB2_PPG_V4.3_AP5_带EMI膜",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000017001",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "RFPCA_W542_PPG组件_V4.3_AP5_激光焊接",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000018101",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_BY02_PRESS_SOLAR_V1_红板",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "130",
+              "LBTXT": "BY02",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "13M000018501",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "13M00",
+              "WGBEZ": "FPCA_PCBA_RFPCA",
+              "MAKTX_ZH": "FPCA_S501_XB2_BARO_V5.1_红板_自制",
+              "MAKTX_EN": "FPCA",
+              "LABOR": "124",
+              "LBTXT": "S501",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "148990014301",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14899",
+              "WGBEZ": "其他塑胶件",
+              "MAKTX_ZH": "车载支架组件_BY01_黑_GVX5H_V3自制",
+              "MAKTX_EN": "车载支架组件",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "148990021001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14899",
+              "WGBEZ": "其他塑胶件",
+              "MAKTX_ZH": "支架组件_BY01_自制加工- 日本",
+              "MAKTX_EN": "车载支架组件",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "14M000068101",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14M00",
+              "WGBEZ": "中框组件",
+              "MAKTX_ZH": "面壳组件_R4_热熔胶EH9656粘合强度检测_自制",
+              "MAKTX_EN": "中框组件",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "14M010002001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14M01",
+              "WGBEZ": "面壳组件",
+              "MAKTX_ZH": "面壳组件_BY01_自制加工- 日本",
+              "MAKTX_EN": "面壳组件",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "14M010003001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14M01",
+              "WGBEZ": "面壳组件",
+              "MAKTX_ZH": "面壳组件_W942_自制加工- 日本",
+              "MAKTX_EN": "面壳组件",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "14M020004001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14M02",
+              "WGBEZ": "底盖组件",
+              "MAKTX_ZH": "底壳组件_HR01_热反应胶的强度检测_自制",
+              "MAKTX_EN": "底壳组件",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "14M020009001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14M02",
+              "WGBEZ": "底盖组件",
+              "MAKTX_ZH": "底壳组件_BY01_自制加工-日本",
+              "MAKTX_EN": "底壳组件",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "14M020010001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "14M02",
+              "WGBEZ": "底盖组件",
+              "MAKTX_ZH": "底壳组件_W942_自制加工- 日本",
+              "MAKTX_EN": "底壳组件",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "152010002001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "15201",
+              "WGBEZ": "开关生耳 (活动生耳)",
+              "MAKTX_ZH": "活动生耳_方头316L_耳矩22_镭雕符号_B20_V1_自制",
+              "MAKTX_EN": "活动生耳",
+              "LABOR": "107",
+              "LBTXT": "B20",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "152010004001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "15201",
+              "WGBEZ": "开关生耳 (活动生耳)",
+              "MAKTX_ZH": "活动生耳_方头316L_耳矩20_镭雕符号_B21_V1_自制",
+              "MAKTX_EN": "活动生耳",
+              "LABOR": "108",
+              "LBTXT": "B21",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "158990015001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "15899",
+              "WGBEZ": "其他五金件",
+              "MAKTX_ZH": "W332_双圈+硅胶套+胶带_自制",
+              "MAKTX_EN": "双圈卡环",
+              "LABOR": "110",
+              "LBTXT": "W332",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料不属于所需主体 # 1050",
+              "nadesc_en": "Not belonging to the required company # 1050"
+            },
+            {
+              "MATNR": "16M100087001",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "16M10",
+              "WGBEZ": "LCD液晶显示屏模组（CG+LCD+TP",
+              "MAKTX_ZH": "面圈组件_W331_热熔胶7039粘合强度检测_自制",
+              "MAKTX_EN": "面圈组件",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "16M100091101",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "16M10",
+              "WGBEZ": "LCD液晶显示屏模组（CG+LCD+TP",
+              "MAKTX_ZH": "面圈组件W942_面圈_1.3寸_黑灰镜片V0_SHARP3_自制V1",
+              "MAKTX_EN": "面圈组件",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "16M100094201",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "16M10",
+              "WGBEZ": "LCD液晶显示屏模组（CG+LCD+TP",
+              "MAKTX_ZH": "面壳组件_W541_锖色CDLC-1_SHARP3_黑白镜片_超泽TP_自制V2",
+              "MAKTX_EN": "面壳组件",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "16M100094203",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "16M10",
+              "WGBEZ": "LCD液晶显示屏模组（CG+LCD+TP",
+              "MAKTX_ZH": "面壳组件_W541_银色IPH-Y_SHARP3_黑白镜片_超泽TP_自制V2",
+              "MAKTX_EN": "面壳组件",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "16M100096201",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "16M10",
+              "WGBEZ": "LCD液晶显示屏模组（CG+LCD+TP",
+              "MAKTX_ZH": "面壳组件_W542_SHARP3_1.2寸_黑白灰镜片_面圈黑色_V2_自制",
+              "MAKTX_EN": "面壳组件",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "16M100096202",
+              "MTART": "Z003",
+              "MTBEZ": "原材料",
+              "MATKL": "16M10",
+              "WGBEZ": "LCD液晶显示屏模组（CG+LCD+TP",
+              "MAKTX_ZH": "面壳组件_W542_SHARP3_1.2寸_黑白灰镜片_面圈银色_V2_自制",
+              "MAKTX_EN": "面壳组件",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料状态不可用 # 01",
+              "nadesc_en": "MSTAE Not Available #01"
+            },
+            {
+              "MATNR": "GSB19S000001",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "B19S_V1_MTK_8MB_64MB_BT_WIFI_1.4寸_月球银_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "121",
+              "LBTXT": "B19S",
+              "ZYULIU1": "VERTIX 2S 月球银",
+              "ZYULIU2": "5099.00"
+            },
+            {
+              "MATNR": "GSB19S000003",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "B19S_V1_MTK_8MB_64MB_BT_WIFI_1.4寸_地球蓝_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "121",
+              "LBTXT": "B19S",
+              "ZYULIU1": "VERTIX 2S 地球蓝",
+              "ZYULIU2": "5099.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSB19S000005",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "B19S_V1_MTK_8MB_64MB_BT_WIFI_1.4寸_太空黑 国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "121",
+              "LBTXT": "B19S",
+              "ZYULIU1": "VERTIX 2S 太空黑",
+              "ZYULIU2": "5099.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSB19S000006",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "B19S_V1_MTK_8MB_64MB_BT_WIFI_1.4寸_太空黑_海外",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "121",
+              "LBTXT": "B19S",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSB200000028",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "B20_V4.2_MTK_8MB_64MB_BT_1.3寸锖黑色_海外开箱机",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "107",
+              "LBTXT": "B20",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSBY01000004",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "BY01_V6_MTK_64MB_GPS_ SOLAR2.7寸整机_国内",
+              "MAKTX_EN": "码表整机",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "DURA 码表",
+              "ZYULIU2": "1799.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSBY01000005",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "BY01_V6_MTK_64MB_GPS_ SOLAR2.7寸整机_海外",
+              "MAKTX_EN": "码表整机",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSFD05000005",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "FD05_V8.1_BLE_IMU_32G_Compass_整机灰色_ 国内",
+              "MAKTX_EN": "跑步动态传感器",
+              "LABOR": "112",
+              "LBTXT": "FD05",
+              "ZYULIU1": "POD 2",
+              "ZYULIU2": "599.00"
+            },
+            {
+              "MATNR": "GSHR01000001",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_国内",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "心率臂带灰色",
+              "ZYULIU2": "599.00",
+              "na": true,
+              "nadesc_cn": "物料在 1060 工厂下未设置价格",
+              "nadesc_en": "No price set under 1060"
+            },
+            {
+              "MATNR": "GSHR01000002",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_海外",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "心率臂带灰色-海外",
+              "ZYULIU2": "599.00"
+            },
+            {
+              "MATNR": "GSHR01000003",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带绿色_国内",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "心率臂带绿色",
+              "ZYULIU2": "599.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSHR01000005",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_日韩",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSHR01000006",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带绿色_海外",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "心率臂带绿色-海外",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSHR01000007",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带橙色_海外",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "心率臂带橙色-海外",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSHR01000009",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+L码臂带灰色_海外",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSHR01000017",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_海外_外购",
+              "MAKTX_EN": "心率臂带",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSR400000007",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_1.21寸_黑灰_硅胶整机_国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "XACE 4黑色硅胶",
+              "ZYULIU2": "1499.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSR400000012",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_1.21寸_黑灰_硅胶整机_海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW331000009",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V4_MTK_48MB_GPS_SHARP_1.2寸_EK乐土织带国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 EK限量款",
+              "ZYULIU2": "1799.00",
+              "na": true,
+              "nadesc_cn": "物料在 1060 工厂下未设置价格",
+              "nadesc_en": "No price set under 1060"
+            },
+            {
+              "MATNR": "GSW331000010",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V4_MTK_48MB_GPS_JDI_1.2寸_红色跑道_织带_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 跑道限量款",
+              "ZYULIU2": "1699.00",
+              "na": true,
+              "nadesc_cn": "物料在 1060 工厂下未设置价格",
+              "nadesc_en": "No price set under 1060"
+            },
+            {
+              "MATNR": "GSW331000013",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V4_MTK_48MB_GPS_SHARP_1.2寸_黑色+硅胶_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 黑色硅胶",
+              "ZYULIU2": "1699.00"
+            },
+            {
+              "MATNR": "GSW331000015",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V4_MTK_48MB_GPS_SHARP_1.2寸_白色+硅胶_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 白色硅胶",
+              "ZYULIU2": "1699.00"
+            },
+            {
+              "MATNR": "GSW331000017",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V4_MTK_48MB_GPS_SHARP_1.2寸_黑色+硅胶_海外",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 黑色硅胶-海外",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW331000019",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V4_MTK_48MB_SHARP_1.2寸_白色+硅胶_海外",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 白色硅胶-海外",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW331000024",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V5_MTK_48MB_SHARP_1.2寸_柠水黄+硅胶表带_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 柠水黄",
+              "ZYULIU2": "1699.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW331000030",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V5_MTK_48MB_SHARP_1.2寸_白色+白色红边织带_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 白色织物-快拆",
+              "ZYULIU2": "1699.00"
+            },
+            {
+              "MATNR": "GSW331000031",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V5_MTK_48MB_SHARP_1.2寸_白色+白色红边织带_海外",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW331000032",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V5_MTK_48MB_SHARP_1.2寸_黑色+黑色红边织带_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "PACE 3 黑灰织物-快拆",
+              "ZYULIU2": "1699.00"
+            },
+            {
+              "MATNR": "GSW331000033",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W331_V5_MTK_48MB_SHARP_1.2寸_黑色+织带_海外",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "109",
+              "LBTXT": "W331",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW332000012",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸_蓝色整机国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "110",
+              "LBTXT": "W332",
+              "ZYULIU1": "PACE Pro蓝色",
+              "ZYULIU2": "2499.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW332000013",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸_灰色整机国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "110",
+              "LBTXT": "W332",
+              "ZYULIU1": "PACE Pro灰色",
+              "ZYULIU2": "2499.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW332000014",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸_黑色整机国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "110",
+              "LBTXT": "W332",
+              "ZYULIU1": "PACE Pro黑色",
+              "ZYULIU2": "2499.00"
+            },
+            {
+              "MATNR": "GSW332000016",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸 灰色整机海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "110",
+              "LBTXT": "W332",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW332000017",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸 黑色整机海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "110",
+              "LBTXT": "W332",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW541000010",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_整机国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "APEX 4 46mm黑色手表",
+              "ZYULIU2": "3299.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW541000011",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_白色_整机国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "APEX 4 46mm白色手表",
+              "ZYULIU2": "3299.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW541000012",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_整机海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW541000013",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_白色_整机海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW542000005",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_黑色_整机国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "APEX 4 42mm黑色手表",
+              "ZYULIU2": "2999.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW542000006",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_白色_整机国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "APEX 4 42mm白色手表",
+              "ZYULIU2": "2999.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW542000007",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_黑色_整机海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW542000008",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_白色_整机海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW942000013",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_绿色整机_国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "NOMAD 绿色",
+              "ZYULIU2": "2499.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW942000014",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_深灰整机_国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "NOMAD 黑色",
+              "ZYULIU2": "2499.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW942000015",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_棕色整机_国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "NOMAD 棕色",
+              "ZYULIU2": "2499.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "GSW942000016",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_绿色整机_海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSW942000017",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_深灰整机_海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "GSWL20B20007",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "WL20B20_V4_64MB_BT_WIFI_1.3寸_K天王_锖白色_国内",
+              "MAKTX_EN": "智能手表",
+              "LABOR": "107",
+              "LBTXT": "B20",
+              "ZYULIU1": "APEX 2 Pro KJ限量款",
+              "ZYULIU2": "3699.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "HSFD05000003",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "FD05_Charger_V5_PSoC4000_灰色_充电器",
+              "MAKTX_EN": "动态传感器充电盒",
+              "LABOR": "112",
+              "LBTXT": "FD05",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSFD05000005",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "FD05_V8.1_BLE_IMU_32G_Compass_主机灰色",
+              "MAKTX_EN": "动态传感器主机",
+              "LABOR": "112",
+              "LBTXT": "FD05",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSHR01000001",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "HR01_V4_AP3BP_16MB_PPG_机头灰色",
+              "MAKTX_EN": "心率臂带机头",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSR400000006",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_白灰_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSR400000007",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_黑灰_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSW541000010",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSW541000011",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_白色_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSW542000005",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_黑色_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSW542000006",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_白色_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSW942000013",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_CYW_1.3寸_绿色机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSW942000014",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_CYW_1.3寸_深灰机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "HSW942000015",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "W942_V4_AP5_32MB_32GB_SYN_CYW_1.3寸_棕色机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSBY01000008",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "BY01_V6_MTK_64MB_GPS_BT_WIFI_SOLAR_ 2.7寸",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSBY01000009",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "BY01_V6_MTK_64MB_GPS_BT_SOLAR_2.7寸分板",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "120",
+              "LBTXT": "BY01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSFD05000005",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "FD05_Charger_V5_PSoC4000_自制",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "112",
+              "LBTXT": "FD05",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSFD05000006",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "FD05_V8.1_BLE_IMU_32G_Compass_分板测试_自制组件",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "112",
+              "LBTXT": "FD05",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSFD05000007",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "FD05_V8.1_BLE_IMU_32G_Compass_Barometer",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "112",
+              "LBTXT": "FD05",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSHR01000004",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "FPCBA_HR01_MB_V4.2_AP3BP_16MB_PPG",
+              "MAKTX_EN": "FPCBA",
+              "LABOR": "113",
+              "LBTXT": "HR01",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSR400000012",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSW541000011",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSW541000012",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "125",
+              "LBTXT": "W541",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSW542000007",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "PSW542000008",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "126",
+              "LBTXT": "W542",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "TDVTHSS501000003",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "S501_V4_AP3.5BP_16MB_BLE_NFC_黑色_机头DVT2",
+              "MAKTX_EN": "水情探测器",
+              "LABOR": "124",
+              "LBTXT": "S501",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "TDVTPSR4T0000001",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "R4T_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_红板",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "129",
+              "LBTXT": "R4T",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "TEVTHSR4T0000002",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "R4T_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_黑色_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "129",
+              "LBTXT": "R4T",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "TEVTPSBY02000001",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "BY02_V1_AP5_64GB_BLE_WIFI_3.5寸",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "130",
+              "LBTXT": "BY02",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "TPVTGSR400000006",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_1.21寸_白灰_硅胶整机_ 国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "TPVTGSR400000007",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "R4_V4_AP5_32MB_4GB_SYN_1.21寸_黑灰_硅胶整机_国内",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "TPVTGSR400000014",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_1.21寸_白灰_硅胶整机_海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "TPVTGSR400000015",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "GS",
+              "WGBEZ": "Smart Watch 包装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_1.21寸_黑灰_硅胶整机_海外",
+              "MAKTX_EN": "智能手表整机",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00"
+            },
+            {
+              "MATNR": "TPVTHSR400000006",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "HS",
+              "WGBEZ": "Smart Watch 组装",
+              "MAKTX_ZH": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_白灰_机头",
+              "MAKTX_EN": "智能手表机头",
+              "LABOR": "128",
+              "LBTXT": "R4",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "TPVTPSW942000015",
+              "MTART": "Z002",
+              "MTBEZ": "半成品",
+              "MATKL": "PS",
+              "WGBEZ": "Smart Watch  PCBA",
+              "MAKTX_ZH": "W942_V5_AP5_32MB_32GB_AG_CYW_1.3寸",
+              "MAKTX_EN": "PCBA",
+              "LABOR": "123",
+              "LBTXT": "W942",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料类型不可用",
+              "nadesc_en": "MTART Not Available"
+            },
+            {
+              "MATNR": "WQHR01000003",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "HR01(HR31)橙色臂带配件",
+              "MAKTX_EN": "HR31橙色臂带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "橙色臂带配件",
+              "ZYULIU2": "109.00"
+            },
+            {
+              "MATNR": "WQHR01000006",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "HR31充电线配件Type-C",
+              "MAKTX_EN": "HR31充电线",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "臂带充电线",
+              "ZYULIU2": "49.00"
+            },
+            {
+              "MATNR": "WQW331000009",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W331白色硅胶表带配件",
+              "MAKTX_EN": "W331白色硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "PACE 3白色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW331000022",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W331柠水黄硅胶表带配件",
+              "MAKTX_EN": "W331柠水黄硅胶表",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "PACE 3 柠水黄硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW331000026",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W331白红色尼龙表带配件",
+              "MAKTX_EN": "W331白红色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "PACE 3白红色尼龙表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW331000030",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "第一代充电转接头配件",
+              "MAKTX_EN": "第一代充电转接头配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "第一代充电转接头",
+              "ZYULIU2": "59.00"
+            },
+            {
+              "MATNR": "WQW332000004",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "第二代充电转接头配件",
+              "MAKTX_EN": "充电转接头",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "第二代充电转接头",
+              "ZYULIU2": "59.00"
+            },
+            {
+              "MATNR": "WQW332000009",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W332灰色尼龙表带配件",
+              "MAKTX_EN": "W332灰色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "PACE Pro灰色尼龙表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW332000010",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W332黑色尼龙表带配件",
+              "MAKTX_EN": "W332黑色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "PACE Pro黑色尼龙表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW541000001",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W541黑色硅胶表带配件",
+              "MAKTX_EN": "W541黑色硅胶表带配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 4 46mm黑色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW541000002",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W541白色硅胶表带配件",
+              "MAKTX_EN": "W541白色硅胶表带配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 4 46mm白色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW542000001",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W542黑色硅胶表带配件",
+              "MAKTX_EN": "W542黑色硅胶表带配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 4 42mm黑色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW542000002",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W542白色硅胶表带配件",
+              "MAKTX_EN": "W542白色硅胶表带配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 4 42mm白色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW942000004",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W942深灰色硅胶表带配件-M码",
+              "MAKTX_EN": "W942深灰色硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "NOMAD黑色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW942000006",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W942棕色硅胶表带配件-M码",
+              "MAKTX_EN": "W942棕色硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "NOMAD棕色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW942000007",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W942深灰色硅胶表带配件-L码",
+              "MAKTX_EN": "W942深灰色硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "NOMAD黑色硅胶表带-L",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW942000009",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W942棕色硅胶表带配件-L码",
+              "MAKTX_EN": "W942棕色硅胶表带配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "NOMAD棕色硅胶表带-L",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW942000010",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W942深灰色尼龙表带配件-M码",
+              "MAKTX_EN": "W942深灰色尼龙表带配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "NOMAD黑色织物表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQW942000011",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "W942绿色尼龙表带配件-M码",
+              "MAKTX_EN": "W942绿色尼龙表带配件",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "NOMAD绿色织物表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQWL15B15D01",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B15D黑色硅胶表带配件",
+              "MAKTX_EN": "B15D黑色硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "",
+              "ZYULIU2": "0.00",
+              "na": true,
+              "nadesc_cn": "物料在 1050 工厂下未设置价格",
+              "nadesc_en": "No price set under 1050"
+            },
+            {
+              "MATNR": "WQWL18B18016",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B18白色硅胶表带配件_新",
+              "MAKTX_EN": "B18白色硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "PACE 2白色硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQWL19B19018",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B19绿色硅胶表带配件",
+              "MAKTX_EN": "B19绿色硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "VERTIX 2绿色硅胶表带",
+              "ZYULIU2": "239.00"
+            },
+            {
+              "MATNR": "WQWL19B19021",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B19紫色尼龙表带配件",
+              "MAKTX_EN": "B19紫色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "VERTIX 2紫色尼龙表带",
+              "ZYULIU2": "239.00"
+            },
+            {
+              "MATNR": "WQWL19B19022",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B19绿色尼龙表带配件",
+              "MAKTX_EN": "B19绿色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "VERTIX 2绿色尼龙表带",
+              "ZYULIU2": "239.00"
+            },
+            {
+              "MATNR": "WQWL20B20001",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B20黑灰硅胶表带配件",
+              "MAKTX_EN": "B20黑灰硅胶表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 2 Pro黑灰硅胶表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQWL20B20005",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B20黑色尼龙表带配件",
+              "MAKTX_EN": "B20黑色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 2 Pro黑色尼龙表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQWL20B20006",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B20灰色尼龙表带配件",
+              "MAKTX_EN": "B20灰色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 2 Pro灰色尼龙表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQWL20B20008",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B20紫色尼龙表带配件",
+              "MAKTX_EN": "B20紫色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 2 Pro紫色尼龙表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQWL21B21007",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "常规手表充电线配件_B13/B15/B17/B18/B19/B20/B21",
+              "MAKTX_EN": "常规手表USB充电线",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "常规充电线",
+              "ZYULIU2": "49.00"
+            },
+            {
+              "MATNR": "WQWL21B21011",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B21紫色尼龙表带配件",
+              "MAKTX_EN": "B21紫色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 2紫色尼龙表带",
+              "ZYULIU2": "199.00"
+            },
+            {
+              "MATNR": "WQWL21B21012",
+              "MTART": "Z001",
+              "MTBEZ": "成品",
+              "MATKL": "WQ",
+              "WGBEZ": "配件",
+              "MAKTX_ZH": "B21蓝色尼龙表带配件",
+              "MAKTX_EN": "B21蓝色尼龙表带",
+              "LABOR": "116",
+              "LBTXT": "配件",
+              "ZYULIU1": "APEX 2蓝色尼龙表带",
+              "ZYULIU2": "199.00"
+            }
+          ]
+        }
+      }
+    ],
+    "移除重复工单": [
+      {
+        "json": {
+          "materialCode": "HSS501000004",
+          "jobNumber": "1000005724",
+          "materialDescription": "S501_V4_AP3.5BP_16MB_BLE_ NFC_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M010002001",
+          "jobNumber": "1000005729",
+          "materialDescription": "面壳组件_BY01_自制加工- 日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M020009001",
+          "jobNumber": "1000005730",
+          "materialDescription": "底壳组件_BY01_自制加工-日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M020010001",
+          "jobNumber": "1000005794",
+          "materialDescription": "底壳组件_W942_深灰色_自制加工- 日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M010003001",
+          "jobNumber": "1000005795",
+          "materialDescription": "面壳组件_W942_深灰色_自制加工- 日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000007",
+          "jobNumber": "1000005797",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_黑灰_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000006",
+          "jobNumber": "1000005798",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_白灰机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSHR01000001",
+          "jobNumber": "1000005801",
+          "materialDescription": "HR01_V4_AP3BP_16MB_PPG_机头灰色"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M020010001",
+          "jobNumber": "1000005802",
+          "materialDescription": "底壳组件_W942_深灰色_自制加工- 日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M010003001",
+          "jobNumber": "1000005803",
+          "materialDescription": "面壳组件_W942_深灰色_自制加工- 日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000007",
+          "jobNumber": "1000005805",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_黑灰_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000007",
+          "jobNumber": "1000005806",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_黑灰_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW542000008",
+          "jobNumber": "1000005833",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_白色_整机海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW542000007",
+          "jobNumber": "1000005844",
+          "materialDescription": "W542黑灰织物表带配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW541000007",
+          "jobNumber": "1000005845",
+          "materialDescription": "W541黑灰织物表带配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSS501000004",
+          "jobNumber": "1000005846",
+          "materialDescription": "S501_V4_AP3.5BP_16MB_BLE_NFC_黑色_整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSS501000005",
+          "jobNumber": "1000005847",
+          "materialDescription": "S501_V4_AP3.5BP_16MB_BLE_NFC_黑色_整机_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSHR01000001",
+          "jobNumber": "1000005864",
+          "materialDescription": "HR01_V4_AP3BP_16MB_PPG_机头灰色"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW542000006",
+          "jobNumber": "1000005865",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_白色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW541000011",
+          "jobNumber": "1000005866",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_白色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000008",
+          "jobNumber": "1000005867",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_SYN_1.21寸_白粉_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M110002304",
+          "jobNumber": "1000005868",
+          "materialDescription": "COLED_R4_TM1.21寸_晶创黑粉镜片V1_自制V3"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000007",
+          "jobNumber": "1000005869",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_黑灰_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M100096202",
+          "jobNumber": "1000005871",
+          "materialDescription": "面壳组件_W542_SHARP3_1.2寸_黑白灰镜片_面圈银色_V2_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000007",
+          "jobNumber": "1000005877",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000012",
+          "jobNumber": "1000005878",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_ 海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW541000012",
+          "jobNumber": "1000005885",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_整机海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW331000033",
+          "jobNumber": "1000005886",
+          "materialDescription": "W331_V5_MTK_48MB_SHARP_1.2寸_黑色+织带_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW331000019",
+          "jobNumber": "1000005887",
+          "materialDescription": "W331_V4_MTK_48MB_SHARP_1.2寸_白色+硅胶_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000012",
+          "jobNumber": "1000005888",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_ 海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW332000015",
+          "jobNumber": "1000005889",
+          "materialDescription": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸 蓝色整机海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW541000006",
+          "jobNumber": "1000005899",
+          "materialDescription": "W541雪蓝带粒织物表带配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW542000006",
+          "jobNumber": "1000005904",
+          "materialDescription": "W542雪蓝带粒织物表带配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000002",
+          "jobNumber": "1000005913",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW332000015",
+          "jobNumber": "1000005916",
+          "materialDescription": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸 蓝色整机海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW942000014",
+          "jobNumber": "1000005917",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_深灰整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQR400000009",
+          "jobNumber": "1000005922",
+          "materialDescription": "R4红黄织物表带配件-M码 (日本城西大学定制款)"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "158990015001",
+          "jobNumber": "1000005923",
+          "materialDescription": "W332_双圈+硅胶套+胶带_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "152010002001",
+          "jobNumber": "1000005924",
+          "materialDescription": "活动生耳_方头316L_耳矩22_镭雕符号_B20_V1_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSHR01000001",
+          "jobNumber": "1000005925",
+          "materialDescription": "HR01_V4_AP3BP_16MB_PPG_机头灰色"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW542000005",
+          "jobNumber": "1000005926",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW541000011",
+          "jobNumber": "1000005927",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_白色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M100094203",
+          "jobNumber": "1000005928",
+          "materialDescription": "面壳组件_W541_银色IPH-Y_SHARP3_黑白镜片_超泽TP_自制V2"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M100096201",
+          "jobNumber": "1000005929",
+          "materialDescription": "面壳组件_W542_SHARP3_1.2寸_黑白灰镜片_面圈黑色_V2_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000006",
+          "jobNumber": "1000005930",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_白灰机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M020012001",
+          "jobNumber": "1000005933",
+          "materialDescription": "底壳组件_W335_黑灰_自制_日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M010001001",
+          "jobNumber": "1000005934",
+          "materialDescription": "屏幕组件_W335_黑灰_自制-日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M120044003",
+          "jobNumber": "1000005935",
+          "materialDescription": "长表带组件_W335_黑灰_自制_德洋_日本"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M010000001",
+          "jobNumber": "1000005936",
+          "materialDescription": "W335屏幕组件_黑灰_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "158990015001",
+          "jobNumber": "1000005937",
+          "materialDescription": "W332_双圈+硅胶套+胶带_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSHR01000001",
+          "jobNumber": "1000005939",
+          "materialDescription": "HR01_V4_AP3BP_16MB_PPG_机头灰色"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW542000005",
+          "jobNumber": "1000005940",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW541000010",
+          "jobNumber": "1000005941",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000007",
+          "jobNumber": "1000005942",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_黑灰_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M100096201",
+          "jobNumber": "1000005943",
+          "materialDescription": "面壳组件_W542_SHARP3_1.2寸_黑白灰镜片_面圈黑色_V2_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M100094201",
+          "jobNumber": "1000005944",
+          "materialDescription": "面壳组件_W541_锖色CDLC-1_SHARP3_黑白镜片_超泽TP_自制V2"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "14M000068001",
+          "jobNumber": "1000005945",
+          "materialDescription": "中框组件_R4_热熔胶7851B的粘结强度检测_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQWL21B21007",
+          "jobNumber": "1000005946",
+          "materialDescription": "常规手表充电线配件_B13/B15/B17/B18/B19/B20/B21"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000012",
+          "jobNumber": "1000005947",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_ 海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000013",
+          "jobNumber": "1000005948",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_织物整机_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000002",
+          "jobNumber": "1000005949",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000012",
+          "jobNumber": "1000005950",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_ 海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW332000014",
+          "jobNumber": "1000005951",
+          "materialDescription": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸_黑色整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000016",
+          "jobNumber": "1000005952",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_白粉_织物整机_无锡款"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000016",
+          "jobNumber": "1000005953",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_白粉_织物整机_无锡款"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000012",
+          "jobNumber": "1000005954",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_ 海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSWL15B15D31",
+          "jobNumber": "1000005955",
+          "materialDescription": "B15D_V3_640KB_32MB_BT_1.2寸_Sharp_整机锖"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000006",
+          "jobNumber": "1000005956",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_白灰_硅胶整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000007",
+          "jobNumber": "1000005957",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSBY01000005",
+          "jobNumber": "1000005958",
+          "materialDescription": "BY01_V6_MTK_64MB_GPS_ SOLAR2.7寸整机_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW541000010",
+          "jobNumber": "1000005959",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000006",
+          "jobNumber": "1000005960",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带绿色_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000007",
+          "jobNumber": "1000005961",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带橙色_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW542000007",
+          "jobNumber": "1000005962",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_黑色_整机海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW541000011",
+          "jobNumber": "1000005963",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_白色_整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW942000014",
+          "jobNumber": "1000005964",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_深灰整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW332000012",
+          "jobNumber": "1000005965",
+          "materialDescription": "W332_V4_AP5_32G_GPS_BT_WIFI_1.28寸_蓝色整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW541000012",
+          "jobNumber": "1000005966",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_整机海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000006",
+          "jobNumber": "1000005967",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_白灰_硅胶整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW542000006",
+          "jobNumber": "1000005968",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_白色_整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000010",
+          "jobNumber": "1000005969",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_白灰_硅胶整机_ 海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000001",
+          "jobNumber": "1000005970",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000003",
+          "jobNumber": "1000005971",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带绿色_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000004",
+          "jobNumber": "1000005972",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带橙色_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW331000013",
+          "jobNumber": "1000005973",
+          "materialDescription": "W331黑红色尼龙表带配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQWL21B21007",
+          "jobNumber": "1000005974",
+          "materialDescription": "常规手表充电线配件_B13/B15/B17/B18/B19/B20/B21"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW331000030",
+          "jobNumber": "1000005975",
+          "materialDescription": "第一代充电转接头配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW332000004",
+          "jobNumber": "1000005976",
+          "materialDescription": "第二代充电转接头配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQW332000008",
+          "jobNumber": "1000005977",
+          "materialDescription": "W332蓝色尼龙表带配件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000009",
+          "jobNumber": "1000005978",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+L码臂带灰色_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000002",
+          "jobNumber": "1000005979",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW331000056",
+          "jobNumber": "1000005980",
+          "materialDescription": "W331_V4_MTK_48MB_SHARP_1.2寸_黑色+硅胶_海外开箱机"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSHR01000002",
+          "jobNumber": "1000005981",
+          "materialDescription": "HR31_V4_AP3BP_16MB_PPG_整机灰色+臂带灰色_海外"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW332000024",
+          "jobNumber": "1000005983",
+          "materialDescription": "W332_V4_AP5_32G_GPS_BT_1.28寸黑色_海外开箱机"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSB19S000009",
+          "jobNumber": "1000005984",
+          "materialDescription": "B19S_V1_MTK_8MB_64MB_BT_1.4寸_太空黑_海外开箱机"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSB210000022",
+          "jobNumber": "1000005985",
+          "materialDescription": "B21_V4_MTK_64MB_GPS_1.2寸_SHARP银灰_海外开箱机"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW331000054",
+          "jobNumber": "1000005986",
+          "materialDescription": "W331_V4_MTK_48MB_SHARP_1.2寸_白色+硅胶_海外开箱机"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW332000026",
+          "jobNumber": "1000005987",
+          "materialDescription": "W332_V4_AP5_32G_GPS_BT_1.28寸_灰色_海外开箱机"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW332000028",
+          "jobNumber": "1000005988",
+          "materialDescription": "W332_V4_AP5_32G_GPS_BT_1.28寸_蓝色_海外开箱机"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQWL21B21007",
+          "jobNumber": "1000005989",
+          "materialDescription": "常规手表充电线配件_B13/B15/B17/B18/B19/B20/B21"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "WQHR01000006",
+          "jobNumber": "1000005990",
+          "materialDescription": "HR31充电线配件Type-C"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "158990015001",
+          "jobNumber": "1000005991",
+          "materialDescription": "W332_双圈+硅胶套+胶带_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "158990019001",
+          "jobNumber": "1000005992",
+          "materialDescription": "W331_双圈+硅胶套+胶带_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSS501000004",
+          "jobNumber": "2000000651",
+          "materialDescription": "S501_V4_AP3.5BP_16MB_BLE_NFC_黑色_整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000006",
+          "jobNumber": "2000000656",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_白灰_硅胶整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSR400000007",
+          "jobNumber": "2000000657",
+          "materialDescription": "W335_V5_AP5_32MB_4GB_1.21寸_黑灰_硅胶整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW541000010",
+          "jobNumber": "2000000658",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_黑色_整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW542000005",
+          "jobNumber": "2000000659",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_黑色_整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW541000011",
+          "jobNumber": "2000000660",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_CYW_1.3寸_白色_整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW542000006",
+          "jobNumber": "2000000661",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_CYW_1.2寸_白色_整机国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW942000013",
+          "jobNumber": "2000000662",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_绿色整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "GSW942000015",
+          "jobNumber": "2000000663",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_1.3寸_棕色整机_国内"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000002901",
+          "jobNumber": "3000000805",
+          "materialDescription": "FPCBA_W331_XB1_PPG_V3_SPL16-001_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSBY01000009",
+          "jobNumber": "3900000089",
+          "materialDescription": "BY01_V6_MTK_64MB_GPS_BT_SOLAR_2.7寸分板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD02000012",
+          "jobNumber": "3900000097",
+          "materialDescription": "FD02_V3.1_nRF52832_64KB_SENSOR_橘色+绿色_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009005",
+          "jobNumber": "3900000149",
+          "materialDescription": "FPCA_W942_PPG_XB2_V3.3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSB200000004",
+          "jobNumber": "3900000217",
+          "materialDescription": "B20_V4.2_MTK_8MB_64MB_BT_WIFI_1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSBY01000008",
+          "jobNumber": "3900000270",
+          "materialDescription": "BY01_V6_MTK_64MB_GPS_BT_WIFI_SOLAR_ 2.7寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSB19S000001",
+          "jobNumber": "3900000283",
+          "materialDescription": "B19S_V1_MTK_8MB_64MB_BT_WIFI_1.4inch"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW332000016",
+          "jobNumber": "3900000324",
+          "materialDescription": "W332_V4_AP5_B2_32MB_32GB_SYN_CYW_ 1.28寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW541000012",
+          "jobNumber": "3900000346",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW331000008",
+          "jobNumber": "3900000353",
+          "materialDescription": "W331_V5.3_MTK_48MB_GPS_BTWIFI_1.2寸_SHARP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW541000012",
+          "jobNumber": "3900000399",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000005701",
+          "jobNumber": "3900000413",
+          "materialDescription": "FPCA_BY01_FPC_USB_V6_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW541000012",
+          "jobNumber": "3900000427",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR400000012",
+          "jobNumber": "3900000470",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR400000012",
+          "jobNumber": "3900000476",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000008",
+          "jobNumber": "3900000497",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR400000012",
+          "jobNumber": "3900000526",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW942000014",
+          "jobNumber": "3900000528",
+          "materialDescription": "W942_V4.1_32MB_32GB_SYN_CYW_1.3寸_P2"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000005701",
+          "jobNumber": "3900000537",
+          "materialDescription": "FPCA_BY01_FPC_USB_V6_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000581",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000011",
+          "jobNumber": "3900000586",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000007",
+          "jobNumber": "3900000593",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000005",
+          "jobNumber": "3900000601",
+          "materialDescription": "FD05_Charger_V5_PSoC4000_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000006",
+          "jobNumber": "3900000602",
+          "materialDescription": "FD05_V8.1_BLE_IMU_32G_Compass_分板测试_自制组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000012",
+          "jobNumber": "3900000612",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000008",
+          "jobNumber": "3900000619",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000012",
+          "jobNumber": "3900000645",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSS501000009",
+          "jobNumber": "3900000721",
+          "materialDescription": "S501_V4.2_AP3.5BP_16MB_BLE_NFC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000018501",
+          "jobNumber": "3900000722",
+          "materialDescription": "FPCA_S501_XB2_BARO_V5.1_红板_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000005",
+          "jobNumber": "3900000724",
+          "materialDescription": "FD05_Charger_V5_PSoC4000_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000006",
+          "jobNumber": "3900000725",
+          "materialDescription": "FD05_V8.1_BLE_IMU_32G_Compass_分板测试_自制组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW942000014",
+          "jobNumber": "3900000742",
+          "materialDescription": "W942_V4.1_32MB_32GB_SYN_CYW_1.3寸_P2"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD03000002",
+          "jobNumber": "3900000751",
+          "materialDescription": "FD03_V3.1_nRF52832_64KB_SENSOR_橘色+绿色_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001701",
+          "jobNumber": "3900000752",
+          "materialDescription": "PCB_NORM_FD03_V3.1_镭雕“03”_2*2mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD02000012",
+          "jobNumber": "3900000753",
+          "materialDescription": "FD02_V3.1_nRF52832_64KB_SENSOR_橘色+绿色_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009205",
+          "jobNumber": "3900000755",
+          "materialDescription": "RFPCA_W942_PPG组件_V3.3_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000012",
+          "jobNumber": "3900000759",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016301",
+          "jobNumber": "3900000762",
+          "materialDescription": "RFPCA_W541_PPG组件_V4.2_MINIMIC_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000005601",
+          "jobNumber": "3900000768",
+          "materialDescription": "FPCA_BY01_FPC_USB_V6_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000777",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009205",
+          "jobNumber": "3900000781",
+          "materialDescription": "RFPCA_W942_PPG组件_V3.3_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009102",
+          "jobNumber": "3900000782",
+          "materialDescription": "PCBA_W942_PPG_XB1_V3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009205",
+          "jobNumber": "3900000784",
+          "materialDescription": "RFPCA_W942_PPG组件_V3.3_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009102",
+          "jobNumber": "3900000785",
+          "materialDescription": "PCBA_W942_PPG_XB1_V3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009005",
+          "jobNumber": "3900000786",
+          "materialDescription": "FPCA_W942_PPG_XB2_V3.3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001701",
+          "jobNumber": "3900000788",
+          "materialDescription": "EMMC组件_W942_32GBMB_KASK62T1-01TA000组件_烧录"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000008",
+          "jobNumber": "3900000790",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000015001",
+          "jobNumber": "3900000792",
+          "materialDescription": "FPCA_W542_XB3_SBS_V4_红板_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000017001",
+          "jobNumber": "3900000793",
+          "materialDescription": "RFPCA_W542_PPG组件_V4.3_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSHR01000004",
+          "jobNumber": "3900000797",
+          "materialDescription": "FPCBA_HR01_MB_V4.2_AP3BP_16MB_PPG"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000798",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000801",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000802",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000803",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000804",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000805",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000806",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000807",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000808",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000809",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000810",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000811",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000812",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000005",
+          "jobNumber": "3900000813",
+          "materialDescription": "FD05_Charger_V5_PSoC4000_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000006",
+          "jobNumber": "3900000814",
+          "materialDescription": "FD05_V8.1_BLE_IMU_32G_Compass_分板测试_自制组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000007",
+          "jobNumber": "3900000815",
+          "materialDescription": "FD05_V8.1_BLE_IMU_32G_Compass_Barometer"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000005601",
+          "jobNumber": "3900000816",
+          "materialDescription": "FPCA_BY01_FPC_USB_V6_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000006401",
+          "jobNumber": "3900000817",
+          "materialDescription": "FPCA_BY01_LCD_V8_红板_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000004001",
+          "jobNumber": "3900000818",
+          "materialDescription": "PCBA_BY01_ALS_V2_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060000601",
+          "jobNumber": "3900000819",
+          "materialDescription": "EMMC组件_BY01_EMMC_32GB_组件(烧录)"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSBY01000008",
+          "jobNumber": "3900000820",
+          "materialDescription": "BY01_V6_MTK_64MB_GPS_BT_WIFI_SOLAR_ 2.7寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD03000002",
+          "jobNumber": "3900000821",
+          "materialDescription": "FD03_V3.1_nRF52832_64KB_SENSOR_橘色+绿色_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001701",
+          "jobNumber": "3900000822",
+          "materialDescription": "PCB_NORM_FD03_V3.1_镭雕“03”_2*2mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060002001",
+          "jobNumber": "3900000823",
+          "materialDescription": "EMMC组件_W541_EMMC_32GB_烧录组件_金士顿"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000012",
+          "jobNumber": "3900000824",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000011",
+          "jobNumber": "3900000825",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000015101",
+          "jobNumber": "3900000826",
+          "materialDescription": "FPCA_W541_SPK_XB3_V3_AP5_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016301",
+          "jobNumber": "3900000827",
+          "materialDescription": "RFPCA_W541_PPG组件_V4.2_MINIMIC_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016601",
+          "jobNumber": "3900000828",
+          "materialDescription": "PCBA_W542_PPG_XB1_V1_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016001",
+          "jobNumber": "3900000829",
+          "materialDescription": "FPCA_W541_PPG_XB2_V4.2_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001001",
+          "jobNumber": "3900000830",
+          "materialDescription": "EMMC组件_W542_EMMC_32GB_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000008",
+          "jobNumber": "3900000831",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000007",
+          "jobNumber": "3900000832",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000015001",
+          "jobNumber": "3900000833",
+          "materialDescription": "FPCA_W542_XB3_SBS_V4_红板_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000017001",
+          "jobNumber": "3900000834",
+          "materialDescription": "RFPCA_W542_PPG组件_V4.3_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016601",
+          "jobNumber": "3900000835",
+          "materialDescription": "PCBA_W542_PPG_XB1_V1_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016801",
+          "jobNumber": "3900000836",
+          "materialDescription": "FPCA_W542_XB2_PPG_V4.3_AP5_带EMI膜"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSS501000009",
+          "jobNumber": "3900000837",
+          "materialDescription": "S501_V4.2_AP3.5BP_16MB_BLE_NFC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000018501",
+          "jobNumber": "3900000838",
+          "materialDescription": "FPCA_S501_XB2_BARO_V5.1_红板_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000014001",
+          "jobNumber": "3900000839",
+          "materialDescription": "FPCA_S501_XB1_ALS_V4.2_红板_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009205",
+          "jobNumber": "3900000841",
+          "materialDescription": "RFPCA_W942_PPG组件_V3.3_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009102",
+          "jobNumber": "3900000842",
+          "materialDescription": "PCBA_W942_PPG_XB1_V3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009005",
+          "jobNumber": "3900000843",
+          "materialDescription": "FPCA_W942_PPG_XB2_V3.3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW942000014",
+          "jobNumber": "3900000844",
+          "materialDescription": "W942_V4.1_32MB_32GB_SYN_CYW_1.3寸_P2"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060000801",
+          "jobNumber": "3900000845",
+          "materialDescription": "EMMC组件_W942_32GBMB_EMMC32G-KC30-GC组件_烧录"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011101",
+          "jobNumber": "3900000846",
+          "materialDescription": "RFPCA_W331_PPG组件_V5.3_SPL16-001_欧司朗_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011001",
+          "jobNumber": "3900000847",
+          "materialDescription": "PCBA_W331_PPG_XB1_V5.3_欧司朗"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009701",
+          "jobNumber": "3900000848",
+          "materialDescription": "FPCA_W331_PPG_XB1_V5.3_SPL16-001"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW331000008",
+          "jobNumber": "3900000849",
+          "materialDescription": "W331_V5.3_MTK_48MB_GPS_BTWIFI_1.2寸_SHARP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001401",
+          "jobNumber": "3900000850",
+          "materialDescription": "PCB_HDI_W331_MB_V5.3_SHARP屏_镭雕“S”_1*1mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001301",
+          "jobNumber": "3900000851",
+          "materialDescription": "EMMC组件_W331_EMMC_康盈低功耗4GB_组件(烧录)"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSHR01000004",
+          "jobNumber": "3900000852",
+          "materialDescription": "FPCBA_HR01_MB_V4.2_AP3BP_16MB_PPG"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000853",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000854",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000855",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSHR01000004",
+          "jobNumber": "3900000856",
+          "materialDescription": "FPCBA_HR01_MB_V4.2_AP3BP_16MB_PPG"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011101",
+          "jobNumber": "3900000857",
+          "materialDescription": "RFPCA_W331_PPG组件_V5.3_SPL16-001_欧司朗_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011001",
+          "jobNumber": "3900000858",
+          "materialDescription": "PCBA_W331_PPG_XB1_V5.3_欧司朗"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009701",
+          "jobNumber": "3900000859",
+          "materialDescription": "FPCA_W331_PPG_XB1_V5.3_SPL16-001"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW331000008",
+          "jobNumber": "3900000860",
+          "materialDescription": "W331_V5.3_MTK_48MB_GPS_BTWIFI_1.2寸_SHARP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001401",
+          "jobNumber": "3900000861",
+          "materialDescription": "PCB_HDI_W331_MB_V5.3_SHARP屏_镭雕“S”_1*1mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001301",
+          "jobNumber": "3900000862",
+          "materialDescription": "EMMC组件_W331_EMMC_康盈低功耗4GB_组件(烧录)"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSHR01000004",
+          "jobNumber": "3900000863",
+          "materialDescription": "FPCBA_HR01_MB_V4.2_AP3BP_16MB_PPG"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000864",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR4T0000004",
+          "jobNumber": "3900000866",
+          "materialDescription": "R4T_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR4T0000004",
+          "jobNumber": "3900000867",
+          "materialDescription": "R4T_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000868",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000870",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000872",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011101",
+          "jobNumber": "3900000873",
+          "materialDescription": "RFPCA_W331_PPG组件_V5.3_SPL16-001_欧司朗_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011001",
+          "jobNumber": "3900000874",
+          "materialDescription": "PCBA_W331_PPG_XB1_V5.3_欧司朗"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009701",
+          "jobNumber": "3900000875",
+          "materialDescription": "FPCA_W331_PPG_XB1_V5.3_SPL16-001"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW331000008",
+          "jobNumber": "3900000876",
+          "materialDescription": "W331_V5.3_MTK_48MB_GPS_BTWIFI_1.2寸_SHARP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001401",
+          "jobNumber": "3900000877",
+          "materialDescription": "PCB_HDI_W331_MB_V5.3_SHARP屏_镭雕“S”_1*1mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001301",
+          "jobNumber": "3900000878",
+          "materialDescription": "EMMC组件_W331_EMMC_康盈低功耗4GB_组件(烧录)"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000880",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001001",
+          "jobNumber": "3900000882",
+          "materialDescription": "EMMC组件_W542_EMMC_32GB_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001701",
+          "jobNumber": "3900000883",
+          "materialDescription": "PCB_NORM_FD03_V3.1_镭雕“03”_2*2mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW942000015",
+          "jobNumber": "3900000884",
+          "materialDescription": "W942_V5_AP5_32MB_32GB_AG_CYW_1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060000601",
+          "jobNumber": "3900000885",
+          "materialDescription": "EMMC组件_BY01_EMMC_32GB_组件(烧录)"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000886",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000887",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000888",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000889",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000890",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000891",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000892",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000893",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000894",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000895",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000005",
+          "jobNumber": "3900000896",
+          "materialDescription": "FD05_Charger_V5_PSoC4000_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000006",
+          "jobNumber": "3900000897",
+          "materialDescription": "FD05_V8.1_BLE_IMU_32G_Compass_分板测试_自制组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD05000007",
+          "jobNumber": "3900000898",
+          "materialDescription": "FD05_V8.1_BLE_IMU_32G_Compass_Barometer"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSHR01000004",
+          "jobNumber": "3900000899",
+          "materialDescription": "FPCBA_HR01_MB_V4.2_AP3BP_16MB_PPG"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD03000002",
+          "jobNumber": "3900000900",
+          "materialDescription": "FD03_V3.1_nRF52832_64KB_SENSOR_橘色+绿色_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001701",
+          "jobNumber": "3900000901",
+          "materialDescription": "PCB_NORM_FD03_V3.1_镭雕“03”_2*2mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD02000012",
+          "jobNumber": "3900000902",
+          "materialDescription": "FD02_V3.1_nRF52832_64KB_SENSOR_橘色+绿色_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009205",
+          "jobNumber": "3900000903",
+          "materialDescription": "RFPCA_W942_PPG组件_V3.3_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009102",
+          "jobNumber": "3900000904",
+          "materialDescription": "PCBA_W942_PPG_XB1_V3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009005",
+          "jobNumber": "3900000905",
+          "materialDescription": "FPCA_W942_PPG_XB2_V3.3_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW942000015",
+          "jobNumber": "3900000906",
+          "materialDescription": "W942_V5_AP5_32MB_32GB_AG_CYW_1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001701",
+          "jobNumber": "3900000907",
+          "materialDescription": "EMMC组件_W942_32GBMB_KASK62T1-01TA000组件_烧录"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060002001",
+          "jobNumber": "3900000908",
+          "materialDescription": "EMMC组件_W541_EMMC_32GB_烧录组件_金士顿"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000012",
+          "jobNumber": "3900000909",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW541000011",
+          "jobNumber": "3900000910",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000015101",
+          "jobNumber": "3900000911",
+          "materialDescription": "FPCA_W541_SPK_XB3_V3_AP5_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016301",
+          "jobNumber": "3900000912",
+          "materialDescription": "RFPCA_W541_PPG组件_V4.2_MINIMIC_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016601",
+          "jobNumber": "3900000913",
+          "materialDescription": "PCBA_W542_PPG_XB1_V1_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000016001",
+          "jobNumber": "3900000914",
+          "materialDescription": "FPCA_W541_PPG_XB2_V4.2_AP5"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000915",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000916",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000917",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000918",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000919",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000920",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000921",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000922",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR4T0000004",
+          "jobNumber": "3900000923",
+          "materialDescription": "R4T_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000924",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012605",
+          "jobNumber": "3900000925",
+          "materialDescription": "RFPCA_R4_PPG组件_V3.2_AP5_激光焊接_歌尔气压计"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012403",
+          "jobNumber": "3900000926",
+          "materialDescription": "PCBA_R4_PPG_XB1_V3_AP5_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000012508",
+          "jobNumber": "3900000927",
+          "materialDescription": "FPCA_R4_PPG_XB2_V3.2_AP5_红板FPC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "3900000928",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000929",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011101",
+          "jobNumber": "3900000930",
+          "materialDescription": "RFPCA_W331_PPG组件_V5.3_SPL16-001_欧司朗_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000011001",
+          "jobNumber": "3900000931",
+          "materialDescription": "PCBA_W331_PPG_XB1_V5.3_欧司朗"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000009701",
+          "jobNumber": "3900000932",
+          "materialDescription": "FPCA_W331_PPG_XB1_V5.3_SPL16-001"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW331000008",
+          "jobNumber": "3900000933",
+          "materialDescription": "W331_V5.3_MTK_48MB_GPS_BTWIFI_1.2寸_SHARP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "130050001401",
+          "jobNumber": "3900000934",
+          "materialDescription": "PCB_HDI_W331_MB_V5.3_SHARP屏_镭雕“S”_1*1mm"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001301",
+          "jobNumber": "3900000935",
+          "materialDescription": "EMMC组件_W331_EMMC_康盈低功耗4GB_组件(烧录)"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060002401",
+          "jobNumber": "3900000936",
+          "materialDescription": "EMMC组件_W337_EMMC_64GB_BWCTL0211X64G_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060002401",
+          "jobNumber": "3900000937",
+          "materialDescription": "EMMC组件_W337_EMMC_64GB_BWCTL0211X64G_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000938",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000939",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "120060001501",
+          "jobNumber": "3900000940",
+          "materialDescription": "EMMC组件_R4_KAS041S1-01T1000_9*7.5_烧录组件"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M100074011",
+          "jobNumber": "5000000359",
+          "materialDescription": "LCM_W331_SHARP1_1.2寸_晶创黑白镜片_通豪TP_自制V1"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TDVTHSR4T0000004",
+          "jobNumber": "5000000478",
+          "materialDescription": "W336_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_白色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TDVTHSR4T0000005",
+          "jobNumber": "5000000479",
+          "materialDescription": "W336_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TDVTHSR4T0000005",
+          "jobNumber": "5000000480",
+          "materialDescription": "W336_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW942000014",
+          "jobNumber": "5000000494",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_CYW_1.3寸_深灰机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "16M110003002",
+          "jobNumber": "5000000496",
+          "materialDescription": "COLED_R4T_TM1.21寸_晶创黑金镜片V0_自制V0"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTHSR4T0000009",
+          "jobNumber": "5000000497",
+          "materialDescription": "W336_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_金色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "158990025001",
+          "jobNumber": "5000000498",
+          "materialDescription": "车载支架组件_BY02_AL6013_黑色V0_自制"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSR400000006",
+          "jobNumber": "5000000499",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_白灰机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW942000016",
+          "jobNumber": "5000000500",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_CYW_1.3寸_浅灰机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW942000014",
+          "jobNumber": "5000000502",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_CYW_1.3寸_深灰机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "HSW942000014",
+          "jobNumber": "5000000503",
+          "materialDescription": "W942_V4_AP5_32MB_32GB_SYN_CYW_1.3寸_深灰机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTHSR4T0000008",
+          "jobNumber": "5000000506",
+          "materialDescription": "W336_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTHSR4T0000008",
+          "jobNumber": "5000000507",
+          "materialDescription": "W336_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTHSR4T0000008",
+          "jobNumber": "5000000508",
+          "materialDescription": "W336_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_黑色_机头"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW542000008",
+          "jobNumber": "6900000059",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW942000013",
+          "jobNumber": "7900000015",
+          "materialDescription": "W942_V4.1_AP5_32MB_32GB_SYN_CYW _1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW542000008",
+          "jobNumber": "7900000064",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW541000012",
+          "jobNumber": "7900000067",
+          "materialDescription": "W541_V4.1_AP5_32MB_32GB_SYN_CYW_1.3寸_测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW542000008",
+          "jobNumber": "7900000130",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSW942000015",
+          "jobNumber": "7900000141",
+          "materialDescription": "W942_V5_AP5_32MB_32GB_AG_CYW_ 1.3寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSS501000009",
+          "jobNumber": "7900000145",
+          "materialDescription": "S501_V4.2_AP3.5BP_16MB_BLE_NFC"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TEVTPSBY02000002",
+          "jobNumber": "7900000155",
+          "materialDescription": "BY02_V2_AP5_64GB_BLE_WIFI_3.5寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TDVTPSR4T0000001",
+          "jobNumber": "7900000158",
+          "materialDescription": "R4T_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "7900000159",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR400000014",
+          "jobNumber": "7900000160",
+          "materialDescription": "W335_V5.2_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "7900000161",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000017701",
+          "jobNumber": "7900000162",
+          "materialDescription": "RFPCA_W541_PPG组件_V5_AP5_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TDVTPSR4T0000003",
+          "jobNumber": "7900000165",
+          "materialDescription": "W336_V1.2_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "7900000166",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR4T0000004",
+          "jobNumber": "7900000167",
+          "materialDescription": "R4T_V1_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR400000016",
+          "jobNumber": "7900000169",
+          "materialDescription": "W335_V5.3_AP5_32MB_4GB_SYN_CYW_1.21寸_中京"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSR400000012",
+          "jobNumber": "7900000170",
+          "materialDescription": "R4_V5_AP5_32MB_4GB_SYN_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000008",
+          "jobNumber": "7900000171",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸_分板测试"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSW542000007",
+          "jobNumber": "7900000172",
+          "materialDescription": "W542_V4_AP5_32MB_32GB_SYN_CYW_1.2寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "PSFD03000002",
+          "jobNumber": "7900000173",
+          "materialDescription": "FD03_V3.1_nRF52832_64KB_SENSOR_橘色+绿色_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000018901",
+          "jobNumber": "7900000175",
+          "materialDescription": "RFPCA_W337_PPG组件_V1_BES2800BP_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000019001",
+          "jobNumber": "7900000176",
+          "materialDescription": "PCBA_W337_PPG_XB1_V1_BES2800BP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000018801",
+          "jobNumber": "7900000177",
+          "materialDescription": "FPCA_W337_PPG_XB2_V1_BES2800BP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000019101",
+          "jobNumber": "7900000178",
+          "materialDescription": "FPCA_W337_SPK_XB3_V1_BES2800BP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TEVTPSW337000001",
+          "jobNumber": "7900000179",
+          "materialDescription": "W337_V1_BES2800BP_AG3365_64MB_64GB_1.47寸"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000018901",
+          "jobNumber": "7900000180",
+          "materialDescription": "RFPCA_W337_PPG组件_V1_BES2800BP_激光焊接"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000019001",
+          "jobNumber": "7900000181",
+          "materialDescription": "PCBA_W337_PPG_XB1_V1_BES2800BP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000018801",
+          "jobNumber": "7900000182",
+          "materialDescription": "FPCA_W337_PPG_XB2_V1_BES2800BP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "13M000019101",
+          "jobNumber": "7900000183",
+          "materialDescription": "FPCA_W337_SPK_XB3_V1_BES2800BP"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR4T0000005",
+          "jobNumber": "7900000184",
+          "materialDescription": "W336_V2_AP5_32MB_4GB_AG_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TPVTPSR4T0000005",
+          "jobNumber": "7900000185",
+          "materialDescription": "W336_V2_AP5_32MB_4GB_AG_CYW_1.21寸_红板"
+        }
+      },
+      {
+        "json": {
+          "materialCode": "TEVTPSBY02000003",
+          "jobNumber": "7900000186",
+          "materialDescription": "BY02_V2.2_AP5_32MB_64GB_SYN_BES_3.5寸"
+        }
+      }
+    ]
+  },
+  "versionId": "fbad5d54-b940-479f-8101-7b21ba26d632",
+  "activeVersionId": "fbad5d54-b940-479f-8101-7b21ba26d632",
+  "versionCounter": 146,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-15T06:00:11.561Z",
+      "createdAt": "2025-05-15T06:00:11.561Z",
+      "role": "workflow:owner",
+      "workflowId": "rbCEkBx9jguuxhsA",
+      "projectId": "pu9QnguCIBxFDyPo",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:06.924Z",
+        "createdAt": "2025-05-15T05:57:29.519Z",
+        "id": "pu9QnguCIBxFDyPo",
+        "name": "SAP_JOB_CACHE",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "layer-group"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

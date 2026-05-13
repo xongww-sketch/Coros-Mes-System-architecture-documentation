@@ -1,0 +1,613 @@
+{
+  "updatedAt": "2026-03-03T06:46:29.526Z",
+  "createdAt": "2025-09-26T07:57:56.054Z",
+  "id": "BA0MT3S2E1pKyu85",
+  "name": "Hostcomputer_data_report",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Hostcomputer_data_report",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -928,
+        -144
+      ],
+      "id": "7a821768-daf4-40d9-8115-97170dd949fa",
+      "name": "Webhook",
+      "webhookId": "0c03cca9-7117-488f-a8ed-c858ef59d1ec"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "422b07c0-6a72-46db-bbc3-8a8371fe9a61",
+              "leftValue": "={{ $json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -768,
+        -160
+      ],
+      "id": "ee03a6fa-ad15-493f-897f-aebe5d4ba32a",
+      "name": "判断是否填写必填项"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请选择对应机型\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -352,
+        16
+      ],
+      "id": "6de106ef-3494-4fd5-92a6-7a20fb7fc89e",
+      "name": "报错信息：请选择对应机型"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.retroid_id\nFROM mes.retroid r\nINNER JOIN mes.joborder j ON r.joborder_id = j.joborder_id\nINNER JOIN mes.product_info p ON j.product_id = p.product_id\nWHERE p.product_model_id = {{ $json.body.product_model }}\n  AND j.status != 2\n  AND r.status != 3;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -624,
+        -624
+      ],
+      "id": "20a68723-c9e6-4159-9053-8f9bb3833df6",
+      "name": "根据机型查询对应的sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  md.retroid_id,\n  md.createtime,\n  md.machine_data_id,\n  md.procedure_detail_id,\n  (md.data ->> 'Station')::text AS station,\n  (md.data ->> 'Result')::text AS result,\n  (md.data ->> 'Model')::text AS model,\n  (md.data ->> 'uuid')::text AS uuid,\n  md.data ->> 'Machine_id' AS machine_id,\n  (md.data ->> 'file')::text AS file,\n  (md.data ->> 'file')::text AS file_name,\n  r.retroid,\n  r.retroid_id,\n  pd.procedure_name\nFROM\n  mes.machine_data md\nJOIN\n  mes.retroid r ON r.retroid_id = md.retroid_id\nJOIN\n  mes.procedure_detail pd ON pd.procedure_detail_id = md.procedure_detail_id\nWHERE\n  md.retroid_id IN ({{ $json.retroid_id ? $json.retroid_id : 'NULL' }})\n  AND md.createtime >= '{{ $json.bgtime }}'::timestamp\n  AND md.createtime <= '{{ $json.edtime }}'::timestamp\n  AND md.procedure_detail_id IN (\n    {{ $json.procedure_name\n      ? \"(SELECT procedure_detail_id FROM mes.procedure_detail WHERE procedure_name = '\" + $json.procedure_name + \"')\"\n      : '96,95,94,93,97,125,134,135,136,148,149,155,156,140,141'\n    }}\n  )",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -16,
+        -656
+      ],
+      "id": "13eb7e09-9edb-49fc-bdee-d11cd27f61d8",
+      "name": "查询machine_data",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid_id",
+              "renameField": true,
+              "outputFieldName": "retroid_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -672
+      ],
+      "id": "bb398300-d56e-4150-b0e6-e9fb5946e41e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取当前时间（如果一开始没有选择测试时间，就默认为当天数据）\nconst now = new Date();\n\n// 计算东八区（UTC+8）的今日开始和结束\nconst startOfTodayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);\nconst endOfTodayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);\n\n// 从 Webhook 节点获取输入数据\nconst body = $('Webhook').item.json.body;\n\n// 处理 retroid_id\nconst retroidIdsArray = items[0].json.retroid_id || [];\nconst retroid_id = retroidIdsArray.join(',');\n\n// 格式化为 YYYY-MM-DDTHH:mm:ss\nconst formatDateToLocalString = (date) => {\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  const hours = String(date.getHours()).padStart(2, '0');\n  const minutes = String(date.getMinutes()).padStart(2, '0');\n  const seconds = String(date.getSeconds()).padStart(2, '0');\n  \n  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;\n};\n\n// 设置 bgtime 和 edtime，如果为空则使用东八区的开始和结束时间\nconst bgtime = body.bgtime || formatDateToLocalString(startOfTodayLocal);\nconst edtime = body.edtime || formatDateToLocalString(endOfTodayLocal);\nconst procedure_name= body.procedure_name || null\n// 这里将处理后的数据保存到当前节点的输出中\nreturn [\n  {\n    json: {\n      retroid_id,\n      bgtime,\n      edtime,\n      procedure_name\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        -640
+      ],
+      "id": "dc45f9e0-7503-47d9-88f7-f1ecba3e3531",
+      "name": "整合数据"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        784,
+        -656
+      ],
+      "id": "7baac21b-f7bc-4aa3-a3e0-9deadf013254",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fc6159eb-b1b5-4f33-a73b-8350af24c4ad",
+              "leftValue": "={{ $('Webhook').first().json.body.type }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -640
+      ],
+      "id": "24e23d08-4dac-4388-b39d-8c3571eb5ce0",
+      "name": "判断查询类型"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入数据\nconst inputData = $input.all().map(item => item.json);\n\n// 存储统计结果\nconst statistics = {};\n\n// 统计过程中记录所有 fail 的 retroid_id\nlet failedCountRetroids = [];\n\n// 分组：procedure_detail_id + retroid_id\nconst groupedByProcedureAndRetroid = {};\n\ninputData.forEach(record => {\n  const procedure_detail_id = String(record.procedure_detail_id);\n  const retroid_id = String(record.retroid_id);\n  if (!groupedByProcedureAndRetroid[procedure_detail_id]) {\n    groupedByProcedureAndRetroid[procedure_detail_id] = {};\n  }\n  if (!groupedByProcedureAndRetroid[procedure_detail_id][retroid_id]) {\n    groupedByProcedureAndRetroid[procedure_detail_id][retroid_id] = [];\n  }\n  groupedByProcedureAndRetroid[procedure_detail_id][retroid_id].push(record);\n});\n\nconst resultArray = [];\n\nObject.entries(groupedByProcedureAndRetroid).forEach(([procedure_detail_id, retroids]) => {\n  let procedure_name = '';\n  let total_test_amount = 0;\n  let successful_passage_count = 0;\n  let failed_count = 0;\n  let false_measurement_count = 0;\n\n  Object.entries(retroids).forEach(([retroid_id, records]) => {\n    // 按 created_time 升序排序\n    records.sort((a, b) => new Date(a.createtime || a.created_time) - new Date(b.createtime || b.created_time));\n    procedure_name = records[0].procedure_name;\n    total_test_amount += 1;\n\n    const firstResult = (records[0].result || '').toLowerCase();\n    const lastResult = (records[records.length - 1].result || '').toLowerCase();\n\n    let isFail = false;\n\n    if (firstResult === 'pass') {\n      successful_passage_count += 1;\n    } else {\n      if (records.length === 1) {\n        failed_count += 1;\n        failedCountRetroids.push(Number(retroid_id));\n      } else if (records.length > 1 && lastResult === 'pass') {\n        false_measurement_count += 1;\n      } else {\n        failed_count += 1;\n        failedCountRetroids.push(Number(retroid_id));\n      }\n    }\n  });\n\n  const success_count = successful_passage_count + false_measurement_count;\n\n  // 比例化\n  const ratio = (count) => total_test_amount ? (count / total_test_amount * 100).toFixed(2) + '%' : '0.00%';\n  const pass_rate = ratio(successful_passage_count); // 直通率\n  const fail_rate = ratio(failed_count);             // 不良率\n  const good_rate = ratio(success_count);            // 良率\n  const false_rate = ratio(false_measurement_count); // 误测率\n\n  resultArray.push({\n    procedure_detail_id: parseInt(procedure_detail_id),\n    procedure_name,\n    total_test_amount,\n    successful_passage_count,\n    failed_count,\n    false_measurement_count,\n    success_count,\n    pass_rate,\n    fail_rate,\n    good_rate,\n    false_rate\n  });\n});\n\n// 打印统计得到的 fail retroid_id\nconsole.log(\"统计fail retroid_id:\", failedCountRetroids);\n\nreturn resultArray.map(stat => ({ json: stat }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -672
+      ],
+      "id": "8be9b538-21aa-4aa3-b037-87e417117d84",
+      "name": "统计上位机数据（总测试数据）"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all().map(item => item.json);\n\n// 存 failed 明细的数组\nconst failedDetailRecords = [];\nconst uniqueRetroids = new Set();\n\n// 分组\nconst groupedByProcedureAndRetroid = {};\n\ninputData.forEach(record => {\n  const procedure_detail_id = String(record.procedure_detail_id);\n  const retroid_id = String(record.retroid_id);\n  if (!groupedByProcedureAndRetroid[procedure_detail_id]) {\n    groupedByProcedureAndRetroid[procedure_detail_id] = {};\n  }\n  if (!groupedByProcedureAndRetroid[procedure_detail_id][retroid_id]) {\n    groupedByProcedureAndRetroid[procedure_detail_id][retroid_id] = [];\n  }\n  groupedByProcedureAndRetroid[procedure_detail_id][retroid_id].push(record);\n});\n\nObject.entries(groupedByProcedureAndRetroid).forEach(([procedure_detail_id, retroids]) => {\n  Object.entries(retroids).forEach(([retroid_id, records]) => {\n    records.sort((a, b) => new Date(a.createtime || a.created_time) - new Date(b.createtime || b.created_time));\n    const firstResult = (records[0].result || \"\").toLowerCase();\n    const lastResult = (records[records.length - 1].result || \"\").toLowerCase();\n\n    let isFail = false;\n\n    if (firstResult === \"pass\") {\n      isFail = false;\n    } else {\n      if (records.length === 1) {\n        isFail = true;\n      } else if (records.length > 1 && lastResult === \"pass\") {\n        isFail = false;\n      } else {\n        isFail = true;\n      }\n    }\n\n    if (isFail) {\n      if (!uniqueRetroids.has(retroid_id)) {\n        uniqueRetroids.add(retroid_id);\n        failedDetailRecords.push({\n          procedure_detail_id: Number(procedure_detail_id),\n          procedure_name: records[0].procedure_name,\n          retroid_id: Number(retroid_id),\n          retroid: records[0].retroid,\n          created_time: records[0].createtime || records[0].created_time\n        });\n      }\n    }\n  });\n});\n\n// 打印明细中的fail retroid_id\nconsole.log(\"明细fail retroid_id:\", failedDetailRecords.map(r=>r.retroid_id));\n\nreturn failedDetailRecords.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -464
+      ],
+      "id": "f3fa6c23-e16e-41ea-b3fb-9dbb3e5dbe7b",
+      "name": "统计上位机数据（不良测试数据）"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "705c8683-d78c-4002-b1ac-82ef0db31e42",
+              "leftValue": "={{ $('Webhook').first().json.body.type }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        -448
+      ],
+      "id": "2b5ff6b4-5682-47dd-aa8a-1d437eeceb7d",
+      "name": "判断是否是查询不良明细"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all().map(item => item.json);\n\n// 分组（统一key类型为字符串，防止类型混淆）\nconst groupedByProcedureAndRetroid = {};\n\ninputData.forEach(record => {\n  const procedure_detail_id = String(record.procedure_detail_id);\n  const retroid_id = String(record.retroid_id);\n\n  if (!groupedByProcedureAndRetroid[procedure_detail_id]) {\n    groupedByProcedureAndRetroid[procedure_detail_id] = {};\n  }\n  if (!groupedByProcedureAndRetroid[procedure_detail_id][retroid_id]) {\n    groupedByProcedureAndRetroid[procedure_detail_id][retroid_id] = [];\n  }\n  groupedByProcedureAndRetroid[procedure_detail_id][retroid_id].push(record);\n});\n\nconst result = [];\n\nObject.entries(groupedByProcedureAndRetroid).forEach(([procedure_detail_id, retroids]) => {\n  Object.values(retroids).forEach(records => {\n    // 按 created_time 升序\n    records.sort((a, b) => new Date(a.created_time || a.createtime) - new Date(b.created_time || b.createtime));\n    const firstResult = (records[0].result || '').toLowerCase();\n    const lastResult = (records[records.length - 1].result || '').toLowerCase();\n\n    // 误测判定：多次测试，首测非pass，末测pass\n    const isFalseMeasurement = records.length > 1 && firstResult !== 'pass' && lastResult === 'pass';\n\n    if (isFalseMeasurement) {\n      // 只输出最后一次pass那条\n      const lastPass = records[records.length - 1];\n      result.push({\n        procedure_detail_id: lastPass.procedure_detail_id,\n        procedure_name: lastPass.procedure_name,\n        retroid_id: lastPass.retroid_id,\n        retroid: lastPass.retroid,\n        created_time: lastPass.created_time || lastPass.createtime\n      });\n    }\n  });\n});\n\nreturn result.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -272
+      ],
+      "id": "f16759a1-9cef-4b5e-ba06-ee202ed79763",
+      "name": "统计上位机数据（误测测试数据）"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  md.retroid_id, \n  md.createtime, \n  md.machine_data_id,\n  md.procedure_detail_id,\n  (md.data ->> 'Station')::text AS station,\n  (md.data ->> 'Result')::text AS result,\n  (md.data ->> 'Model')::text AS model,\n  (md.data ->> 'uuid')::text AS uuid,\n  md.data ->> 'Machine_id' AS machine_id,\n  (md.data ->> 'file')::text AS file,\n  (md.data ->> 'file')::text AS file_name,\n  r.retroid,        \n  r.retroid_id,\n  pd.procedure_name\nFROM \n  mes.machine_data md \nJOIN \n  mes.retroid r ON r.retroid_id = md.retroid_id\nJOIN \n  mes.procedure_detail pd ON pd.procedure_detail_id = md.procedure_detail_id\nWHERE \n md.retroid_id IN (\n  {{ $json.retroid_id ? $json.retroid_id : 'NULL' }}\n)\n  AND md.procedure_detail_id = {{ $('Webhook').item.json.body.procedure_name }}\n  AND md.createtime >= '{{ $json.bgtime }}'::timestamp\n  AND md.createtime <= '{{ $json.edtime }}'::timestamp\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        -448
+      ],
+      "id": "2138f67a-007d-4f10-8df4-47c71ac1ad24",
+      "name": "查询machine_data（明细数据）",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        576,
+        -448
+      ],
+      "id": "12bf9fcb-f83c-404e-bc67-f626bcc49a9a",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库报错\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        448,
+        -32
+      ],
+      "id": "24e188b5-919e-4ff5-b0f5-e83e90ad04ef",
+      "name": "报错信息：数据库报错"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"没有对应测试数据\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        704,
+        -64
+      ],
+      "id": "11ff7d9c-590b-41ec-8d71-e5e3ae68d0c4",
+      "name": "报错信息：没有对应测试数据"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "06bf53c8-057a-40bd-88f2-b787783de8a8",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        -672
+      ],
+      "id": "be474730-0f49-4e07-939a-a10166fd4227",
+      "name": "判断是否有数据"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否填写必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否填写必填项": {
+      "main": [
+        [
+          {
+            "node": "根据机型查询对应的sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请选择对应机型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据机型查询对应的sn": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "整合数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据": {
+      "main": [
+        [
+          {
+            "node": "判断查询类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data": {
+      "main": [
+        [
+          {
+            "node": "判断是否有数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询类型": {
+      "main": [
+        [
+          {
+            "node": "查询machine_data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询machine_data（明细数据）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统计上位机数据（总测试数据）": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统计上位机数据（不良测试数据）": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否是查询不良明细": {
+      "main": [
+        [
+          {
+            "node": "统计上位机数据（不良测试数据）",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "统计上位机数据（误测测试数据）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统计上位机数据（误测测试数据）": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data（明细数据）": {
+      "main": [
+        [
+          {
+            "node": "判断是否是查询不良明细",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有数据": {
+      "main": [
+        [
+          {
+            "node": "统计上位机数据（总测试数据）",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：没有对应测试数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "aedf322f-38cf-42d7-a0c2-1b1cf4a17e64",
+  "activeVersionId": "aedf322f-38cf-42d7-a0c2-1b1cf4a17e64",
+  "versionCounter": 46,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-26T07:57:56.054Z",
+      "createdAt": "2025-09-26T07:57:56.054Z",
+      "role": "workflow:owner",
+      "workflowId": "BA0MT3S2E1pKyu85",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "updatedAt": "2024-04-24T05:59:25.797Z",
+  "createdAt": "2024-01-31T03:17:28.202Z",
+  "id": "gxKr4NzxOTZcp5AC",
+  "name": "consm_barcodeprocedure_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select TOP 10000* from consm_barcodeprocedure WHERE barcode like '%{{ $json.headers.barcode||\"\"}}%' and jobnumber like '%{{ $json.headers.jobnumber||\"\"}}%' and ordernumber like '%{{ $json.headers.ordernumber||\"\"}}%'"
+      },
+      "id": "64621b61-0fa7-4433-b728-1ed614e318ee",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        680,
+        360
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "4dec43ff-7378-4f33-9ae1-caffd223fc2b22341",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "80f1c535-d806-44eb-85f2-a81a4bd28783",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        380
+      ],
+      "webhookId": "2272fa51-2677-4332-b7e8-ae3bc0511118"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d857c50e-f3e7-4df7-b6d5-61585dec116a",
+              "leftValue": "={{ $json.headers.jobnumber }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "d28728a9-3ed4-4129-aa8a-052ae27f895f",
+              "leftValue": "={{ $json.headers.ordernumber }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "000fe5c1-6a00-4bd8-a364-68ef1dad34a7",
+              "leftValue": "={{ $json.headers.barcode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "a067b06f-1db2-48a1-8274-68e15097c975",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        460,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "host": "192.168.128.8",
+            "accept": "*/*",
+            "barcode": "",
+            "jobnumber": "",
+            "ordernumber": ""
+          },
+          "params": {},
+          "query": {},
+          "body": {}
+        }
+      }
+    ]
+  },
+  "versionId": "259c2ed1-684f-4fd3-ae69-6587996ccc77",
+  "activeVersionId": "259c2ed1-684f-4fd3-ae69-6587996ccc77",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:41.807Z",
+      "createdAt": "2024-01-29T03:43:19.869Z",
+      "id": "wbylAziHNIuwj3Uh",
+      "name": "MES查询应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-01-31T03:17:28.208Z",
+      "createdAt": "2024-01-31T03:17:28.208Z",
+      "role": "workflow:owner",
+      "workflowId": "gxKr4NzxOTZcp5AC",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "updatedAt": "2025-12-24T12:03:03.348Z",
+  "createdAt": "2024-07-19T05:52:03.449Z",
+  "id": "0VAHSrh3ALLmhzKT",
+  "name": "getprintinfo_search_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"数据已上传\",\n  \"result\":{{JSON.stringify($json.result)}}\n}",
+        "options": {}
+      },
+      "id": "fe80b2ba-a01d-460b-80a9-f2f955c165a2",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "d651c2bc-8c2a-4524-b594-0367ecbc493e",
+              "leftValue": "={{$json.body.printinfo_id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "25dd3862-6a98-430a-8dc1-66ed906897aa",
+      "name": "判断是否需要查询明细行",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        80,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.printinfo_id,\n    p.print_name,\n    p.print_quantity,\n    p.createtime,\n    u.user_name,\n    m.product_model_name,\n    p.file_name,\n    p.product_model_id,          p.printinfo_type,\n  print_version\nFROM \n    mes.printinfo p\nJOIN \n    mes.user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nwhere p.printinfo_id={{ $json.body.printinfo_id}} and p.status = 1;",
+        "options": {}
+      },
+      "id": "cf6822b4-3ee4-41c3-a361-cfe87c71a2a4",
+      "name": "查询模板明细行",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        304,
+        272
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n    // 复制项并添加包装类型\n    let itemCopy = {...item.json};\n    if (itemCopy.printinfo_type === 1) {\n        itemCopy.packaging_type = \"彩盒包装\";\n    } else if (itemCopy.printinfo_type === 2) {\n        itemCopy.packaging_type = \"整箱包装\";\n    }\n    res.push(itemCopy);\n}\n\nreturn {\n  result: res\n};\n"
+      },
+      "id": "ffa0abd7-d7f2-4bba-b276-a42600500a3d",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "getprintinfo_API_search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "28d0a08e-15e6-4eb2-9fdd-a6c3cd0698e0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        320
+      ],
+      "webhookId": "fa0c0aff-fb54-47ad-ad18-2b0724551c4a"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.printinfo_id,\n    p.print_name,\n    p.print_quantity,\n    p.createtime,\n    u.user_name,\n    m.product_model_name,\n    p.product_model_id,\n    p.printinfo_type,\n    p.file_name,\n    p.print_version\nFROM \n    mes.printinfo p\nJOIN \n    mes.user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nwhere p.status = 1",
+        "options": {}
+      },
+      "id": "b93f275a-613b-4220-bd25-4bf58460bc07",
+      "name": "查询模板明细行1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        304,
+        432
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "判断是否需要查询明细行": {
+      "main": [
+        [
+          {
+            "node": "查询模板明细行",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询模板明细行1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询模板明细行": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否需要查询明细行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询模板明细行1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.13",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "62",
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json;charset=utf-8",
+            "user-agent": "axios/1.13.2",
+            "accept-encoding": "gzip, compress, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "page_num": 1,
+            "page_size": 10,
+            "params": {},
+            "printinfo_id": "690"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getprintinfo_API_search",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "8163084e-c655-4b5b-8c67-f6a3b8dfea83",
+  "activeVersionId": "8163084e-c655-4b5b-8c67-f6a3b8dfea83",
+  "versionCounter": 34,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:55:57.270Z",
+      "createdAt": "2025-04-24T05:55:57.270Z",
+      "role": "workflow:owner",
+      "workflowId": "0VAHSrh3ALLmhzKT",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

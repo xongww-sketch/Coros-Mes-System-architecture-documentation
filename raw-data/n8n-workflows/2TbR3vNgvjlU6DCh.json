@@ -1,0 +1,290 @@
+{
+  "updatedAt": "2025-08-25T06:07:38.055Z",
+  "createdAt": "2025-08-25T05:39:54.781Z",
+  "id": "2TbR3vNgvjlU6DCh",
+  "name": "find_joborder",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r\nwhere r.retroid='{{ $json.retroid }}'  and r.status != 3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        48,
+        80
+      ],
+      "id": "a1c5b977-8842-45a8-b297-f3d0a743c906",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5ef5862f-533d-432b-9775-c5984a7550de",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        80
+      ],
+      "id": "eec691c2-487b-45a8-95ba-26d613fc93d7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data r\nwhere r.retroid_id='{{ $('Execute a SQL query').item.json.retroid_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        592,
+        32
+      ],
+      "id": "348df4e0-4c7d-4424-aa14-ca1accfe85ed",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- select * from mes_test.material m\n-- where m.material ='{{ $json.body.material }}'\nSELECT joborder_id \nFROM mes.material m\nWHERE m.material = '{{ $json.body.material }}'\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -368,
+        48
+      ],
+      "id": "ad8961d1-0837-403b-9e74-3767b7df20e8",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT retroid\nFROM mes.retroid r\nWHERE r.joborder_id = '{{ $json.joborder_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -160,
+        48
+      ],
+      "id": "adc96f49-929c-45d5-ba9a-c480441921a7",
+      "name": "Execute a SQL query3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"sn不存在或无效sn\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        544,
+        368
+      ],
+      "id": "44e0469d-5ff4-46eb-a3f2-b73c35bb4d04",
+      "name": "sn不存在或无效s n"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        832,
+        32
+      ],
+      "id": "df05c675-dd05-4b76-95ff-e53a042d051d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "find_joborder",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        48
+      ],
+      "id": "6f1fd727-c47a-4ff4-acbf-760baf7ff2b0",
+      "name": "material_joborder",
+      "webhookId": "f15fd318-b4c2-47c6-8e36-d1fe264c4aa0"
+    }
+  ],
+  "connections": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn不存在或无效s n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query3": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "material_joborder": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "4441f262-a841-4911-be62-0183fdd852c6",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-08-25T05:39:54.781Z",
+      "createdAt": "2025-08-25T05:39:54.781Z",
+      "role": "workflow:owner",
+      "workflowId": "2TbR3vNgvjlU6DCh",
+      "projectId": "nibbXVSPf8J6itYk",
+      "project": {
+        "updatedAt": "2025-07-02T06:42:38.028Z",
+        "createdAt": "2025-07-02T06:40:56.794Z",
+        "id": "nibbXVSPf8J6itYk",
+        "name": "Huali Lei <leihuali@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "780e7333-0684-45a2-be3f-59aeedfdd9af"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,1169 @@
+{
+  "updatedAt": "2024-05-23T13:14:18.932Z",
+  "createdAt": "2024-03-04T02:20:06.460Z",
+  "id": "MvybWLLg0y4cq1e7",
+  "name": "条码绑定程序_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"message\":\"请填写所有必填项\"\n}",
+        "options": {}
+      },
+      "id": "f48a6aa3-aa0f-4b1b-9b1d-36dd70dffdcc",
+      "name": "报错信息：请填写所有必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        300,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "7a0f398e-5f23-4b05-afa5-9c5596c8ba49",
+              "leftValue": "={{ $json.body.productCode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a95dd00f-74ca-4921-8516-e7c9b3e65823",
+              "leftValue": "={{ $json.body.orderNumber }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "34917810-a4d9-47d1-8240-06d039a005f3",
+              "leftValue": "={{ $json.body.jobNumber }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6aa276a7-1882-4bff-8449-5a74afd3f4c5",
+              "leftValue": "={{ $json.body.uuidId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b0b2b56d-23fc-4e1f-b64e-2f4e5a4f014b",
+              "leftValue": "={{ $json.body.retroid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6f335cde-510f-46aa-9131-4b29236f9648",
+              "leftValue": "={{ $json.body.BatteryBatch }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "2b9a3206-915f-4786-9918-e6db1c2841f3",
+              "leftValue": "={{ $json.body.productType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f95c3e30-d4cd-443d-920c-485a80bbdd8d",
+      "name": "所有信息是否已填写",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "3a6c3bcd-b790-4f0f-85a5-6e9a818febaf",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "810dbe48-8357-4800-92d8-9b4dc949ca1e",
+      "name": "判断条码是否已有绑定记录",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = [];\n\n  let queryResult = $('根据机型转换uuid').all()[0].json;\n\n  result.push(queryResult);\n\nreturn result;\n"
+      },
+      "id": "73d5d9f2-e2be-44ae-8498-797e2475d3a1",
+      "name": "新建条码绑定信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"404\",\n  \"message\":\"条码已被绑定，请出入正确的CPUID或底壳条码\"\n}",
+        "options": {}
+      },
+      "id": "7d5e8902-6657-411f-8fbe-a8c4d2b11fbd",
+      "name": "报错信息：条码绑定记录已存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"403\",\n  \"message\":\"请检查CPUID链接是否填写正确\"\n}",
+        "options": {}
+      },
+      "id": "fc366efd-6f12-4a67-b156-d4658648419b",
+      "name": "报错信息：请检查CPUID链接是否填写正确",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "BARCODEBLIND",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8254d9ed-f54e-4e13-b894-0adecaa9f80f",
+      "name": "条码绑定程序信息上传",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -200,
+        20
+      ],
+      "webhookId": "8d8bdca3-f152-4349-82c3-d92dc09a261b"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"message\":\"条码已成功绑定\",\n  \"uuid\":\"{{$('判断转换后UUID长度是否正确').all()[0].json.body.uuidId}}\",\n  \"sn\":\"{{$('判断转换后UUID长度是否正确').all()[0].json.body.retroid}}\"\n}\n",
+        "options": {}
+      },
+      "id": "cf87ae5b-bb81-4aa7-b6f0-42ab9a8882ec",
+      "name": "上传成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2940,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet body=$input.first().json.body //只接收第一个输入\n\nlet url=body.uuidId.toUpperCase();\n// 使用单个正则表达式同时匹配所有参数，并捕获所需部分\nconst regex = /a=([\\w\\s]+)\\s([A-F\\d]+)&b=([A-F\\d]+)&c=([A-F\\d]+)/i;\nconst match = url.match(regex);\n\nif (match && match.length==5) { //如果匹配上，并且结果是5个\n  body.model = match[1];\n  body.uuidId = [match[2], match[3], match[4]].join('');\n  body.uuid_unique=[ match[2], match[4]].join('');\n}\n//retroid校正大小写输入\n body.retroid = body.retroid.toUpperCase();\nreturn $input.all();\n\n\n"
+      },
+      "id": "fc0e70bc-b63c-4881-8375-2b5aecaf8cdd",
+      "name": "根据机型转换uuid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "31f8e166-406b-4fc8-8759-f2890a0e43d5",
+              "leftValue": "={{ $json.body.uuidId.length }}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "38e0e901-34f8-40b3-876c-cd3d63381f05",
+              "leftValue": "={{ $json.body.uuid_unique.length }}",
+              "rightValue": 18,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4fdb4b8e-dc17-4829-9692-574c2e4f703f",
+      "name": "判断转换后UUID长度是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        700,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"402\",\n  \"message\":\"请检查输入法是否正确\"\n}",
+        "options": {}
+      },
+      "id": "e9464d74-b35b-4fc6-ac64-5eba76184d32",
+      "name": "报错信息：请检查输入法是否正确",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d90369e6-58e0-4a14-bc88-c4fb9d909922",
+              "leftValue": "={{ $json.body.uuidId[29] }}",
+              "rightValue": "= ",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d1007e4b-b97c-4875-9492-36aa50cc5600",
+              "leftValue": "=[M1D,B15D]",
+              "rightValue": "={{ $json.body.productType }}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "14899099-ce33-4fe6-86be-2c9b666ef4a3",
+      "name": "判断输入法是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        280,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "afd14586-6035-4dad-8c6f-bbf2be5b4c87",
+              "leftValue": "={{ $json.body.uuidId[27]}}",
+              "rightValue": "= ",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "470cab5c-815a-46e1-8a59-c2d163e61123",
+              "leftValue": "=[M1D,B15D]",
+              "rightValue": "={{ $json.body.productType }}",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "e9d9537d-4f5a-46ca-8e52-07e76b36d34c",
+      "name": "判断输入法是否正确1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2d34b2fa-36fe-4388-a07f-432eab099db0",
+              "leftValue": "={{ $json.body.retroid.length}}",
+              "rightValue": "={{ 10 }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "46b043ef-b2dc-4de8-9c66-e8c0a8578c02",
+      "name": "判断sn码长度是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        120,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"message\":\"请检查底壳条码是否填写正确\"\n}",
+        "options": {}
+      },
+      "id": "072e694d-65b7-49b7-a011-9012fbaca281",
+      "name": "报错信息：请检查底壳条码是否填写正确",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        500,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e29567f3-62d6-4532-abf7-5a8e394f9bbd",
+              "leftValue": "={{$json}}",
+              "rightValue": "=",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a9366523-5324-48fe-b775-0fded0df110a",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"405\",\n  \"message\":\"条码已被绑定且有扫描装箱记录\"\n}",
+        "options": {}
+      },
+      "id": "87b4df97-f0a8-4aef-8b7c-a6898bbd5867",
+      "name": "报错信息：条码绑定记录已存在且有报错记录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let uuid_unique= $('根据机型转换uuid').all()[0].json.body.uuid_unique\nlet retroid=$('根据机型转换uuid').all()[0].json.body.retroid\nreturn {\n uuid_unique:uuid_unique,\nretroid:retroid\n};"
+      },
+      "id": "55df74e2-e6fe-4639-a8a1-b75a8e8b9e5a",
+      "name": "UUID切片",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "7fe110e0-42f9-417a-825d-859d8bfd8b36",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5a7fbd32-7478-440b-b7fd-72757053d34f",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2140,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"406\",\n  \"message\":\"请输入正确的CPUID，该CPUID在恢复出厂前存在绑定记录\"\n}",
+        "options": {}
+      },
+      "id": "6840259b-9b44-4cb0-a8e6-1ed6f7e376ca",
+      "name": "报错信息：请输入正确的CPUID，该CPUID在恢复出厂前存在绑定记录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2320,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "var retroid = $input.all()[0].json.body.retroid;\nvar ProductSeries = retroid.substring(0,1);\nvar ProductModel = retroid.substring(1,3);\nvar ProductPhase = retroid.substring(3,5);\nvar Series = retroid.substring(5,10)\n \nvar snList ={\n ProductSeries:ProductSeries,\n ProductModel:ProductModel,\n ProductPhase:ProductPhase,\n  Series:Series\n}\nreturn snList;"
+      },
+      "id": "127fc772-cecf-4f9d-9a7c-732c4257c319",
+      "name": "拆分SN",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "6b79c7ae-45d9-4294-b4d1-9a7483bd551c",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f00286a9-1225-41f5-828c-78c8e92ca496",
+      "name": "判断MES后台数据库中是否存在该条底壳条码",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"409\",\n  \"message\":\"请检查该底壳条码是否填写正确，底壳生成记录中无该条条码信息\"\n}",
+        "options": {}
+      },
+      "id": "89f87956-37b8-46ae-ab62-cd99d4a3a91a",
+      "name": "报错信息：请检查该底壳条码是否填写正确，底壳生成记录中无该条条码信息",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = [];\n\n  let queryResult = $('根据机型转换uuid').all()[0].json;\n\n  result.push(queryResult);\n\nreturn result;\n"
+      },
+      "id": "2f6751fa-8224-470b-a497-760421d625a8",
+      "name": "条码信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * \nFROM YFConsumer.dbo.consm_baselinegenerate \nWHERE ProductSeries= '{{ $json.ProductSeries }}' \n  and ProductModel= '{{ $json.ProductModel }}' \n  and ProductPhase = '{{ $json.ProductPhase }}' \n  and CONVERT(INT, BeginSeries) <= CONVERT(INT, '{{ $json.Series }}')  \n  and CONVERT(INT,EndSeries) >= CONVERT(INT,'{{ $json.Series }}') ;"
+      },
+      "id": "ebe03047-8ca4-45d1-bcc5-2d16157957e0",
+      "name": "查询MES后台数据库中是否存在该条底壳条码",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        980,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM consm_barcodebindinfo\nWHERE (\n    uuid = '{{ $json.body.uuidId }}' \n    AND LEFT(retroid, 3) = LEFT('{{ $json.body.retroid }}', 3)\n)\nOR (\n    uuid <> '{{ $json.body.uuidId }}' \n    AND retroid = '{{ $json.body.retroid }}'\n)\n"
+      },
+      "id": "0027a0d4-5e98-4c16-975a-c6cc9aa3f99f",
+      "name": "查询MES后台数据库中是否存在该条数据",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM consm_deviceweight WHERE barcode ='{{$json.retroid}}'"
+      },
+      "id": "9950598c-f7a7-4084-9e37-3f452e93ab6c",
+      "name": "查询是否有包装记录",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        -60
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM consm_barcodebindinfo WHERE uuid_unique ='{{ $json.uuid_unique }}'AND LEFT(retroid, 3) = LEFT('{{ $json.retroid }}', 3) "
+      },
+      "id": "23730909-b898-4dd1-8f32-2298e1b86614",
+      "name": "查询UUID是否存在",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        160
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"201\",\n  \"message\":\"数据库错误！\",\n}\n",
+        "options": {}
+      },
+      "id": "74f8fafb-65ee-41dd-a014-7056231786bf",
+      "name": "数据库错误！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2540,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "IF NOT EXISTS (\n  SELECT 1 FROM YFConsumer.dbo.consm_barcodebindinfo\n  WHERE retroid = '{{ $json.body.retroid }}'\n        and uuid = '{{ $json.body.uuid }}'\n)\nBEGIN\nINSERT INTO YFConsumer.dbo.consm_barcodebindinfo (\n  jobnumber,\n  ordernumber,\n  productcode,\n  clientcode,\n  retroid,\n  baseline,\n  uuid,\n  uuid_unique,\n  BatteryBatch,\n  createtime,\n  modifytime,\n  procedurevalue,\n  isstateok\n) VALUES (\n  '{{ $json.body.jobNumber }}',\n  '{{ $json.body.orderNumber }}',\n  '{{ $json.body.productCode }}',\n  'ConsumerBindClient',\n  '{{ $json.body.retroid }}',\n  '{{ $json.body.retroid }}',\n  '{{ $json.body.uuidId }}',\n  '{{ $json.body.uuid_unique }}',\n  '{{ $json.body.BatteryBatch}}',\n  GETDATE(),\n  GETDATE(),\n  '1',\n  '1'\n);\nSELECT @@ROWCOUNT AS InsertedRows;\nEND\n\n"
+      },
+      "id": "30716e31-760f-44e9-ae26-60ee5ca61170",
+      "name": "更新MES后台数据库",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        200
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "35ae2299-9ba5-4cd8-a019-c6e0396ced46",
+              "leftValue": "={{ $json.InsertedRows }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cdf9d01c-a508-41a7-81da-128d0879547a",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "所有信息是否已填写": {
+      "main": [
+        [
+          {
+            "node": "判断sn码长度是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断条码是否已有绑定记录": {
+      "main": [
+        [
+          {
+            "node": "查询是否有包装记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "UUID切片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "新建条码绑定信息": {
+      "main": [
+        [
+          {
+            "node": "更新MES后台数据库",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "条码绑定程序信息上传": {
+      "main": [
+        [
+          {
+            "node": "所有信息是否已填写",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据机型转换uuid": {
+      "main": [
+        [
+          {
+            "node": "判断转换后UUID长度是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断转换后UUID长度是否正确": {
+      "main": [
+        [
+          {
+            "node": "拆分SN",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查CPUID链接是否填写正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断输入法是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断输入法是否正确1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查输入法是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断输入法是否正确1": {
+      "main": [
+        [
+          {
+            "node": "根据机型转换uuid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查输入法是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn码长度是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断输入法是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查底壳条码是否填写正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "报错信息：条码绑定记录已存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：条码绑定记录已存在且有报错记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UUID切片": {
+      "main": [
+        [
+          {
+            "node": "查询UUID是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "新建条码绑定信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请输入正确的CPUID，该CPUID在恢复出厂前存在绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分SN": {
+      "main": [
+        [
+          {
+            "node": "查询MES后台数据库中是否存在该条底壳条码",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断MES后台数据库中是否存在该条底壳条码": {
+      "main": [
+        [
+          {
+            "node": "条码信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查该底壳条码是否填写正确，底壳生成记录中无该条条码信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "条码信息": {
+      "main": [
+        [
+          {
+            "node": "查询MES后台数据库中是否存在该条数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询MES后台数据库中是否存在该条底壳条码": {
+      "main": [
+        [
+          {
+            "node": "判断MES后台数据库中是否存在该条底壳条码",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询MES后台数据库中是否存在该条数据": {
+      "main": [
+        [
+          {
+            "node": "判断条码是否已有绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询是否有包装记录": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询UUID是否存在": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新MES后台数据库": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "上传成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "条码绑定程序信息上传": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.18.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "252",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "productType": "HR31",
+            "productCode": "watch",
+            "orderNumber": "HR31ZZDD",
+            "jobNumber": "HR31ZZGD",
+            "uuidId": "https://r.coros.com/6?a=COROS HEART RATE 260C68&b=D31E7FF0A81E&c=2F49C881C825&d=0&e=0&f=0",
+            "retroid": "H31AA41314",
+            "BatteryBatch": "240315 A06+A07+A05"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/BARCODEBLIND",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "d18be41e-9c9f-4c2e-af72-08e660abae9e",
+  "activeVersionId": "d18be41e-9c9f-4c2e-af72-08e660abae9e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:32.105Z",
+      "createdAt": "2024-01-26T07:50:15.258Z",
+      "id": "Sagrd0CJUl5QtuS4",
+      "name": "MES相关应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-04T02:20:06.466Z",
+      "createdAt": "2024-03-04T02:20:06.466Z",
+      "role": "workflow:owner",
+      "workflowId": "MvybWLLg0y4cq1e7",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

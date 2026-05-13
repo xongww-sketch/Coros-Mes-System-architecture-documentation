@@ -1,0 +1,203 @@
+{
+  "updatedAt": "2025-04-24T06:28:56.104Z",
+  "createdAt": "2024-08-12T08:52:16.687Z",
+  "id": "zUgTKdUXtsut64jI",
+  "name": "getPackageIds",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "0b14a58d-ad76-43b6-a3f6-a8145d2d9330",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT ON (package_name) package_id, package_name\nFROM mes.installation_package\nWHERE package_version ~ '^[0-9]+(\\.[0-9]+)*$' and is_delete=0\nORDER BY \n  package_name,\n  string_to_array(package_version, '.')::int[] DESC;\n",
+        "options": {}
+      },
+      "id": "808e7413-d18a-4986-b3b8-70f6284b4165",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        280,
+        480
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "packageList",
+        "options": {}
+      },
+      "id": "a0598732-ea18-4966-bffb-f7fe248dbbb8",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        500,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{{ JSON.stringify($json.packageList) }}\n} ",
+        "options": {}
+      },
+      "id": "c7a3db06-bf15-4520-bcd7-f8e64b160c67",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "path": "/resource/getPackageIds",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "bcb80fca-71a6-40d4-9d42-3782988f7ff7",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        80,
+        480
+      ],
+      "webhookId": "66155fa2-1af8-47ab-a267-9231511e5a38"
+    }
+  ],
+  "connections": {
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/getDeviceIds",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "60b500c8-06a6-4bca-a75b-4e98820bd009",
+  "activeVersionId": "60b500c8-06a6-4bca-a75b-4e98820bd009",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:45:11.205Z",
+      "createdAt": "2025-04-24T05:45:11.205Z",
+      "role": "workflow:owner",
+      "workflowId": "zUgTKdUXtsut64jI",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

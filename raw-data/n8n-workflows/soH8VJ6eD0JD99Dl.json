@@ -1,0 +1,3848 @@
+{
+  "updatedAt": "2025-09-17T02:40:30.862Z",
+  "createdAt": "2025-07-30T01:40:44.978Z",
+  "id": "soH8VJ6eD0JD99Dl",
+  "name": "schedule_get_component_info_20250101_20250401",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vhggsps4ci.sap.coros.com:44300/sap/zrestsrv/zrestful",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "sap-client",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "sndprn",
+              "value": "MES"
+            },
+            {
+              "name": "zrfcid",
+              "value": "MES001"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"ZSFWJ\": \"否\",\n    \"ERDAT_B\": \"{{ $json.ERDAT_B }}\",\n    \"ERDAT_E\": \"{{ $json.ERDAT_E }}\"\n }",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "timeout": 1200000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2752,
+        1744
+      ],
+      "id": "6568682c-7cf1-40bb-924d-f149a20120b0",
+      "name": "调用SAP接口，通过工单号获取到组件描述",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Cm2mEZNoCXemPYwx",
+          "name": "SAP "
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//规则数组\nlet ruleArr=[13000,13001,13002,13003,13004]\nlet res=[];\nlet pcbaArr=[];\nlet others=[];\nfor (const item of $input.all()) {\n  const matNr=item.json.material_code;\n  \n  if(ruleArr.includes(Number(matNr.substring(0,5)))){\n    pcbaArr.push(item.json);\n  }else{\n    others.push(item.json);\n  }\n}\nres.push({pcbaArr})\nres.push({others})\nreturn res;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        1280
+      ],
+      "id": "936e7b75-e85a-4718-abc7-096e1736b8c7",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76d65fb3-1b73-4712-9375-40cb275f4558",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2128,
+        1008
+      ],
+      "id": "1da1d3fc-002b-4767-9a23-71303ef9e1c9",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3568,
+        1664
+      ],
+      "id": "063cfcc9-416b-452b-9c06-7c08f738846f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "pcbaArr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        848
+      ],
+      "id": "aa5715c8-61d0-4bd5-93fe-837862059bf9",
+      "name": "获取每条记录"
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "447d27fe-59ed-4f3f-8add-e26ff4433924",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        1568
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -  同步SN到京东仓库",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "id": "979148d6-6642-4c10-a7e1-7537338254c5",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2192,
+        1648
+      ],
+      "retryOnFail": false,
+      "webhookId": "84cd507e-a8c4-48c3-9143-8b1fec1e982f",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33784bf8-9543-4730-bc11-2a35e3a15e1d",
+              "name": "message",
+              "value": "该工单不存在PCB板拼板描述！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2400,
+        1024
+      ],
+      "id": "519204d7-d4b1-4199-9706-d14aa6daa29a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "workOrderList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        1008
+      ],
+      "id": "442b6747-5e6e-493a-8499-710084a689be",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "order_number",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        848,
+        848
+      ],
+      "id": "5e91d392-1f7f-4107-82aa-3f933d39ba8f",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3deaf010-3ca9-4123-8c44-0662275aeec4",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2448,
+        1472
+      ],
+      "id": "e849b25f-9f9b-4933-bc30-5ecd01b2da47",
+      "name": "判断SAP是否成功返回数据"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "batches[0].data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        1296
+      ],
+      "id": "f1ef748c-8e6c-4e7a-897c-4a1f319f7938",
+      "name": "拆分SAP返回的数据"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb1a30c6-4b63-42d9-95e3-26f8a97a32ee",
+              "name": "material_code",
+              "value": "={{ $json.MATNR }}",
+              "type": "string"
+            },
+            {
+              "id": "1de2311c-533d-4ca1-af34-0159707060ee",
+              "name": "material_description",
+              "value": "={{ $json.IDNKX }}",
+              "type": "string"
+            },
+            {
+              "id": "069b9468-76e8-44c7-95d4-6d5135fc2af7",
+              "name": "production_quantity",
+              "value": "={{ $json.GAMNG }}",
+              "type": "number"
+            },
+            {
+              "id": "9b1a4252-75e6-44ec-b406-609bf26c39bc",
+              "name": "type",
+              "value": "={{ $json.LBTXT1 }}",
+              "type": "string"
+            },
+            {
+              "id": "a5259c1e-4088-4f3e-b3b1-685ead424682",
+              "name": "production_date",
+              "value": "={{ $json.GSTRP }}",
+              "type": "string"
+            },
+            {
+              "id": "966f6e4f-0287-4f36-8ea5-8cabae141b7e",
+              "name": "order_status",
+              "value": "={{ $json.ZSFWJ==='否'? 2 : 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "dc553c52-0908-4818-8e4d-a965c2dc81ff",
+              "name": "production_end_date",
+              "value": "={{ $json.GLTRP }}",
+              "type": "string"
+            },
+            {
+              "id": "c53731cf-d8dc-44e1-b284-49bdd328db71",
+              "name": "order_number",
+              "value": "={{ $json.AUFNR }}",
+              "type": "string"
+            },
+            {
+              "id": "21c79139-e5fa-4dd1-95ba-f48486c681bf",
+              "name": "order_create_time",
+              "value": "={{$json.ERDAT}}",
+              "type": "string"
+            },
+            {
+              "id": "fb7896a2-d66d-4acd-b0b5-77af51452088",
+              "name": "base_bom_code",
+              "value": "={{ $json.PLNBEZ }}",
+              "type": "string"
+            },
+            {
+              "id": "3305bbc4-1022-4610-81fc-d372a387212f",
+              "name": "zecnl4",
+              "value": "={{ $json.ZECNL4 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2064,
+        1296
+      ],
+      "id": "064da9dd-ff09-4cc4-bbd2-04790f9bae0b",
+      "name": "取出需要的属性字段"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ddd2752f-f2c3-4698-8e7b-9288ff3702da",
+              "leftValue": "={{ $json.pcbaArr }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1504,
+        1280
+      ],
+      "id": "f0903b6d-7d0c-43cb-9dac-2bcf685b4db0",
+      "name": "对两个数组做不同的处理"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst res={};\nfor (const item of $input.all()) {\n  const arr=item.json.others;\n  var newArr=arr.filter(e=>e.material_description.includes('镭雕'))\n}\nres.arr=newArr;\nreturn res;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        1424
+      ],
+      "id": "8d1fe2c9-525f-490b-b694-4bcd6b96a224",
+      "name": "判断数组中的物料描述中是否带有镭雕两个字"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "arr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        1424
+      ],
+      "id": "8361c890-a3bd-49c6-9fc5-331224aea9ff",
+      "name": "拆分所有包含镭雕字段物料描述的数组"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 性能优化版本\nconst sapData = $('判断SAP是否成功返回数据').first().json.batches[0].data;\n\n// 1. 使用Map建立索引（性能关键点）\nconst materialCodeMap = new Map();\nif (Array.isArray(sapData)) {\n  sapData.forEach(item => {\n    if (item?.PLNBEZ) {\n      const code = item.PLNBEZ;\n      if (!materialCodeMap.has(code)) {\n        materialCodeMap.set(code, []);\n      }\n      materialCodeMap.get(code).push(item);\n    }\n  });\n}\n\n// 2. 批量处理输入数据\nreturn $input.all().map(item => {\n  const children = materialCodeMap.get(item.json.material_code) || [];\n  return {\n    json: {\n      ...item.json,\n      children: children.slice(0, 1000) // 限制最大数量防止内存爆炸\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        1424
+      ],
+      "id": "c94cb68d-11b5-4823-b01e-51694c43c63e",
+      "name": "从查询到的数据中获取具体的拼板描述"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76fde4cc-7dd6-4167-9c4f-f9e4c8273163",
+              "leftValue": "={{ $json.childerns }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthNotEquals",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -128,
+        1424
+      ],
+      "id": "a4cf934f-802b-42d3-b1a1-9028abf8e26b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//规则数组\nlet ruleArr=[13000,13001,13002,13003,13004]\nlet res=[];\nfor (const item of $input.all()) {\n  const childern = [...item.json.childerns].sort((a, b) => \n  b.ERDAT.localeCompare(a.ERDAT)\n)[0];\n  \n  if(ruleArr.includes(Number(childern.MATNR.substring(0,5)))){\n    item.json.material_description=childern.IDNKX;\n    res.push(item);\n  }\n}\nreturn res"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        1264
+      ],
+      "id": "8b2021a6-2a81-4f7d-b649-82b72c3d0421",
+      "name": "获取到数组中工单创建时间最新的数据，判断其工单号是否是规则数组内"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "886e7783-7a10-4df7-bfd5-b35809bee951",
+              "name": "material_code",
+              "value": "={{ $json.material_code }}",
+              "type": "string"
+            },
+            {
+              "id": "9e5be52f-08b9-4996-9d1b-8e99eb1870b9",
+              "name": "material_description",
+              "value": "={{ $json.material_description }}",
+              "type": "string"
+            },
+            {
+              "id": "99b3cf28-56eb-4369-a656-b7d3ca2f51b2",
+              "name": "production_quantity",
+              "value": "={{ $json.production_quantity }}",
+              "type": "number"
+            },
+            {
+              "id": "8935f34d-5067-40da-8081-7f73a6f9e07d",
+              "name": "type",
+              "value": "={{ $json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "62d9748f-3f42-4562-a22d-df6e57c9e061",
+              "name": "production_date",
+              "value": "={{ $json.production_date }}",
+              "type": "string"
+            },
+            {
+              "id": "2463a480-6274-4e59-98bb-519c7704ac89",
+              "name": "order_number",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            },
+            {
+              "id": "68008827-7deb-459f-bb05-f7162635e76f",
+              "name": "order_create_time",
+              "value": "={{ $json.order_create_time }}",
+              "type": "string"
+            },
+            {
+              "id": "10d328bd-8b2d-4e8e-a1cb-fbd61ea1148a",
+              "name": "order_status",
+              "value": "={{ $json.order_status }}",
+              "type": "string"
+            },
+            {
+              "id": "971c5e27-e2ae-4f51-b261-d9049fe3db16",
+              "name": "production_end_date",
+              "value": "={{ $json.production_end_date }}",
+              "type": "string"
+            },
+            {
+              "id": "e19da069-b052-4d1f-8432-d16ec596e212",
+              "name": "base_bom_code",
+              "value": "={{ $json.childerns[0].PLNBEZ }}",
+              "type": "string"
+            },
+            {
+              "id": "6a888896-d4c2-488a-be28-71f6dbbdfe9f",
+              "name": "=zencl4",
+              "value": "={{ $json.ZECNL4 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        1264
+      ],
+      "id": "a1f045d7-bad1-4db7-b4af-b02453ce22aa",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        544,
+        880
+      ],
+      "id": "1dbd691c-2921-4de8-9c23-9a5237e28c66",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "yf_pcba_data",
+          "mode": "list",
+          "cachedResultName": "yf_pcba_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "work_order_number": "={{ $json.work_order_number }}",
+            "material_code": "={{ $json.material_code }}",
+            "material_description": "={{ $json.material_description }}",
+            "production_quantity": "={{ $json.production_quantity }}",
+            "type": "={{ $json.type }}",
+            "production_date": "={{ $json.production_date }}",
+            "order_status": "={{ $json.order_status }}",
+            "create_time": "={{ $now }}",
+            "production_end_date": "={{ $json.production_end_date }}",
+            "order_create_time": "={{ $json.order_create_time }}",
+            "base_bom_code": "={{ $json.base_bom_code }}"
+          },
+          "matchingColumns": [
+            "work_order_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "material_code",
+              "displayName": "material_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "material_description",
+              "displayName": "material_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_quantity",
+              "displayName": "production_quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_date",
+              "displayName": "production_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_end_date",
+              "displayName": "production_end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "work_order_number",
+              "displayName": "work_order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_create_time",
+              "displayName": "order_create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "base_bom_code",
+              "displayName": "base_bom_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1392,
+        1024
+      ],
+      "id": "8f988c48-4027-4011-90fc-730f51810b34",
+      "name": "Postgres1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "yf_pcba_data",
+          "mode": "list",
+          "cachedResultName": "yf_pcba_data"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1232,
+        400
+      ],
+      "id": "fcff2af7-db74-457b-8181-dc7a23cec79e",
+      "name": "从数据库中获取所有数据",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const orderList = $(\"Aggregate1\").all()[0].json.orderList;\nconst inputItems = $input.all();\n\n// 创建物料代码映射用于快速查找\nconst inputMaterialMap = {};\nfor (const item of inputItems) {\n    inputMaterialMap[item.json.work_order_number] = item; // 存储整个对象以便引用\n}\n\n// 处理现有数据并添加新数据\nconst result = [...inputItems]; // 复制原始输入\n\nfor (const item of inputItems) {\n    const order = orderList.find(e => e.order_number === item.json.work_order_number);\n    \n    if (order) {\n        // 使用严格比较并处理可能的null/undefined\n        const isSameDesc = order.material_description === item.json.material_description;\n        const isSameQty = Number(order.production_quantity) === Number(item.json.production_quantity);\n        const isSameStart = order.production_date === item.json.production_date;\n        const isSameEnd = order.production_end_date === item.json.production_end_date;\n        const isSameZecnl4 = String(order.zecnl4 || '') === String(item.json.zecnl4 || '');\n        \n        if (isSameDesc && isSameQty && isSameStart && isSameEnd && isSameZecnl4) {\n            item.json.is_update = 0; // 没有变化\n        } else {\n            // 用新数据覆盖旧数据（包括zecnl4）\n            item.json.material_description = order.material_description;\n            item.json.production_quantity = order.production_quantity;\n            item.json.production_date = order.production_date;\n            item.json.production_end_date = order.production_end_date;\n            item.json.zecnl4 = order.zecnl4; // 确保更新这个字段\n            item.json.is_update = 1; // 标记为已更新\n            \n            console.log('更新记录:', {\n                work_order: order.order_number,\n                old_zecnl4: inputMaterialMap[order.order_number].json.zecnl4,\n                new_zecnl4: order.zecnl4\n            });\n        }\n    } else {\n        item.json.is_update = 0;\n    }\n}\n\n// 添加新数据（存在于orderList但不存在于input）\nfor (const order of orderList) {\n    if (!inputMaterialMap[order.order_number]) {\n        result.push({\n            json: {\n                material_code: order.material_code,\n                material_description: order.material_description,\n                base_bom_code: order.base_bom_code,\n                type: order.type,\n                order_status: order.order_status,\n                work_order_number: order.order_number,\n                order_create_time: order.order_create_time,\n                production_quantity: order.production_quantity,\n                production_date: order.production_date,\n                production_end_date: order.production_end_date,\n                zecnl4: order.zecnl4, // 确保包含此字段\n                is_update: 1 // 新数据标记为需要更新\n            }\n        });\n    }\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        400
+      ],
+      "id": "21d7bfd8-e3c1-4f0f-9cea-a5d0717d632d",
+      "name": "比对当前数据是新增还是修改"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "orderList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        400
+      ],
+      "id": "2a45cf12-ea75-434c-80a7-bc824ee6760b",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        128
+      ],
+      "id": "6f07e905-e82c-4e6b-af72-1cb88222798a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "yf_pcba_data",
+          "mode": "list",
+          "cachedResultName": "yf_pcba_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "work_order_number": "={{ $json.work_order_number }}",
+            "order_status": "={{ $json.order_status }}",
+            "is_update": "={{ $json.is_update}}",
+            "material_code": "={{ $json.material_code }}",
+            "material_description": "={{ $json.material_description }}",
+            "production_quantity": "={{ $json.production_quantity }}",
+            "type": "={{ $json.type }}",
+            "production_date": "={{ $json.production_date }}",
+            "create_time": "={{ $now }}",
+            "production_end_date": "={{ $json.production_end_date}}",
+            "order_create_time": "={{ $json.order_create_time}}",
+            "base_bom_code": "={{ $json.base_bom_code}}",
+            "zecnl4": "={{ $json.zecnl4}}"
+          },
+          "matchingColumns": [
+            "work_order_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "material_code",
+              "displayName": "material_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "material_description",
+              "displayName": "material_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_quantity",
+              "displayName": "production_quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_date",
+              "displayName": "production_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "production_end_date",
+              "displayName": "production_end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "work_order_number",
+              "displayName": "work_order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_create_time",
+              "displayName": "order_create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "base_bom_code",
+              "displayName": "base_bom_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "is_update",
+              "displayName": "is_update",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "zecnl4",
+              "displayName": "zecnl4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1872,
+        400
+      ],
+      "id": "4f029c3e-bc04-41be-bb8c-090ab37e5ccf",
+      "name": "插入数据到pcba数据表中",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initial data\nlet timestap = [\n   {\"ERDAT_B\":\"20250101\",\"ERDAT_E\": \"20250401\"},\n];\n\nreturn timestap;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3344,
+        1648
+      ],
+      "id": "781992fa-a5a7-4923-97cc-74cb34b9f3c8",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -3120,
+        1600
+      ],
+      "id": "6fd15096-2fc8-4cfc-953c-ea460bcb697b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 使用流式处理替代全量合并\nlet allSuccess = true;\nlet errorMessages = [];\nlet processedCount = 0;\nlet batchSize = 100; // 每批处理100条记录\nlet outputBatches = [];\n\ntry {\n    // 分批次处理数据\n    for (let i = 0; i < items.length; i += batchSize) {\n        const batch = items.slice(i, i + batchSize);\n        let batchResults = [];\n        \n        for (const item of batch) {\n            processedCount++;\n            \n            // 检查数据有效性\n            if (!item?.json?.ET_OUTPUT) {\n                allSuccess = false;\n                errorMessages.push(`Item ${processedCount} missing ET_OUTPUT`);\n                continue;\n            }\n            \n            if (item.json.E_TYPE !== \"S\") {\n                allSuccess = false;\n                errorMessages.push(`Item ${processedCount} has E_TYPE=${item.json.E_TYPE}`);\n                continue;\n            }\n            \n            // 添加有效数据到批次\n            batchResults.push(...item.json.ET_OUTPUT);\n        }\n        \n        // 存储当前批次结果\n        if (batchResults.length > 0) {\n            outputBatches.push({\n                batchIndex: Math.floor(i / batchSize) + 1,\n                data: batchResults\n            });\n        }\n        \n        // 可选: 每处理完一批就释放内存\n        batchResults = null;\n    }\n\n    // 准备最终输出\n    if (allSuccess) {\n        // 返回成功和所有批次数据\n        return [{\n            json: {\n                tag: 0,\n                batchCount: outputBatches.length,\n                batches: outputBatches,\n                totalProcessed: processedCount\n            }\n        }];\n    } else {\n        // 返回失败和错误详情\n        return [{\n            json: {\n                tag: 1,\n                errorCount: errorMessages.length,\n                errors: errorMessages.slice(0, 10), // 只返回前10个错误\n                batchesProcessed: outputBatches.length,\n                totalProcessed: processedCount\n            }\n        }];\n    }\n} catch (error) {\n    return [{\n        json: {\n            tag: 2,\n            error: error.message,\n            processedUpTo: processedCount\n        }\n    }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2832,
+        1568
+      ],
+      "id": "4f77ef4d-02b5-4bda-9533-8c5d44b553da",
+      "name": "Code2"
+    }
+  ],
+  "connections": {
+    "调用SAP接口，通过工单号获取到组件描述": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "对两个数组做不同的处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取每条记录": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断SAP是否成功返回数据": {
+      "main": [
+        [
+          {
+            "node": "拆分SAP返回的数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分SAP返回的数据": {
+      "main": [
+        [
+          {
+            "node": "取出需要的属性字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "取出需要的属性字段": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "对两个数组做不同的处理": {
+      "main": [
+        [
+          {
+            "node": "获取每条记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断数组中的物料描述中是否带有镭雕两个字",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数组中的物料描述中是否带有镭雕两个字": {
+      "main": [
+        [
+          {
+            "node": "拆分所有包含镭雕字段物料描述的数组",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分所有包含镭雕字段物料描述的数组": {
+      "main": [
+        [
+          {
+            "node": "从查询到的数据中获取具体的拼板描述",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从查询到的数据中获取具体的拼板描述": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "获取到数组中工单创建时间最新的数据，判断其工单号是否是规则数组内",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到数组中工单创建时间最新的数据，判断其工单号是否是规则数组内": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从数据库中获取所有数据": {
+      "main": [
+        [
+          {
+            "node": "比对当前数据是新增还是修改",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "比对当前数据是新增还是修改": {
+      "main": [
+        [
+          {
+            "node": "插入数据到pcba数据表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "从数据库中获取所有数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "调用SAP接口，通过工单号获取到组件描述",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "判断SAP是否成功返回数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-07-29T03:01:00.770+08:00",
+          "Readable date": "July 29th 2025, 3:01:00 am",
+          "Readable time": "3:01:00 am",
+          "Day of week": "Tuesday",
+          "Year": "2025",
+          "Month": "July",
+          "Day of month": "29",
+          "Hour": "03",
+          "Minute": "01",
+          "Second": "00",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "Remove Duplicates": [
+      {
+        "json": {
+          "material_code": "130010005301",
+          "material_description": "PCB_HDI_BY01_MB_V6_8层_8拼_沉金+OSP_中京",
+          "production_quantity": 5000,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000450",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "PSBY01000008"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040003401",
+          "material_description": "PCB_FPC_BY01_LCD_V8_2层_4拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000448",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "13M000006401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040002701",
+          "material_description": "PCB_FPC_BY01_USB_V6_2层_8拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000446",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "13M000005601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000402",
+          "material_description": "PCB_NORM_BY01_ALS_V2_2_90拼_沉金_中京",
+          "production_quantity": 5000,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000445",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "13M000004001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004101",
+          "material_description": "FPC_W541_PPG_XB2_V1_2层_8拼_沉金_红板",
+          "production_quantity": 80,
+          "type": "W541",
+          "production_date": "2024-07-09",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "7000000107",
+          "order_create_time": "2024-07-09",
+          "base_bom_code": "13M000007901"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030000501",
+          "material_description": "FPCB_WL21B21_PPG3_V2.1_HDI6+FPC2_8拼_中京",
+          "production_quantity": 100,
+          "type": "B21",
+          "production_date": "2024-07-15",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000469",
+          "order_create_time": "2024-07-13",
+          "base_bom_code": "13M000001101"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010001101",
+          "material_description": "PCB_HDI_WL10B10D1_V3_8层_8拼_沉金+SOP_中京",
+          "production_quantity": 2200,
+          "type": "M1D",
+          "production_date": "2024-07-30",
+          "order_status": 2,
+          "production_end_date": "2024-08-30",
+          "order_number": "3000000494",
+          "order_create_time": "2024-07-30",
+          "base_bom_code": "PSM1D0000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007601",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V2_6层_20拼_沉金_红板",
+          "production_quantity": 100,
+          "type": "W942",
+          "production_date": "2024-11-09",
+          "order_status": 2,
+          "production_end_date": "2024-11-29",
+          "order_number": "7000000155",
+          "order_create_time": "2024-11-09",
+          "base_bom_code": "13M000009101"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 36,
+          "type": "W942",
+          "production_date": "2025-02-08",
+          "order_status": 2,
+          "production_end_date": "2025-02-28",
+          "order_number": "7000000210",
+          "order_create_time": "2025-02-08",
+          "base_bom_code": "13M000009102"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 11300,
+          "type": "W332",
+          "production_date": "2024-12-24",
+          "order_status": 2,
+          "production_end_date": "2024-12-31",
+          "order_number": "3000000750",
+          "order_create_time": "2024-12-24",
+          "base_bom_code": "PSW332000010"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001801",
+          "material_description": "RFPC_HR31_MB_V4.2_HDI6+FPC2_8拼_红板",
+          "production_quantity": 8000,
+          "type": "HR01",
+          "production_date": "2024-08-16",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "3000000526",
+          "order_create_time": "2024-08-16",
+          "base_bom_code": "PSHR01000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002501",
+          "material_description": "RFPC_B19S_PPG_V2_6层_4拼_沉金_红板",
+          "production_quantity": 1300,
+          "type": "B19S",
+          "production_date": "2024-08-16",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "3000000527",
+          "order_create_time": "2024-08-16",
+          "base_bom_code": "13M000006101"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004101",
+          "material_description": "PCB_HDI_WL19B19S_MB_V6.3_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 1300,
+          "type": "B19S",
+          "production_date": "2024-08-16",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "3000000528",
+          "order_create_time": "2024-08-16",
+          "base_bom_code": "PSB19S000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000001301",
+          "material_description": "PCB_NORM_FD02_V3.1_4层_9拼_沉金_中京",
+          "production_quantity": 1490,
+          "type": "FD02",
+          "production_date": "2024-09-11",
+          "order_status": 2,
+          "production_end_date": "2024-09-30",
+          "order_number": "3000000561",
+          "order_create_time": "2024-09-11",
+          "base_bom_code": "TDVTPSFD02000011"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000402",
+          "material_description": "PCB_NORM_BY01_ALS_V2_2_90拼_沉金_中京",
+          "production_quantity": 1280,
+          "type": "BY01",
+          "production_date": "2024-08-16",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "3000000504",
+          "order_create_time": "2024-08-16",
+          "base_bom_code": "13M000004001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040002701",
+          "material_description": "PCB_FPC_BY01_USB_V6_2层_8拼_沉金_红板",
+          "production_quantity": 2000,
+          "type": "BY01",
+          "production_date": "2024-08-16",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "3000000505",
+          "order_create_time": "2024-08-16",
+          "base_bom_code": "13M000005601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 100,
+          "type": "W331",
+          "production_date": "2024-08-19",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "7000000122",
+          "order_create_time": "2024-08-19",
+          "base_bom_code": "130050001601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040003401",
+          "material_description": "PCB_FPC_BY01_LCD_V8_2层_4拼_沉金_红板",
+          "production_quantity": 2000,
+          "type": "BY01",
+          "production_date": "2024-08-16",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "3000000507",
+          "order_create_time": "2024-08-16",
+          "base_bom_code": "13M000006401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010005301",
+          "material_description": "PCB_HDI_BY01_MB_V6_8层_8拼_沉金+OSP_中京",
+          "production_quantity": 5000,
+          "type": "BY01",
+          "production_date": "2024-08-16",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "3000000509",
+          "order_create_time": "2024-08-16",
+          "base_bom_code": "PSBY01000008"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007501",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4.1_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 42,
+          "type": "W332",
+          "production_date": "2024-08-19",
+          "order_status": 2,
+          "production_end_date": "2024-09-27",
+          "order_number": "7000000118",
+          "order_create_time": "2024-08-19",
+          "base_bom_code": "TDVTPSW332000009"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000001601",
+          "material_description": "PCB_NORM_PPG_XB3_LED_V1_2层_240拼_红板",
+          "production_quantity": 600,
+          "type": "W942",
+          "production_date": "2024-10-10",
+          "order_status": 2,
+          "production_end_date": "2024-10-31",
+          "order_number": "7000000137",
+          "order_create_time": "2024-10-10",
+          "base_bom_code": "13M000010201"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001801",
+          "material_description": "RFPC_HR31_MB_V4.2_HDI6+FPC2_8拼_红板",
+          "production_quantity": 3700,
+          "type": "HR01",
+          "production_date": "2024-09-11",
+          "order_status": 2,
+          "production_end_date": "2024-09-30",
+          "order_number": "3000000564",
+          "order_create_time": "2024-09-11",
+          "base_bom_code": "PSHR01000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 7000,
+          "type": "W332",
+          "production_date": "2024-12-02",
+          "order_status": 2,
+          "production_end_date": "2024-12-31",
+          "order_number": "3000000713",
+          "order_create_time": "2024-11-18",
+          "base_bom_code": "PSW332000010"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002401",
+          "material_description": "RFPC_W331_XB1_PPG_V4_HDI6+FPC2_8拼_红板",
+          "production_quantity": 9000,
+          "type": "W331",
+          "production_date": "2025-02-28",
+          "order_status": 2,
+          "production_end_date": "2025-03-30",
+          "order_number": "3000000812",
+          "order_create_time": "2025-02-08",
+          "base_bom_code": "13M000005101"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2024-09-12",
+          "order_status": 2,
+          "production_end_date": "2024-09-30",
+          "order_number": "3000000585",
+          "order_create_time": "2024-09-12",
+          "base_bom_code": "TPVTPSW332000010"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040001801",
+          "material_description": "PCB_FPC_WL10B10D_PPG_V1.1_2层_沉金_红板",
+          "production_quantity": 1,
+          "type": "",
+          "production_date": "2024-12-30",
+          "order_status": 2,
+          "production_end_date": "2024-12-30",
+          "order_number": "6000000004",
+          "order_create_time": "2023-10-09",
+          "base_bom_code": ""
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007704",
+          "material_description": "PCB_HDI_W942_MB_AP5_V4.1_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 60,
+          "type": "W942",
+          "production_date": "2025-03-25",
+          "order_status": 2,
+          "production_end_date": "2025-04-05",
+          "order_number": "7000000260",
+          "order_create_time": "2025-03-25",
+          "base_bom_code": "TDVTPSW942000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040005301",
+          "material_description": "PCB_FPC_W542_XB2_V2_2层_8拼_沉金_红板",
+          "production_quantity": 152,
+          "type": "W542",
+          "production_date": "2024-11-28",
+          "order_status": 2,
+          "production_end_date": "2024-12-31",
+          "order_number": "7000000165",
+          "order_create_time": "2024-11-28",
+          "base_bom_code": "13M000011201"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 3500,
+          "type": "W331",
+          "production_date": "2024-12-02",
+          "order_status": 2,
+          "production_end_date": "2024-12-31",
+          "order_number": "3000000724",
+          "order_create_time": "2024-11-18",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040005801",
+          "material_description": "PCB_FPC_S501_BARO_V3_2层_18拼_沉金_红板",
+          "production_quantity": 240,
+          "type": "S501",
+          "production_date": "2024-12-25",
+          "order_status": 2,
+          "production_end_date": "2024-12-31",
+          "order_number": "3000000753",
+          "order_create_time": "2024-12-25",
+          "base_bom_code": "13M000012001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 200,
+          "type": "W331",
+          "production_date": "2024-11-08",
+          "order_status": 2,
+          "production_end_date": "2024-11-30",
+          "order_number": "3000000704",
+          "order_create_time": "2024-11-08",
+          "base_bom_code": "130050001601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007708",
+          "material_description": "PCB_HDI_W942_MB_V4.1_P2_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5700,
+          "type": "W942",
+          "production_date": "2025-06-10",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000115",
+          "order_create_time": "2025-06-04",
+          "base_bom_code": "TPVTPSW942000014"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007704",
+          "material_description": "PCB_HDI_W942_MB_AP5_V4.1_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 198,
+          "type": "W942",
+          "production_date": "2025-03-25",
+          "order_status": 2,
+          "production_end_date": "2025-04-05",
+          "order_number": "7000000261",
+          "order_create_time": "2025-03-25",
+          "base_bom_code": "TDVTPSW942000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009201",
+          "material_description": "PCB_HDI_W332_MB_AP5_V6.1_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 120,
+          "type": "W332",
+          "production_date": "2025-02-08",
+          "order_status": 2,
+          "production_end_date": "2025-02-28",
+          "order_number": "7000000218",
+          "order_create_time": "2025-02-08",
+          "base_bom_code": "TPVTPSW332000019"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001201",
+          "material_description": "FPCB_W331_XB1_PPG_V3_HDI6+FPC2_8拼_沉金_红板",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-02-06",
+          "order_status": 2,
+          "production_end_date": "2025-02-28",
+          "order_number": "3000000805",
+          "order_create_time": "2025-02-06",
+          "base_bom_code": "13M000002901"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004403",
+          "material_description": "FPC_W942_PPG_XB2_V3.1_2层_8拼_沉金_ 红板",
+          "production_quantity": 558,
+          "type": "W942",
+          "production_date": "2025-02-08",
+          "order_status": 2,
+          "production_end_date": "2025-02-28",
+          "order_number": "7000000217",
+          "order_create_time": "2025-02-08",
+          "base_bom_code": "13M000009003"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009601",
+          "material_description": "PCB_HDI_R4_PPG_XB1_V1_6层1阶_20拼_沉金_红板",
+          "production_quantity": 30,
+          "type": "R4",
+          "production_date": "2025-03-14",
+          "order_status": 2,
+          "production_end_date": "2025-03-31",
+          "order_number": "7000000247",
+          "order_create_time": "2025-03-14",
+          "base_bom_code": "13M000012401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040005701",
+          "material_description": "PCB_FPC_S501_ALS_V3_2层_40拼_沉金_红板",
+          "production_quantity": 160,
+          "type": "S501",
+          "production_date": "2025-02-27",
+          "order_status": 2,
+          "production_end_date": "2025-03-31",
+          "order_number": "7000000222",
+          "order_create_time": "2025-02-27",
+          "base_bom_code": "13M000012101"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040005801",
+          "material_description": "PCB_FPC_S501_BARO_V3_2层_18拼_沉金_红板",
+          "production_quantity": 162,
+          "type": "S501",
+          "production_date": "2025-02-27",
+          "order_status": 2,
+          "production_end_date": "2025-03-31",
+          "order_number": "7000000223",
+          "order_create_time": "2025-02-27",
+          "base_bom_code": "13M000012001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009001",
+          "material_description": "PCB_HDI_S501_V3_6层_14拼_沉金+OSP_红板",
+          "production_quantity": 154,
+          "type": "S501",
+          "production_date": "2025-02-27",
+          "order_status": 2,
+          "production_end_date": "2025-03-31",
+          "order_number": "7000000224",
+          "order_create_time": "2025-02-27",
+          "base_bom_code": "TDVTPSS501000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040006101",
+          "material_description": "FPC_W541_PPG_XB2_V3_2层_8拼_沉金_红板",
+          "production_quantity": 332,
+          "type": "W541",
+          "production_date": "2025-03-04",
+          "order_status": 2,
+          "production_end_date": "2025-03-31",
+          "order_number": "7000000235",
+          "order_create_time": "2025-03-04",
+          "base_bom_code": "13M000012701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001201",
+          "material_description": "FPCB_W331_XB1_PPG_V3_HDI6+FPC2_8拼_沉金_红板",
+          "production_quantity": 3000,
+          "type": "W331",
+          "production_date": "2025-03-31",
+          "order_status": 2,
+          "production_end_date": "2025-04-30",
+          "order_number": "3000000892",
+          "order_create_time": "2025-03-27",
+          "base_bom_code": "13M000002901"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010005301",
+          "material_description": "PCB_HDI_BY01_MB_V6_8层_8拼_沉金+OSP_中京",
+          "production_quantity": 3000,
+          "type": "BY01",
+          "production_date": "2025-04-24",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "3900000007",
+          "order_create_time": "2025-04-24",
+          "base_bom_code": "PSBY01000008"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040006601",
+          "material_description": "PCB_FPC_S501_XB1_ALS_V4_2层_20拼_沉金_红板",
+          "production_quantity": 100,
+          "type": "S501",
+          "production_date": "2025-03-24",
+          "order_status": 2,
+          "production_end_date": "2025-04-05",
+          "order_number": "7000000253",
+          "order_create_time": "2025-03-24",
+          "base_bom_code": "13M000013601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 36,
+          "type": "W942",
+          "production_date": "2025-03-25",
+          "order_status": 2,
+          "production_end_date": "2025-04-05",
+          "order_number": "7000000256",
+          "order_create_time": "2025-03-25",
+          "base_bom_code": "13M000009102"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004404",
+          "material_description": "FPC_W942_PPG_XB2_V3.2_2层_8拼_沉金_红板",
+          "production_quantity": 36,
+          "type": "W942",
+          "production_date": "2025-03-25",
+          "order_status": 2,
+          "production_end_date": "2025-04-05",
+          "order_number": "7000000257",
+          "order_create_time": "2025-03-25",
+          "base_bom_code": "13M000009004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010000901",
+          "material_description": "PCB_HDI_WL21B21_V4_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 418,
+          "type": "B21",
+          "production_date": "2025-05-09",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000041",
+          "order_create_time": "2025-05-09",
+          "base_bom_code": "130050000601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040006501",
+          "material_description": "PCB_FPC_S501_XB2_BARO_V4.1_2层_24拼_沉金_红板",
+          "production_quantity": 72,
+          "type": "S501",
+          "production_date": "2025-03-24",
+          "order_status": 2,
+          "production_end_date": "2025-04-05",
+          "order_number": "7000000254",
+          "order_create_time": "2025-03-24",
+          "base_bom_code": "13M000013501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004101",
+          "material_description": "PCB_HDI_WL19B19S_MB_V6.3_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 1200,
+          "type": "B19S",
+          "production_date": "2025-04-09",
+          "order_status": 2,
+          "production_end_date": "2025-04-30",
+          "order_number": "3000000900",
+          "order_create_time": "2025-04-09",
+          "base_bom_code": "PSB19S000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007708",
+          "material_description": "PCB_HDI_W942_MB_V4.1_P2_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 2100,
+          "type": "W942",
+          "production_date": "2025-06-04",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000114",
+          "order_create_time": "2025-06-04",
+          "base_bom_code": "TPVTPSW942000014"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001201",
+          "material_description": "FPCB_W331_XB1_PPG_V3_HDI6+FPC2_8拼_沉金_红板",
+          "production_quantity": 2325,
+          "type": "W331",
+          "production_date": "2025-02-11",
+          "order_status": 2,
+          "production_end_date": "2025-05-12",
+          "order_number": "3000000817",
+          "order_create_time": "2025-02-11",
+          "base_bom_code": "13M000002901"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008001",
+          "material_description": "PCB_W331_XB1_PPG_V5.3_HDI6_24拼_沉金_激光_红板",
+          "production_quantity": 3000,
+          "type": "W541",
+          "production_date": "2025-04-09",
+          "order_status": 2,
+          "production_end_date": "2025-04-30",
+          "order_number": "3000000906",
+          "order_create_time": "2025-04-09",
+          "base_bom_code": "13M000011001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004601",
+          "material_description": "FPC_W331_XB1_PPG_V5.3_2层_10拼_沉金EMI_激光_红板",
+          "production_quantity": 3000,
+          "type": "W331",
+          "production_date": "2025-04-09",
+          "order_status": 2,
+          "production_end_date": "2025-04-30",
+          "order_number": "3000000907",
+          "order_create_time": "2025-04-09",
+          "base_bom_code": "13M000009701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010003901",
+          "material_description": "PCB_HDI_WL20B20_MB_V4.2_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 1250,
+          "type": "B20",
+          "production_date": "2025-04-09",
+          "order_status": 2,
+          "production_end_date": "2025-05-05",
+          "order_number": "3000000915",
+          "order_create_time": "2025-04-09",
+          "base_bom_code": "TPVTPSB200000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010001101",
+          "material_description": "PCB_HDI_WL10B10D1_V3_8层_8拼_沉金+SOP_中京",
+          "production_quantity": 3600,
+          "type": "M1D",
+          "production_date": "2025-04-16",
+          "order_status": 2,
+          "production_end_date": "2025-05-05",
+          "order_number": "3000000923",
+          "order_create_time": "2025-04-16",
+          "base_bom_code": "PSM1D0000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040006701",
+          "material_description": "PCB_FPC_S501_XB1_ALS_V4.1_2层_56拼_沉金_红板",
+          "production_quantity": 448,
+          "type": "S501",
+          "production_date": "2025-04-09",
+          "order_status": 2,
+          "production_end_date": "2025-04-30",
+          "order_number": "7000000272",
+          "order_create_time": "2025-04-09",
+          "base_bom_code": "13M000013701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 4100,
+          "type": "W331",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000101",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007708",
+          "material_description": "PCB_HDI_W942_MB_V4.1_P2_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 6050,
+          "type": "W942",
+          "production_date": "2025-05-21",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000082",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "TPVTPSW942000013"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000001301",
+          "material_description": "PCB_NORM_FD02_V3.1_4层_9拼_沉金_中京",
+          "production_quantity": 153,
+          "type": "W331",
+          "production_date": "2025-06-03",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000113",
+          "order_create_time": "2025-06-03",
+          "base_bom_code": "130050001701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040002601",
+          "material_description": "FPC_W332_XB2_ALS_TEMP_V1_2层_沉金_红板",
+          "production_quantity": 4440,
+          "type": "W332",
+          "production_date": "2025-05-23",
+          "order_status": 2,
+          "production_end_date": "2025-06-08",
+          "order_number": "3900000107",
+          "order_create_time": "2025-05-23",
+          "base_bom_code": "13M000005001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000301",
+          "material_description": "PCB_NORM_FD05_Charger_V5_2层_9拼_中京",
+          "production_quantity": 1000,
+          "type": "FD05",
+          "production_date": "2025-05-09",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000035",
+          "order_create_time": "2025-05-09",
+          "base_bom_code": "PSFD05000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004101",
+          "material_description": "PCB_HDI_WL19B19S_MB_V6.3_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 1200,
+          "type": "B19S",
+          "production_date": "2025-05-09",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000039",
+          "order_create_time": "2025-05-09",
+          "base_bom_code": "PSB19S000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009701",
+          "material_description": "PCB_HDI_W541_MB_AP5_V3.2_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 1,
+          "type": "W541",
+          "production_date": "2025-05-09",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "7900000024",
+          "order_create_time": "2025-05-09",
+          "base_bom_code": "TDVTPSW541000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 1000,
+          "type": "W942",
+          "production_date": "2025-04-28",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "7900000007",
+          "order_create_time": "2025-04-28",
+          "base_bom_code": "13M000009102"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009901",
+          "material_description": "PCB_HDI_W542_MB_V3.1_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 336,
+          "type": "W542",
+          "production_date": "2025-04-28",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "7900000011",
+          "order_create_time": "2025-04-28",
+          "base_bom_code": "TDVTPSW542000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001801",
+          "material_description": "RFPC_HR31_MB_V4.2_HDI6+FPC2_8拼_红板",
+          "production_quantity": 10000,
+          "type": "HR01",
+          "production_date": "2025-05-21",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000068",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSHR01000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002401",
+          "material_description": "RFPC_W331_XB1_PPG_V4_HDI6+FPC2_8拼_红板",
+          "production_quantity": 7020,
+          "type": "W331",
+          "production_date": "2025-04-24",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "3900000016",
+          "order_create_time": "2025-04-24",
+          "base_bom_code": "13M000005101"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000001301",
+          "material_description": "PCB_NORM_FD02_V3.1_4层_9拼_沉金_中京",
+          "production_quantity": 1050,
+          "type": "FD02",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000097",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSFD02000012"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010001001",
+          "material_description": "PCB_NORM_FD05_V8.1_6层_15拼_沉金_中京",
+          "production_quantity": 800,
+          "type": "FD05",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000093",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSFD05000007"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000301",
+          "material_description": "PCB_NORM_FD05_Charger_V5_2层_9拼_中京",
+          "production_quantity": 800,
+          "type": "FD05",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000091",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSFD05000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010005301",
+          "material_description": "PCB_HDI_BY01_MB_V6_8层_8拼_沉金+OSP_中京",
+          "production_quantity": 3600,
+          "type": "BY01",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000090",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSBY01000008"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007704",
+          "material_description": "PCB_HDI_W942_MB_AP5_V4.1_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 1000,
+          "type": "W942",
+          "production_date": "2025-04-28",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "7900000015",
+          "order_create_time": "2025-04-28",
+          "base_bom_code": "TPVTPSW942000013"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 1300,
+          "type": "W331",
+          "production_date": "2025-05-23",
+          "order_status": 2,
+          "production_end_date": "2025-06-08",
+          "order_number": "3900000109",
+          "order_create_time": "2025-05-23",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001801",
+          "material_description": "RFPC_HR31_MB_V4.2_HDI6+FPC2_8拼_红板",
+          "production_quantity": 7000,
+          "type": "HR01",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000078",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSHR01000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000106",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSW332000016"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000096",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSW332000016"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010010001",
+          "material_description": "PCB_HDI_W541_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 330,
+          "type": "W541",
+          "production_date": "2025-06-09",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "7900000049",
+          "order_create_time": "2025-06-09",
+          "base_bom_code": "TDVTPSW541000006"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-05-21",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000071",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "PSW332000016"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 320,
+          "type": "W942",
+          "production_date": "2025-06-05",
+          "order_status": 2,
+          "production_end_date": "2025-06-26",
+          "order_number": "7900000046",
+          "order_create_time": "2025-06-05",
+          "base_bom_code": "13M000009102"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040007401",
+          "material_description": "FPC_W541_PPG_XB2_V4_2层_8拼_沉金_红板",
+          "production_quantity": 320,
+          "type": "W541",
+          "production_date": "2025-06-05",
+          "order_status": 2,
+          "production_end_date": "2025-06-26",
+          "order_number": "7900000047",
+          "order_create_time": "2025-06-05",
+          "base_bom_code": "13M000014701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007708",
+          "material_description": "PCB_HDI_W942_MB_V4.1_P2_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 120,
+          "type": "W942",
+          "production_date": "2025-06-13",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "7900000051",
+          "order_create_time": "2025-06-13",
+          "base_bom_code": "TPVTPSW942000014"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002901",
+          "material_description": "RFPC_W332_XB1_PPG_V4_HDI6+FPC2_8拼_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-05-27",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "3900000104",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "13M000007501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 100,
+          "type": "W942",
+          "production_date": "2025-05-12",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "7900000028",
+          "order_create_time": "2025-05-12",
+          "base_bom_code": "13M000009102"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004601",
+          "material_description": "FPC_W331_XB1_PPG_V5.3_2层_10拼_沉金EMI_激光_红板",
+          "production_quantity": 5000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000127",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "13M000009701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009504",
+          "material_description": "PCB_HDI_R4_MB_V3_8层2阶_6拼_OSP+沉金_红板",
+          "production_quantity": 252,
+          "type": "R4",
+          "production_date": "2025-06-24",
+          "order_status": 2,
+          "production_end_date": "2025-07-11",
+          "order_number": "7900000056",
+          "order_create_time": "2025-06-24",
+          "base_bom_code": "TDVTPSR400000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 4500,
+          "type": "W332",
+          "production_date": "2025-06-17",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000146",
+          "order_create_time": "2025-06-17",
+          "base_bom_code": "PSW332000016"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007708",
+          "material_description": "PCB_HDI_W942_MB_V4.1_P2_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 2100,
+          "type": "W942",
+          "production_date": "2025-05-21",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000066",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "TPVTPSW942000013"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 600,
+          "type": "W541",
+          "production_date": "2025-06-09",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "7900000048",
+          "order_create_time": "2025-06-09",
+          "base_bom_code": "13M000015501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010010101",
+          "material_description": "PCB_HDI_edge_MB_V1_10层_6拼_OSP+沉金_红板",
+          "production_quantity": 48,
+          "type": "W541",
+          "production_date": "2025-06-09",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "7900000050",
+          "order_create_time": "2025-06-09",
+          "base_bom_code": "TEVTPSW541000008"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004601",
+          "material_description": "FPC_W331_XB1_PPG_V5.3_2层_10拼_沉金EMI_激光_红板",
+          "production_quantity": 10300,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000124",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "13M000009701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009504",
+          "material_description": "PCB_HDI_R4_MB_V3_8层2阶_6拼_OSP+沉金_红板",
+          "production_quantity": 400,
+          "type": "R4",
+          "production_date": "2025-06-03",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "7900000043",
+          "order_create_time": "2025-06-03",
+          "base_bom_code": "TDVTPSR400000004"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 5700,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000140",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002501",
+          "material_description": "RFPC_B19S_PPG_V2_6层_4拼_沉金_红板",
+          "production_quantity": 900,
+          "type": "B19S",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000119",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "13M000006101"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004101",
+          "material_description": "PCB_HDI_WL19B19S_MB_V6.3_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 900,
+          "type": "B19S",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000120",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "PSB19S000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010010001",
+          "material_description": "PCB_HDI_W541_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 330,
+          "type": "W541",
+          "production_date": "2025-06-01",
+          "order_status": 2,
+          "production_end_date": "2025-06-20",
+          "order_number": "7900000034",
+          "order_create_time": "2025-05-27",
+          "base_bom_code": "TDVTPSW541000006"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008001",
+          "material_description": "PCB_W331_XB1_PPG_V5.3_HDI6_24拼_沉金_激光_红板",
+          "production_quantity": 5300,
+          "type": "W541",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000123",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "13M000011001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010005301",
+          "material_description": "PCB_HDI_BY01_MB_V6_8层_8拼_沉金+OSP_中京",
+          "production_quantity": 1,
+          "type": "",
+          "production_date": "2025-06-23",
+          "order_status": 2,
+          "production_end_date": "2025-07-10",
+          "order_number": "2000000455",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": ""
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008901",
+          "material_description": "PCB_W331_XB1_PPG_V5.5_HDI6_24拼_沉金+OSP_红板",
+          "production_quantity": 5000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000126",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "13M000011601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000128",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010009507",
+          "material_description": "PCB_HDI_R4_MB_V3.3_8层2阶_6拼_OSP+沉金_红板",
+          "production_quantity": 220,
+          "type": "R4",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-01",
+          "order_number": "7900000054",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "TDVTPSR400000007"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 6050,
+          "type": "W942",
+          "production_date": "2025-05-21",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000080",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "13M000009102"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004405",
+          "material_description": "FPC_W942_PPG_XB2_V3.3_2层_8拼_沉金_红板",
+          "production_quantity": 6050,
+          "type": "W942",
+          "production_date": "2025-05-21",
+          "order_status": 2,
+          "production_end_date": "2025-05-30",
+          "order_number": "3900000081",
+          "order_create_time": "2025-05-21",
+          "base_bom_code": "13M000009005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008901",
+          "material_description": "PCB_W331_XB1_PPG_V5.5_HDI6_24拼_沉金+OSP_红板",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000132",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "13M000011601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004601",
+          "material_description": "FPC_W331_XB1_PPG_V5.3_2层_10拼_沉金EMI_激光_红板",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000133",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "13M000009701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 6000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000134",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 4000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000137",
+          "order_create_time": "2025-06-11",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030001201",
+          "material_description": "FPCB_W331_XB1_PPG_V3_HDI6+FPC2_8拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "W331",
+          "production_date": "2025-04-11",
+          "order_status": 2,
+          "production_end_date": "2025-04-11",
+          "order_number": "3000000919",
+          "order_create_time": "2025-04-11",
+          "base_bom_code": "13M000002901"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002901",
+          "material_description": "RFPC_W332_XB1_PPG_V4_HDI6+FPC2_8拼_红板",
+          "production_quantity": 2970,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000152",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000007501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004601",
+          "material_description": "FPC_W331_XB1_PPG_V5.3_2层_10拼_沉金EMI_激光_红板",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000163",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000009701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002901",
+          "material_description": "RFPC_W332_XB1_PPG_V4_HDI6+FPC2_8拼_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-17",
+          "order_status": 2,
+          "production_end_date": "2025-06-30",
+          "order_number": "3900000144",
+          "order_create_time": "2025-06-17",
+          "base_bom_code": "13M000007501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007602",
+          "material_description": "PCB_HDI_W942_PPG_XB1_V3_6层_20拼_沉金_红板",
+          "production_quantity": 5650,
+          "type": "W942",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-19",
+          "order_number": "3900000148",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000009102"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004405",
+          "material_description": "FPC_W942_PPG_XB2_V3.3_2层_8拼_沉金_红板",
+          "production_quantity": 6000,
+          "type": "W942",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-19",
+          "order_number": "3900000149",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000009005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007708",
+          "material_description": "PCB_HDI_W942_MB_V4.1_P2_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 6350,
+          "type": "W942",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-19",
+          "order_number": "3900000150",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "TPVTPSW942000014"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004801",
+          "material_description": "PCB_FPC_W332_XB2_PPG_FPC_V5_2层_14拼_沉金_红板",
+          "production_quantity": 2030,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000154",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000010301"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008201",
+          "material_description": "PCB_HDI_W332_XB1_PPG_V5_6层_24拼_沉金_红板",
+          "production_quantity": 2030,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000155",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000010401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000157",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "PSW332000016"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000301",
+          "material_description": "PCB_NORM_FD05_Charger_V5_2层_9拼_中京",
+          "production_quantity": 800,
+          "type": "FD05",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000158",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "PSFD05000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010001001",
+          "material_description": "PCB_NORM_FD05_V8.1_6层_15拼_沉金_中京",
+          "production_quantity": 800,
+          "type": "FD05",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000160",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "PSFD05000007"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008901",
+          "material_description": "PCB_W331_XB1_PPG_V5.5_HDI6_24拼_沉金+OSP_红板",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000162",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000011601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000164",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004801",
+          "material_description": "PCB_FPC_W332_XB2_PPG_FPC_V5_2层_14拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000168",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000010301"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008201",
+          "material_description": "PCB_HDI_W332_XB1_PPG_V5_6层_24拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000169",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000010401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000171",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "PSW332000016"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000402",
+          "material_description": "PCB_NORM_BY01_ALS_V2_2_90拼_沉金_中京",
+          "production_quantity": 3000,
+          "type": "BY01",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000172",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000004001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040002701",
+          "material_description": "PCB_FPC_BY01_USB_V6_2层_8拼_沉金_红板",
+          "production_quantity": 3000,
+          "type": "BY01",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000174",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000005601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040003401",
+          "material_description": "PCB_FPC_BY01_LCD_V8_2层_4拼_沉金_红板",
+          "production_quantity": 3000,
+          "type": "BY01",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000175",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000006401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010005301",
+          "material_description": "PCB_HDI_BY01_MB_V6_8层_8拼_沉金+OSP_中京",
+          "production_quantity": 3000,
+          "type": "BY01",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000178",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "PSBY01000008"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008901",
+          "material_description": "PCB_W331_XB1_PPG_V5.5_HDI6_24拼_沉金+OSP_红板",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000180",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000011601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004601",
+          "material_description": "FPC_W331_XB1_PPG_V5.3_2层_10拼_沉金EMI_激光_红板",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000181",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000009701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004501",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000182",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040004801",
+          "material_description": "PCB_FPC_W332_XB2_PPG_FPC_V5_2层_14拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000186",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000010301"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010008201",
+          "material_description": "PCB_HDI_W332_XB1_PPG_V5_6层_24拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000187",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "13M000010401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010007401",
+          "material_description": "PCB_HDI_W332_MB_AP5_V4_8层_6拼_OSP+沉金_红板",
+          "production_quantity": 5000,
+          "type": "W332",
+          "production_date": "2025-06-20",
+          "order_status": 2,
+          "production_end_date": "2025-07-20",
+          "order_number": "3900000189",
+          "order_create_time": "2025-06-20",
+          "base_bom_code": "PSW332000016"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040000301",
+          "material_description": "FPC_WL19B19_FPC_PPG(P)_V6.3_2层_沉金_隽美泰和",
+          "production_quantity": 2000,
+          "type": "B19",
+          "production_date": "2023-12-11",
+          "order_status": 2,
+          "production_end_date": "2024-02-29",
+          "order_number": "3000000145",
+          "order_create_time": "2023-12-09",
+          "base_bom_code": "13M000000501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040000601",
+          "material_description": "FPC FPC_WL21B21_FPC_GND_V4_2层_沉金_大显科技",
+          "production_quantity": 1000,
+          "type": "B21",
+          "production_date": "2023-10-10",
+          "order_status": 2,
+          "production_end_date": "2023-10-10",
+          "order_number": "1000000108",
+          "order_create_time": "2023-10-10",
+          "base_bom_code": "HSB210000005"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130030002001",
+          "material_description": "RFPC_WL19B19S_PPG_RFPC_V1_6层_4拼_沉金_红板",
+          "production_quantity": 40,
+          "type": "B19S",
+          "production_date": "2023-10-05",
+          "order_status": 2,
+          "production_end_date": "2023-10-28",
+          "order_number": "5000000004",
+          "order_create_time": "2023-10-03",
+          "base_bom_code": "13M000003701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040002301",
+          "material_description": "PCB_FPC_WL20B20_XB2_PPG3_V3_2层_8拼_沉金_红板",
+          "production_quantity": 150,
+          "type": "B20",
+          "production_date": "2023-10-05",
+          "order_status": 2,
+          "production_end_date": "2023-10-28",
+          "order_number": "5000000005",
+          "order_create_time": "2023-10-03",
+          "base_bom_code": "13M000003301"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010003001",
+          "material_description": "PCB_HDI_WL20B20_XB1_PPG3_V3_6层_24拼_沉金_中京",
+          "production_quantity": 150,
+          "type": "B20",
+          "production_date": "2023-10-05",
+          "order_status": 2,
+          "production_end_date": "2023-10-28",
+          "order_number": "5000000006",
+          "order_create_time": "2023-10-03",
+          "base_bom_code": "13M000003501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004201",
+          "material_description": "PCB_HDI_WL20B20BES_MB_V1_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 96,
+          "type": "B20",
+          "production_date": "2023-10-05",
+          "order_status": 2,
+          "production_end_date": "2023-10-28",
+          "order_number": "5000000007",
+          "order_create_time": "2023-10-04",
+          "base_bom_code": "TEVTPSB200000003"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000001",
+          "material_description": "PCB_NORM_FD01_V3.0_4层_12拼_沉金_中京",
+          "production_quantity": 1,
+          "type": "",
+          "production_date": "2023-10-09",
+          "order_status": 2,
+          "production_end_date": "2025-10-28",
+          "order_number": "6000000002",
+          "order_create_time": "2023-10-09",
+          "base_bom_code": ""
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040007301",
+          "material_description": "PCB_FPC_W542_XB2_V4.1_2层_8拼_沉金_红板",
+          "production_quantity": 360,
+          "type": "W542",
+          "production_date": "2025-05-12",
+          "order_status": 2,
+          "production_end_date": "2025-05-31",
+          "order_number": "7900000032",
+          "order_create_time": "2025-05-12",
+          "base_bom_code": "13M000014301"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010002201",
+          "material_description": "PCB_HDI_W331_MB_V4_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 10550,
+          "type": "W331",
+          "production_date": "2023-10-25",
+          "order_status": 2,
+          "production_end_date": "2023-11-30",
+          "order_number": "3000000054",
+          "order_create_time": "2023-10-25",
+          "base_bom_code": "130050000301"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010000601",
+          "material_description": "PCB_HDI_WL19B19_MB_V5_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 2000,
+          "type": "B19",
+          "production_date": "2023-12-11",
+          "order_status": 2,
+          "production_end_date": "2024-02-29",
+          "order_number": "3000000147",
+          "order_create_time": "2023-12-09",
+          "base_bom_code": "PSB190000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040002401",
+          "material_description": "PCB_FPC_BY01_USB_V5_2层_20拼_沉金_红板",
+          "production_quantity": 136,
+          "type": "BY01",
+          "production_date": "2023-12-01",
+          "order_status": 2,
+          "production_end_date": "2023-12-29",
+          "order_number": "7000000021",
+          "order_create_time": "2023-12-01",
+          "base_bom_code": "13M000003901"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000001301",
+          "material_description": "PCB_NORM_FD02_V3.1_4层_9拼_沉金_中京",
+          "production_quantity": 1500,
+          "type": "FD02",
+          "production_date": "2024-04-01",
+          "order_status": 2,
+          "production_end_date": "2024-04-30",
+          "order_number": "3000000291",
+          "order_create_time": "2024-04-01",
+          "base_bom_code": "TPVTPSFD02000007"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010002301",
+          "material_description": "PCB_HDI_W331_MB_V5_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2024-01-25",
+          "order_status": 2,
+          "production_end_date": "2024-06-29",
+          "order_number": "3000000225",
+          "order_create_time": "2024-01-25",
+          "base_bom_code": "130050000501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010002301",
+          "material_description": "PCB_HDI_W331_MB_V5_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2024-01-25",
+          "order_status": 2,
+          "production_end_date": "2024-06-29",
+          "order_number": "3000000232",
+          "order_create_time": "2024-01-25",
+          "base_bom_code": "130050000501"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040000401",
+          "material_description": "FPC_WL20B20_FPC_GND_V3_2层_带双面胶_沉金_持创",
+          "production_quantity": 100,
+          "type": "B20",
+          "production_date": "2024-04-25",
+          "order_status": 2,
+          "production_end_date": "2024-04-25",
+          "order_number": "5000000129",
+          "order_create_time": "2024-04-25",
+          "base_bom_code": "HSB200000012"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010004101",
+          "material_description": "PCB_HDI_WL19B19S_MB_V6.3_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 1000,
+          "type": "B19S",
+          "production_date": "2024-04-24",
+          "order_status": 2,
+          "production_end_date": "2024-05-15",
+          "order_number": "3000000307",
+          "order_create_time": "2024-04-24",
+          "base_bom_code": "TPVTPSB19S000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010001101",
+          "material_description": "PCB_HDI_WL10B10D1_V3_8层_8拼_沉金+SOP_中京",
+          "production_quantity": 1900,
+          "type": "M1D",
+          "production_date": "2024-09-11",
+          "order_status": 2,
+          "production_end_date": "2024-09-30",
+          "order_number": "3000000562",
+          "order_create_time": "2024-09-11",
+          "base_bom_code": "PSM1D0000001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040000401",
+          "material_description": "FPC_WL20B20_FPC_GND_V3_2层_带双面胶_沉金_持创",
+          "production_quantity": 900,
+          "type": "B20",
+          "production_date": "2024-05-06",
+          "order_status": 2,
+          "production_end_date": "2024-05-18",
+          "order_number": "1000001207",
+          "order_create_time": "2024-05-06",
+          "base_bom_code": "HSB200000013"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040000401",
+          "material_description": "FPC_WL20B20_FPC_GND_V3_2层_带双面胶_沉金_持创",
+          "production_quantity": 10,
+          "type": "B20",
+          "production_date": "2024-05-11",
+          "order_status": 2,
+          "production_end_date": "2024-05-11",
+          "order_number": "5000000140",
+          "order_create_time": "2024-05-11",
+          "base_bom_code": "HSB200000013"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000000402",
+          "material_description": "PCB_NORM_BY01_ALS_V2_2_90拼_沉金_中京",
+          "production_quantity": 4280,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000441",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "13M000004001"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040002701",
+          "material_description": "PCB_FPC_BY01_USB_V6_2层_8拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000438",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "13M000005601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130040003401",
+          "material_description": "PCB_FPC_BY01_LCD_V8_2层_4拼_沉金_红板",
+          "production_quantity": 5000,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000440",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "13M000006401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130010005301",
+          "material_description": "PCB_HDI_BY01_MB_V6_8层_8拼_沉金+OSP_中京",
+          "production_quantity": 8000,
+          "type": "BY01",
+          "production_date": "2024-06-25",
+          "order_status": 2,
+          "production_end_date": "2024-07-30",
+          "order_number": "3000000443",
+          "order_create_time": "2024-06-25",
+          "base_bom_code": "PSBY01000008"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130000001301",
+          "material_description": "PCB_NORM_FD02_V3.1_4层_9拼_沉金_中京",
+          "production_quantity": 40,
+          "type": "FD02",
+          "production_date": "2024-04-15",
+          "order_status": 2,
+          "production_end_date": "2024-04-30",
+          "order_number": "7000000084",
+          "order_create_time": "2024-04-15",
+          "base_bom_code": "TPVTPSFD02000007"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 3500,
+          "type": "W331",
+          "production_date": "2024-12-02",
+          "order_number": "3000000723",
+          "order_create_time": "2024-11-18",
+          "order_status": "2",
+          "production_end_date": "2024-12-31",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001701",
+          "material_description": "PCB_NORM_FD02_V3.1_4层_9拼_沉金_中京",
+          "production_quantity": 2000,
+          "type": "FD03",
+          "production_date": "2024-12-04",
+          "order_number": "3000000732",
+          "order_create_time": "2024-12-04",
+          "order_status": "2",
+          "production_end_date": "2024-12-31",
+          "base_bom_code": "130050001701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001601",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 200,
+          "type": "W331",
+          "production_date": "2024-10-18",
+          "order_number": "3000000650",
+          "order_create_time": "2024-10-18",
+          "order_status": "2",
+          "production_end_date": "2024-10-31",
+          "base_bom_code": "130050001601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001601",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 5250,
+          "type": "W331",
+          "production_date": "2024-12-27",
+          "order_number": "3000000741",
+          "order_create_time": "2024-12-12",
+          "order_status": "2",
+          "production_end_date": "2025-01-31",
+          "base_bom_code": "130050001601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050000601",
+          "material_description": "PCB_HDI_WL21B21_V4_8层_6拼_沉金+OSP_中京",
+          "production_quantity": 418,
+          "type": "B21",
+          "production_date": "2025-05-09",
+          "order_number": "3900000043",
+          "order_create_time": "2025-05-09",
+          "order_status": "2",
+          "production_end_date": "2025-05-30",
+          "base_bom_code": "130050000601"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 4100,
+          "type": "W331",
+          "production_date": "2025-05-27",
+          "order_number": "3900000103",
+          "order_create_time": "2025-05-21",
+          "order_status": "2",
+          "production_end_date": "2025-06-20",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001701",
+          "material_description": "PCB_NORM_FD02_V3.1_4层_9拼_沉金_中京",
+          "production_quantity": 153,
+          "type": "FD03",
+          "production_date": "2025-06-03",
+          "order_number": "7900000044",
+          "order_create_time": "2025-06-03",
+          "order_status": "2",
+          "production_end_date": "2025-06-20",
+          "base_bom_code": "130050001701"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 6500,
+          "type": "W331",
+          "production_date": "2025-05-21",
+          "order_number": "3900000062",
+          "order_create_time": "2025-05-21",
+          "order_status": "2",
+          "production_end_date": "2025-05-30",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-05-27",
+          "order_number": "3900000077",
+          "order_create_time": "2025-05-21",
+          "order_status": "2",
+          "production_end_date": "2025-06-20",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 5700,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_number": "3900000142",
+          "order_create_time": "2025-06-11",
+          "order_status": "2",
+          "production_end_date": "2025-06-30",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_number": "3900000130",
+          "order_create_time": "2025-06-11",
+          "order_status": "2",
+          "production_end_date": "2025-06-30",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 6000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_number": "3900000136",
+          "order_create_time": "2025-06-11",
+          "order_status": "2",
+          "production_end_date": "2025-06-30",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 4000,
+          "type": "W331",
+          "production_date": "2025-06-11",
+          "order_number": "3900000139",
+          "order_create_time": "2025-06-11",
+          "order_status": "2",
+          "production_end_date": "2025-06-30",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_number": "3900000184",
+          "order_create_time": "2025-06-20",
+          "order_status": "2",
+          "production_end_date": "2025-07-20",
+          "base_bom_code": "130050001401"
+        }
+      },
+      {
+        "json": {
+          "material_code": "130050001401",
+          "material_description": "PCB_HDI_W331_MB_V5.30_8层_6拼_主沉金+OSP_中京",
+          "production_quantity": 10000,
+          "type": "W331",
+          "production_date": "2025-06-20",
+          "order_number": "3900000166",
+          "order_create_time": "2025-06-20",
+          "order_status": "2",
+          "production_end_date": "2025-07-20",
+          "base_bom_code": "130050001401"
+        }
+      }
+    ]
+  },
+  "versionId": "1fc9b249-5071-49fc-a7fd-2bf390ab5e2d",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-07-30T01:40:44.978Z",
+      "createdAt": "2025-07-30T01:40:44.978Z",
+      "role": "workflow:owner",
+      "workflowId": "soH8VJ6eD0JD99Dl",
+      "projectId": "Y6ZOz21cjq2fKS18",
+      "project": {
+        "updatedAt": "2025-08-07T02:20:43.893Z",
+        "createdAt": "2025-02-07T02:43:11.522Z",
+        "id": "Y6ZOz21cjq2fKS18",
+        "name": "5.YF_MES_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

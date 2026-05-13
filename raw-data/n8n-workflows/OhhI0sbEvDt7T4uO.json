@@ -1,0 +1,464 @@
+{
+  "updatedAt": "2025-04-24T06:03:28.804Z",
+  "createdAt": "2024-07-23T10:23:44.462Z",
+  "id": "OhhI0sbEvDt7T4uO",
+  "name": "createproductmodel_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\"\n}",
+        "options": {}
+      },
+      "id": "ca714d69-11cb-48b0-9aaf-d9d233e9d1f2",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1660,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c8c7cc91-7fa9-4497-ab08-a39c29ca8aaf",
+              "leftValue": "={{$json.body.product_model_name}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7173a384-e437-4d48-b16e-6360ac60f18b",
+      "name": "判断是否填写必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        780,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "createproductmodel_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5a24a86c-f15f-4e6a-af7d-4aac1e9b7a39",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        620,
+        360
+      ],
+      "webhookId": "6e47d145-9590-46aa-9477-6f348ef957b2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM mes.product_model\nWHERE LOWER(product_model_name) = LOWER('{{ $json.body.product_model_name }}')\nAND LENGTH(product_model_name) = LENGTH('{{ $json.body.product_model_name }}');\n\n",
+        "options": {}
+      },
+      "id": "87c6279a-e085-444c-b93d-0d81df6f2175",
+      "name": "判断是否有重复项",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        940,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "64d3eb65-802e-430c-90fc-4572c5a00a37",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c84a74dc-c907-4711-ae76-278b4889dd59",
+      "name": "是否存在重复项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写机型名称\"\n}",
+        "options": {}
+      },
+      "id": "4fc196ef-0bcb-48ae-b768-aab257c9f206",
+      "name": "报错信息：未填必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "product_model",
+          "mode": "list",
+          "cachedResultName": "product_model"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": 1,
+            "createtime": "={{ $now }}",
+            "product_model_name": "={{ $('Webhook').item.json.body.product_model_name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "product_model_id",
+              "displayName": "product_model_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_model_name",
+              "displayName": "product_model_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "181c04da-ca23-457b-9277-a4fe2e0500d6",
+      "name": "插入数据",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1280,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "960b05ec-a539-4a5c-b24c-148977ca5e49",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0edd8828-ec43-4d2f-812f-30d88ad79f4c",
+      "name": "判断是否插入成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库报错，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "ee81735c-9dd5-44f6-bbd4-e093e62c9878",
+      "name": "报错信息：数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"该机型已存在\"\n}",
+        "options": {}
+      },
+      "id": "40d01af9-139b-4041-8e4e-025804ac976a",
+      "name": "报错信息：存在重复项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "判断是否填写必填项": {
+      "main": [
+        [
+          {
+            "node": "判断是否有重复项",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：未填必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否填写必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有重复项": {
+      "main": [
+        [
+          {
+            "node": "是否存在重复项",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "是否存在重复项": {
+      "main": [
+        [
+          {
+            "node": "插入数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：存在重复项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入数据": {
+      "main": [
+        [
+          {
+            "node": "判断是否插入成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否插入成功": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "28",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "product_model_name": "Modelc"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/createproductmodel_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "af52c4bf-bb3d-444c-b995-8ad069f45cc3",
+  "activeVersionId": "af52c4bf-bb3d-444c-b995-8ad069f45cc3",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:39:50.567Z",
+      "createdAt": "2025-04-24T05:39:50.567Z",
+      "role": "workflow:owner",
+      "workflowId": "OhhI0sbEvDt7T4uO",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

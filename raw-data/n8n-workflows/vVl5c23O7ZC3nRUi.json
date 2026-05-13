@@ -1,0 +1,278 @@
+{
+  "updatedAt": "2026-03-13T19:40:05.581Z",
+  "createdAt": "2025-04-12T13:46:37.674Z",
+  "id": "vVl5c23O7ZC3nRUi",
+  "name": "Date&Time测试",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nfor (const item of $input.all()) {\n  item.json.myNewField = $now;\n  let a=new Date();\n  let b=a.toLocaleString()\n  item.json.a=a\n  item.json.b=b\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -192
+      ],
+      "id": "2c1bbcb5-ea63-473d-a751-1a106ac45435",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -16
+      ],
+      "id": "4679c099-a54f-4da7-b6ff-be003a5f74b0",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = $now;\n  item.json.time=new Date();\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -16
+      ],
+      "id": "237a7f2e-ed1a-4597-b913-c2cd2736269a",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'UTC'; \nSELECT time FROM test.test; -- 显示 UTC 时间",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        320,
+        192
+      ],
+      "id": "c3655464-d40e-42f2-aebe-3580f99501a6",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        544,
+        -16
+      ],
+      "id": "09d870ce-2f6b-428d-ad26-c1455c7b8093",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6ad783e-2f4e-4353-bca1-c3a9465a5a3a",
+              "name": "time",
+              "value": "={{ new Date($json.time).toDateTime() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        192
+      ],
+      "id": "c4557b30-ad87-4101-8279-12d6fa80630e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "test",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "table": {
+          "__rl": true,
+          "value": "test",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": 12312,
+            "time": "={{ $json.currentDate }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        768,
+        -16
+      ],
+      "id": "36390794-5576-46e0-8deb-15af5231b52b",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Date & Time": [
+      {
+        "json": {
+          "myNewField": "2025-08-26T02:08:20.063+08:00",
+          "time": "2025-08-25T18:08:20.070Z",
+          "currentDate": "2025-08-26T02:08:20.147+08:00"
+        }
+      }
+    ]
+  },
+  "versionId": "ff9d3d76-f0b7-4a08-9a60-37208b513bc9",
+  "activeVersionId": null,
+  "versionCounter": 3,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-12T13:46:37.674Z",
+      "createdAt": "2025-04-12T13:46:37.674Z",
+      "role": "workflow:owner",
+      "workflowId": "vVl5c23O7ZC3nRUi",
+      "projectId": "qkFucLdMB4gRfenA",
+      "project": {
+        "updatedAt": "2025-10-28T17:39:46.712Z",
+        "createdAt": "2025-02-17T03:40:37.645Z",
+        "id": "qkFucLdMB4gRfenA",
+        "name": "Z.N8N临时测试",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "spinner"
+        },
+        "description": "测试用途",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

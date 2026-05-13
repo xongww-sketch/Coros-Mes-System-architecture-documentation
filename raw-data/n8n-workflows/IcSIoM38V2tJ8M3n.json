@@ -1,0 +1,435 @@
+{
+  "updatedAt": "2024-06-18T02:26:24.493Z",
+  "createdAt": "2024-03-29T09:07:59.722Z",
+  "id": "IcSIoM38V2tJ8M3n",
+  "name": "Defectivesearch_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sqlQuery }}\n\n\n\n\n",
+        "options": {}
+      },
+      "id": "7eddc39e-e00d-4a8b-a14d-21db6fa4ae41",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        80,
+        200
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"List\":{{ $json[\"searchList\"] }}\n}",
+        "options": {}
+      },
+      "id": "805dbca9-68eb-4122-9e56-79863d582c3c",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        860,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写所有必填项\"\n}",
+        "options": {}
+      },
+      "id": "6a99bdd9-b053-40de-a1ff-f46f65f73d99",
+      "name": "请填写所有必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0443791c-4c2b-481a-bba6-54c1f625acc2",
+              "leftValue": "={{ $json.query.ActiveDate_End }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "bca85e86-93d6-40d3-94c1-b795c012fa49",
+              "leftValue": "={{ $json.query.ActiveDate_Start }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fac7b3e4-c0b8-47ba-b041-4b2bef92795c",
+      "name": "判断所有必填项是否已填",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f12927b7-c6e8-4e92-9a70-2e6d25f1b144",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e8a35d55-cd68-440b-a45d-bfb2b189a423",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        260,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"该激活时间段无不良品\"\n}",
+        "options": {}
+      },
+      "id": "b06602b1-bfbe-459a-84f0-ba6ae1268a47",
+      "name": "激活时间段无不良品",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] - 不良品查询失败",
+        "html": "=",
+        "options": {}
+      },
+      "id": "ad0c528b-4c5c-4a31-b9b2-232a1206cc72",
+      "name": "重复激活设备",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        360,
+        420
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假设输入数据存储在变量 inputData 中\nconst inputData = $input.all()\n// 解析输入数据\nconst data = inputData[0].json;\nconst firmwareTypes = JSON.parse(data.query.firmware_type);\nconst countries = JSON.parse(data.query.Country);\nconst activeDateStart = data.query.ActiveDate_Start;\nconst activeDateEnd = data.query.ActiveDate_End;\n\nconst outputData = [];\n\nif (firmwareTypes.length > 0 && countries.length > 0) {\n  // 如果两者都有值，按照原来的逻辑生成 ITEM\n  for (const country of countries) {\n    for (const firmwareType of firmwareTypes) {\n      const item = {\n        firmware_type: firmwareType,\n        Country: country,\n        ActiveDate_Start: activeDateStart,\n        ActiveDate_End: activeDateEnd\n      };\n      outputData.push(item);\n    }\n  }\n} else if (firmwareTypes.length > 0) {\n  // 如果只有 firmware_type 有值，按照 firmware_type 生成 ITEM\n  for (const firmwareType of firmwareTypes) {\n    const item = {\n      firmware_type: firmwareType,\n      ActiveDate_Start: activeDateStart,\n      ActiveDate_End: activeDateEnd\n    };\n    outputData.push(item);\n  }\n} else if (countries.length > 0) {\n  // 如果只有 Country 有值，按照 Country 生成 ITEM\n  for (const country of countries) {\n    const item = {\n      Country: country,\n      ActiveDate_Start: activeDateStart,\n      ActiveDate_End: activeDateEnd\n    };\n    outputData.push(item);\n  }\n} else {\n  // 如果两者都没有值，只生成包含时间的 ITEM\n  const item = {\n    ActiveDate_Start: activeDateStart,\n    ActiveDate_End: activeDateEnd\n  };\n  outputData.push(item);\n}\n\nreturn outputData;\n\n\n"
+      },
+      "id": "9217b015-9c75-4e37-8004-8a03fdbb4c54",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\nlet sqlQueries = [];\n\n// 遍历inputData数组\nfor (const item of inputData) {\n  let whereConditions = [];\n\n  // 获取item的json属性\n  const queryParams = item.json;\n\n  // 遍历queryParams对象的键值对\n  for (const [key, value] of Object.entries(queryParams)) {\n    if (value && value !== \"0\") {\n      if (key == 'ActiveDate_Start') {\n        whereConditions.push(`ar.activatetime >= '${value}'`);\n      } else if (key == 'ActiveDate_End') {\n        whereConditions.push(`ar.activatetime <= '${value}'`);\n      } else if (key == 'firmware_type') {\n        whereConditions.push(`ar.${key} = '${value}'`);\n      } else if (key == 'Country') {\n        whereConditions.push(`ar.country_code = '${value}'`);\n      }\n    }\n  }\n\n  // 构建SQL查询语句\n  const sqlQuery = `SELECT dr.*, ar.firmware_type, ar.country_code, ar.activatetime FROM public.defective_records dr JOIN public.activation_records ar ON dr.active_id = ar.id ${whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : ''}`;\n\n  // 将生成的SQL查询语句添加到sqlQueries数组中\n  sqlQueries.push({ sqlQuery: sqlQuery });\n}\n\n// 返回sqlQueries数组\nreturn sqlQueries;\n\n\n"
+      },
+      "id": "f596cd11-8bea-4d34-a30d-fbefced4a3da",
+      "name": "构建查询语句",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\n\n// Helper function to calculate the difference in days between two dates\nfunction calculateDaysDifference(isoString, timestamp) {\n    const defectiveDate = new Date(isoString);\n    const activationDate = new Date(Number(timestamp) * 1000); // Convert timestamp to milliseconds\n    const differenceInTime = defectiveDate.getTime() - activationDate.getTime(); // Calculate time difference in milliseconds\n    const differenceInDays = differenceInTime / (1000 * 60 * 60 * 24); // Convert time difference to days without rounding\n    return Math.round(differenceInDays); // Return the rounded difference in days\n}\n\n// Modified input array with added 'activateterm' attribute\nconst modifiedInput = input.map(entry => {\n    // Calculate activateterm and add to the entry object\n    entry.json.activateterm = calculateDaysDifference(entry.json.defective_date, entry.json.activatetime);\n    return entry;\n});\n\nreturn modifiedInput;\n\n\n\n\n\n\n"
+      },
+      "id": "2877008c-376b-4960-a042-019c5a60724b",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "path": "Defectivesearch_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9211fe6c-ed7b-490c-83c9-9700ae022656",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -660,
+        200
+      ],
+      "webhookId": "f03e412a-2908-41a4-a4f7-39d0c7cdf143"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd0188a3-d20b-4723-aafc-570d44205ae1",
+              "name": "searchList",
+              "value": "={{ JSON.stringify($input.all().map(el => el.json)) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "09fe5d3f-3f81-4b09-992b-b55c4887cdeb",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        660,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "判断所有必填项是否已填": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重复激活设备",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "激活时间段无不良品",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "构建查询语句",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建查询语句": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断所有必填项是否已填",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.18.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "firmware_type": "[\"COROS B18\"]",
+            "Country": "[\"CN\",\"US\",\"EU\"]",
+            "ActiveDate_Start": "1709222400",
+            "ActiveDate_End": "1711814400"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/Defectivesearch_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "59f60149-fbb9-46ab-b050-8524cd86d176",
+  "activeVersionId": "59f60149-fbb9-46ab-b050-8524cd86d176",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:56.804Z",
+      "createdAt": "2024-01-26T07:49:15.286Z",
+      "id": "nTeYqAfpKKoeAJjH",
+      "name": "品质部门应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-29T09:07:59.722Z",
+      "createdAt": "2024-03-29T09:07:59.722Z",
+      "role": "workflow:owner",
+      "workflowId": "IcSIoM38V2tJ8M3n",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

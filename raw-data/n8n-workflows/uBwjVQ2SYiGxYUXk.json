@@ -1,0 +1,1504 @@
+{
+  "updatedAt": "2025-07-22T06:23:51.268Z",
+  "createdAt": "2025-06-10T06:20:05.014Z",
+  "id": "uBwjVQ2SYiGxYUXk",
+  "name": "insert_OQC_msg",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "insert_OQC_msg",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4336,
+        304
+      ],
+      "id": "c5f6020a-15fd-4b75-aa12-daf74d9c392e",
+      "name": "Webhook",
+      "webhookId": "1ce5d423-a955-445b-8e3c-af484a204e22"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "add9901c-3e69-4f7d-9447-c082e18acdf8",
+              "leftValue": "={{ $json.body.production_line }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "fe045b5a-11e8-43cc-8e65-8740c920afdb",
+              "leftValue": "={{ $json.body.inspection_num }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4cabfc10-98e6-4ba4-8756-ecf06da28bc2",
+              "leftValue": "={{ $json.body.inspection_All_num }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "01e71068-28fd-4fe4-b68a-5c575ad35b12",
+              "leftValue": "={{ $json.body.badnum_rate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "202b2f9d-a234-4b87-8bc5-9e9e60f60767",
+              "leftValue": "={{ $json.body.bad_num }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "323dd0bc-363e-4eff-8126-e36796b120cc",
+              "leftValue": "={{ $json.body.sn_list }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4cb478c9-a334-426f-8b5b-427140af0fa2",
+              "leftValue": "={{ $json.body.work_station }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b8cf81ea-1e52-4fef-940f-dfed2674eace",
+              "leftValue": "={{ $json.body.inspector }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6ab7c2e4-80f2-47ac-8a21-3333d2f476bc",
+              "leftValue": "={{ $json.body.remark }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e03e3922-d7a7-4f3e-bf6f-a700e77d5b27",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4144,
+        304
+      ],
+      "id": "4b4051f9-c5ae-42d1-b9ae-8825344ca5a4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"填写的参数不完全\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -3744,
+        512
+      ],
+      "id": "3a706f10-3745-4572-9d80-8474ed9a5e4f",
+      "name": "参数不齐全"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":  \"ok\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        48
+      ],
+      "id": "5d8747ba-fcab-49dd-b18a-4d620656b015",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select r.joborder_id from mes.retroid r\nwhere r.retroid='{{ $json.SN }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2048,
+        128
+      ],
+      "id": "94dee849-e181-4ca4-b308-cd928e5bf174",
+      "name": "查找每个sn的工单号",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.sn_list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2800,
+        144
+      ],
+      "id": "cbfdd028-da11-417e-9d17-aebf12643d4b",
+      "name": "分裂SN_list"
+    },
+    {
+      "parameters": {
+        "jsCode": "//收集数据，key是判断sn是否都属于同一个工单的依据\nlet key\nconst mark_job_id = $('Webhook').first().json.body.joborder_id\nconst all_job_id = $input.all().filter(item => item.json.joborder_id !== mark_job_id)\n\nif(all_job_id.length !== 0){\n  key =0\n}else{\n  key=1\n}\n\nreturn {\n  json:{\n    key:key\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1808,
+        112
+      ],
+      "id": "e44ef583-7677-447f-8a91-8c31e30e50ab",
+      "name": "判断sn是否都属于该工单"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "60b8430e-bf24-448e-85af-f3e97e3b9e91",
+              "leftValue": "={{ $json.key }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1664,
+        112
+      ],
+      "id": "abddf471-3769-4727-adca-03fb6677283b",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    body:{\n      \"procedure_name\":$('Webhook').first().json.body.procedure_name\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        64
+      ],
+      "id": "0f3f1217-6630-4503-86d5-9043c49d8d0f",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — 工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -848,
+        64
+      ],
+      "id": "5372baec-d2e1-4a07-a024-226fdb913c91",
+      "name": "查工序id",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "918903bb-a9db-4c38-b663-4d65f1a656a4",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        64
+      ],
+      "id": "d1b6c3a3-8557-4889-abe4-1c3590b3013e",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"工单异常，不存在颜色和机型\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        208
+      ],
+      "id": "4be2e118-9c4d-4893-b35e-4722bea0fefb",
+      "name": "该工单异常"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        64
+      ],
+      "id": "6e3c627f-a7f5-4fda-98f7-f20337a9adef",
+      "name": "收集sn的retroid_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4d26c012-eef0-433c-a4ca-d316a53a9a8a",
+              "name": "procedure_name",
+              "value": "={{ $json.body.procedure_name }}",
+              "type": "string"
+            },
+            {
+              "id": "ae0232e7-c5dd-49e1-a155-91bb0d13aadc",
+              "name": "production_line",
+              "value": "={{ $json.body.production_line }}",
+              "type": "string"
+            },
+            {
+              "id": "85b9fbe6-b0e5-4192-bb73-ef81fa002601",
+              "name": "inspection_num",
+              "value": "={{ $json.body.inspection_num }}",
+              "type": "number"
+            },
+            {
+              "id": "8a07f0eb-f75d-4c49-bba8-a341c102e531",
+              "name": "inspection_All_num",
+              "value": "={{ $json.body.inspection_All_num }}",
+              "type": "number"
+            },
+            {
+              "id": "d01be357-8085-45e7-aa07-ef2d3c41ad6d",
+              "name": "badnum_rate",
+              "value": "={{ $json.body.badnum_rate }}",
+              "type": "string"
+            },
+            {
+              "id": "f2f19f07-68b5-4452-bbd0-1fdb738566a4",
+              "name": "bad_num",
+              "value": "={{ $json.body.bad_num }}",
+              "type": "number"
+            },
+            {
+              "id": "2f759da6-67ed-45b9-9fd9-d72bff93bd3e",
+              "name": "work_station",
+              "value": "={{ $json.body.work_station }}",
+              "type": "string"
+            },
+            {
+              "id": "c2f32985-c055-4801-8086-ffbb8ac138a3",
+              "name": "inspector",
+              "value": "={{ $json.body.inspector }}",
+              "type": "string"
+            },
+            {
+              "id": "d1a0324f-2f9e-41cf-b135-2409d646c44d",
+              "name": "remark",
+              "value": "={{ $json.body.remark }}",
+              "type": "string"
+            },
+            {
+              "id": "1b112096-52e5-4848-ae01-c09db8baa39f",
+              "name": "joborder_id",
+              "value": "={{ $json.body.joborder_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f72a1ef6-d0ff-401e-80fa-21b3007ce509",
+              "name": "sn_list",
+              "value": "={{ $json.body.sn_list }}",
+              "type": "array"
+            },
+            {
+              "id": "66174322-d54c-4e63-8b35-c222bd81023c",
+              "name": "product_color",
+              "value": "={{ $('查颜色和机型').item.json.product_color }}",
+              "type": "string"
+            },
+            {
+              "id": "41f40f6a-b0c0-407e-9964-aede50986853",
+              "name": "product_model_name",
+              "value": "={{ $('匹配sn前三位是否符合工单选择的机型').item.json.mapped_key }}",
+              "type": "string"
+            },
+            {
+              "id": "8ae0fcf7-94bc-48a1-bb31-df70b9cc1e28",
+              "name": "sn_retroid_id_list",
+              "value": "={{ $('收集sn的retroid_id').item.json.retroid_id }}",
+              "type": "array"
+            },
+            {
+              "id": "6c713fb9-130f-4118-867c-d752ee34f4a0",
+              "name": "tag",
+              "value": "={{ $json.body.tag }}",
+              "type": "string"
+            },
+            {
+              "id": "886bbaff-c955-4173-89a9-20b09617fb58",
+              "name": "status",
+              "value": "0",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        48
+      ],
+      "id": "6b20ed6e-a347-49f2-829a-864512b70a8f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r\nwhere r.retroid='{{ $json.SN }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2384,
+        240
+      ],
+      "id": "804d47e4-4c84-40f1-bff1-056074dd223c",
+      "name": "Postgres",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3b451898-32e4-4d2b-860a-b0e72d2a556d",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2144,
+        272
+      ],
+      "id": "039bbd9e-f6be-44e9-8ddc-7966528217d7",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"有sn不存在\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -1840,
+        400
+      ],
+      "id": "1dc16dbe-df11-41be-b09d-30d1de4e34f0",
+      "name": "有sn不存在"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    body:{\n      sn_list:$('Webhook').first().json.body.sn_list\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2368,
+        128
+      ],
+      "id": "4151d380-ebec-4cf3-8f45-bf9c1591f627",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.sn_list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2224,
+        128
+      ],
+      "id": "b8d318b3-7917-428f-a589-3c0f2d4f8880",
+      "name": "分裂SN_list1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    body:{\n      sn_list:$('Webhook').first().json.body.sn_list\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        64
+      ],
+      "id": "0baaa1e4-27e7-4925-967d-6bd3af8cc7b4",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.sn_list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        64
+      ],
+      "id": "b6c82c04-5140-4e51-945c-5e29eb3b1c8a",
+      "name": "分裂SN_list2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select r.retroid_id from mes.retroid r\nwhere r.retroid='{{ $json.SN }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1248,
+        64
+      ],
+      "id": "3f944efc-ff91-4b06-b075-7bd3174ad110",
+      "name": "查找每个sn的id",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Webhook').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        48
+      ],
+      "id": "1de06212-0ab2-4b17-a5e0-18d8b5f0bb76",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2608,
+        144
+      ],
+      "id": "dcd48cf5-1670-4e88-8a8b-00b6192e9e25",
+      "name": "判断sn是否均存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"存在sn不属于该工单。请检查\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -1360,
+        368
+      ],
+      "id": "3995c025-74ae-4f39-8a51-32b71832037b",
+      "name": "存在sn不属于该工单"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $('收集sn的retroid_id').item.json.retroid_id[0] }}",
+            "history_procedure_id": "={{ $('查工序id').item.json.data[0].history_procedure_id }}",
+            "procedure_detail_id": "={{ $('查工序id').item.json.data[0].procedure_detail_id }}",
+            "user_id": 1,
+            "machine_id": 0,
+            "createtime": "={{ $now.toUTC() }}",
+            "data": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        48
+      ],
+      "id": "3e55d594-c4ad-446a-a60e-63620d20f04b",
+      "name": "插入machin_data",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select pi2.product_color\nfrom mes.joborder j \njoin mes.product_info pi2 on j.product_id =pi2.product_id\njoin mes.product_model pm on pi2.product_model_id =pm.product_model_id\nwhere j.joborder_id ={{ $json.joborder_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -480,
+        80
+      ],
+      "id": "f0750946-b7ca-445c-92ca-c6e4a6f7d1fb",
+      "name": "查颜色和机型",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d4b855c6-5872-405b-b52f-c935eb69c593",
+              "leftValue": "={{ $json.body.sn_list.length }}",
+              "rightValue": "={{ $json.body.bad_num }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3696,
+        272
+      ],
+      "id": "fe6058cf-4460-4d7e-9ea4-7f26db9f96f8",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"不良数量与明细表填写sn数量不符合\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -3424,
+        512
+      ],
+      "id": "72677255-75bb-4bd0-8fb8-c70524cd3c41",
+      "name": "明细表sn数量不符合"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "54f68bf0-fc1e-4f7d-b652-4f5dac21bd3e",
+              "leftValue": "={{ $json.hasDuplicates }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3168,
+        144
+      ],
+      "id": "cffc6cb5-d2a2-45b5-9e2e-e72d7dfd82fd",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"明细表sn有重复\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -2960,
+        320
+      ],
+      "id": "fab0b9da-fd71-4281-b64f-c21bd6ee16c1",
+      "name": "明细表sn重复"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.sn_list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -3488,
+        208
+      ],
+      "id": "05dc6209-38b1-46d6-8971-c35af85a7cc0",
+      "name": "分裂SN_list3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 提取所有SN号并过滤掉null/undefined/空字符串\nconst allSNs = items\n  .map(item => item.json.SN)  // 注意字段名是\"SN\"不是\"sn\"\n  .filter(sn => sn != null && sn.trim() !== '');\n\n// 使用Set查重\nconst uniqueSNs = [...new Set(allSNs)];\n\n// 找出重复的SN号\nconst duplicates = allSNs.filter((sn, index) => allSNs.indexOf(sn) !== index);\nconst uniqueDuplicates = [...new Set(duplicates)];\n\n// 获取详细的重复项信息\nconst duplicateDetails = uniqueDuplicates.map(sn => {\n  const duplicateItems = items.filter(item => item.json.SN === sn);\n  return {\n    sn,\n    count: duplicateItems.length,\n    positions: duplicateItems.map(item => item.index),\n    problems: duplicateItems.map(item => item.json.bad_problem)\n  };\n});\n\nreturn {\n  json: {\n    totalItems: items.length,\n    validSNItems: allSNs.length, // 有效的SN号数量(排除空值)\n    uniqueItems: uniqueSNs.length,\n    hasDuplicates: uniqueSNs.length !== allSNs.length,\n    duplicates: uniqueDuplicates,\n    duplicateCount: duplicates.length,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3328,
+        208
+      ],
+      "id": "5a8ef07c-e244-4dec-aa9e-21e1db2b20b0",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Webhook').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2960,
+        144
+      ],
+      "id": "d2b1c8c7-115b-4b0d-9916-8a96d71d5c31",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Define your key-value mapping (left is key, right is value)\nconst keyValueMap = {\n  \"M1D\": \"M04\",\n  \"B20\": \"B20\",\n  \"B21\": \"B21\",\n  \"B18\": \"M18\",\n  \"B19S\": \"V09\",\n  \"W331\": \"W31\",\n  \"W332\": \"W32\",\n  \"B15D\": \"B05\",\n  \"FD05\": \"F05\",\n  \"HR31\": \"H31\",\n  \"BY01\": \"C01\",\n  \"FD02\": \"F02\",\n  \"FD03\": \"F03\",\n  \"W942\": \"W92\",\n  \"S501\": \"S51\",\n  \"W541\": \"W51\",\n  \"W542\": \"W52\",\n  \"W335\": \"W35\"\n};\n\n// Get the incoming data\nconst items = $input.all();\n\n// Process each item\nconst results = items.map(item => {\n  const snValue = item.json.body.sn;\n  \n  // Find the key that has this snValue as its value\n  const matchedKey = Object.keys(keyValueMap).find(key => keyValueMap[key] === snValue);\n  \n  // Return the matched key (or null if not found)\n  return {\n    original_sn: snValue,\n    mapped_key: matchedKey || null\n  };\n});\n\n// Return the processed results\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        48
+      ],
+      "id": "ded4c0e8-1e31-45db-b0d9-0c8932992f15",
+      "name": "匹配sn前三位是否符合工单选择的机型"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取原始UUID值\nconst originalSn = $('Webhook').first().json.body.sn_list[0].SN\n\n\n// 删除第17和18位字符（索引16和17，因为JavaScript从0开始计数）\nconst snCut = originalSn.slice(0, 3) \n\nreturn{\n  json:{\n    body:{\n      sn:snCut\n    }\n  }\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        48
+      ],
+      "id": "2d789aa0-fa66-4351-a890-7d17ab6c5dab",
+      "name": "对应sn前三位"
+    },
+    {
+      "parameters": {
+        "jsCode": "const bad_list = [\n  { key: \"0\", value: \"花屏\" },\n  { key: \"1\", value: \"闪屏\" },\n  { key: \"2\", value: \"黑屏\" },\n  { key: \"3\", value: \"LCD线条纹\" },\n  { key: \"4\", value: \"自动重启\" },\n  { key: \"5\", value: \"恢复出厂设置卡死\" },\n  { key: \"6\", value: \"功耗静置界面卡死\" },\n  { key: \"7\", value: \"资源丢失\" },\n  { key: \"8\", value: \"马达无振动\" },\n  { key: \"9\", value: \"马达振动异响\" },\n  { key: \"10\", value: \"马达振动弱\" },\n  { key: \"11\", value: \"蓝牙无法连接\" },\n  { key: \"12\", value: \"蓝牙连接自动断开\" },\n  { key: \"13\", value: \"旋钮转动无反应\" },\n  { key: \"14\", value: \"旋钮按压无反应\" },\n  { key: \"15\", value: \"旋钮卡顿\" },\n  { key: \"16\", value: \"按键无反应\" },\n  { key: \"17\", value: \"按键手感差\" },\n  { key: \"18\", value: \"心率测试失败\" },\n  { key: \"19\", value: \"漏绑定\" },\n  { key: \"20\", value: \"漏功耗静置\" },\n  { key: \"21\", value: \"漏老化\" },\n  { key: \"22\", value: \"漏恢复出厂设置\" },\n  { key: \"23\", value: \"漏打螺丝\" },\n  { key: \"24\", value: \"漏装轴棒\" },\n  { key: \"25\", value: \"漏镭雕认证信息\" },\n  { key: \"26\", value: \"漏镭雕序列号\" },\n  { key: \"27\", value: \"漏写入序列号\" },\n  { key: \"28\", value: \"写入序列号与中框镭雕序列号不一致\" },\n  { key: \"29\", value: \"功耗高\" },\n  { key: \"30\", value: \"休眠功耗高\" },\n  { key: \"31\", value: \"不防水\" },\n  { key: \"32\", value: \"无电流\" },\n  { key: \"33\", value: \"电流低\" },\n  { key: \"34\", value: \"机头发烫\" },\n  { key: \"35\", value: \"搜星低\" },\n  { key: \"36\", value: \"电量计无数值\" },\n  { key: \"37\", value: \"搜星无数值\" },\n  { key: \"38\", value: \"烧错表盘\" },\n  { key: \"39\", value: \"漏烧出货版本\" },\n  { key: \"40\", value: \"出货版本错误\" },\n  { key: \"41\", value: \"屏白印\" },\n  { key: \"42\", value: \"WiFi不连接\" },\n  { key: \"43\", value: \"气压计不连接\" },\n  { key: \"44\", value: \"气压计爆红\" },\n  { key: \"45\", value: \"校准不过\" },\n  { key: \"46\", value: \"黑卡不过\" },\n  { key: \"47\", value: \"暗室不过\" },\n  { key: \"48\", value: \"通讯不过\" },\n  { key: \"49\", value: \"陀螺仪不过\" },\n  { key: \"50\", value: \"CP值不过\" },\n  { key: \"51\", value: \"无背光\" },\n  { key: \"52\", value: \"屏红斑\" },\n  { key: \"53\", value: \"屏漏光\" },\n  { key: \"54\", value: \"屏内毛丝\" },\n  { key: \"55\", value: \"屏内异物\" },\n  { key: \"56\", value: \"屏内黑点\" },\n  { key: \"57\", value: \"屏内白点\" },\n  { key: \"58\", value: \"屏内异色点\" },\n  { key: \"59\", value: \"屏内气泡\" },\n  { key: \"60\", value: \"盖板掉油墨\" },\n  { key: \"61\", value: \"盖板划伤\" },\n  { key: \"62\", value: \"盖板缺口\" },\n  { key: \"63\", value: \"盖板凹印\" },\n  { key: \"64\", value: \"油墨异色\" },\n  { key: \"65\", value: \"面圈掉镀\" },\n  { key: \"66\", value: \"面圈划伤\" },\n  { key: \"67\", value: \"面圈缺口\" },\n  { key: \"68\", value: \"面圈压伤\" },\n  { key: \"69\", value: \"面圈拉砂纹\" },\n  { key: \"70\", value: \"面圈凹点\" },\n  { key: \"71\", value: \"面圈异色点\" },\n  { key: \"72\", value: \"面圈脏污\" },\n  { key: \"73\", value: \"底盖掉镀\" },\n  { key: \"74\", value: \"底盖划伤\" },\n  { key: \"75\", value: \"底盖缺口\" },\n  { key: \"76\", value: \"底盖脏污\" },\n  { key: \"77\", value: \"底盖拉砂纹\" },\n  { key: \"78\", value: \"底盖压伤\" },\n  { key: \"79\", value: \"底盖异色点\" },\n  { key: \"80\", value: \"PPG镜片划伤\" },\n  { key: \"81\", value: \"PPG镜片亮点\" },\n  { key: \"82\", value: \"PPG镜片掉油墨\" },\n  { key: \"83\", value: \"PPG镜片缺口\" },\n  { key: \"84\", value: \"PPG镜片溢胶\" },\n  { key: \"85\", value: \"PD划伤\" },\n  { key: \"86\", value: \"PD亮点\" },\n  { key: \"87\", value: \"PD脏污\" },\n  { key: \"88\", value: \"PPG支架异物\" },\n  { key: \"89\", value: \"PPG支架装反\" },\n  { key: \"90\", value: \"中框脏污\" },\n  { key: \"91\", value: \"中框划伤\" },\n  { key: \"92\", value: \"中框缺口\" },\n  { key: \"93\", value: \"按键缺口\" },\n  { key: \"94\", value: \"按键划伤\" },\n  { key: \"95\", value: \"按键脏污\" },\n  { key: \"96\", value: \"按键装反\" },\n  { key: \"97\", value: \"按键脱落\" },\n  { key: \"98\", value: \"旋钮掉镀\" },\n  { key: \"99\", value: \"旋钮划伤\" },\n  { key: \"100\", value: \"旋钮缺口\" },\n  { key: \"101\", value: \"旋钮异色点\" },\n  { key: \"102\", value: \"旋钮脏污\" },\n  { key: \"103\", value: \"旋钮脱落\" },\n  { key: \"104\", value: \"端子掉镀\" },\n  { key: \"105\", value: \"端子划伤\" },\n  { key: \"106\", value: \"端子缺口\" },\n  { key: \"107\", value: \"面圈与中框间隙大\" },\n  { key: \"108\", value: \"面圈与中框段差大\" },\n  { key: \"109\", value: \"面圈与中框溢胶\" },\n  { key: \"110\", value: \"PPG镜片与中框间隙大\" },\n  { key: \"111\", value: \"PPG镜片与中框段差大\" },\n  { key: \"112\", value: \"漏装耳通\" },\n  { key: \"113\", value: \"表圈装反\" },\n  { key: \"114\", value: \"表圈装错\" },\n  { key: \"115\", value: \"漏装生耳\" },\n  { key: \"116\", value: \"生耳装错\" },\n  { key: \"117\", value: \"表扣装反\" },\n  { key: \"118\", value: \"表舌装反\" },\n  { key: \"119\", value: \"长短表带装错\" },\n  { key: \"120\", value: \"漏放卡片\" },\n  { key: \"121\", value: \"附件盒方向放反\" },\n  { key: \"122\", value: \"封套印刷不良\" }\n];\n\n// 创建一个 value 到 key 的映射对象\nconst valueToKeyMap = {};\nbad_list.forEach(item => {\n  valueToKeyMap[item.value] = item.key;\n});\n\n// 获取输入数据\nconst inputData = $input.all();\n\n// 处理每个 item\nconst output = inputData.map(item => {\n  if (item.json.body && item.json.body.sn_list) {\n    const processedSnList = item.json.body.sn_list.map(snItem => {\n      if (snItem.bad_problem && Array.isArray(snItem.bad_problem)) {\n        // 转换 bad_problem 数组中的值为 key\n        snItem.bad_problem = snItem.bad_problem.map(problem => {\n          return valueToKeyMap[problem] || problem; // 如果找不到对应的 key，保留原值\n        });\n      }\n      return snItem;\n    });\n    \n    return {\n      ...item.json,\n      sn_list: processedSnList\n    };\n  }\n  return item.json;\n});\n\n// 返回处理后的数据\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        48
+      ],
+      "id": "2083df32-38c1-425f-a49c-b4ee85d2538e",
+      "name": "不良问题标识转换"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n   joborder_id: $('Webhook').first().json.body.joborder_id\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        64
+      ],
+      "id": "1a48204c-721e-4502-a584-fadcfdc55a0d",
+      "name": "Code6"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "参数不齐全",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查找每个sn的工单号": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否都属于该工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分裂SN_list": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否均存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否都属于该工单": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "存在sn不属于该工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "查工序id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查工序id": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "对应sn前三位",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该工单异常",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "收集sn的retroid_id": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "插入machin_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否均存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "有sn不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "分裂SN_list1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分裂SN_list1": {
+      "main": [
+        [
+          {
+            "node": "查找每个sn的工单号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "分裂SN_list2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分裂SN_list2": {
+      "main": [
+        [
+          {
+            "node": "查找每个sn的id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查找每个sn的id": {
+      "main": [
+        [
+          {
+            "node": "收集sn的retroid_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "不良问题标识转换",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否均存在": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入machin_data": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查颜色和机型": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "分裂SN_list3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "明细表sn数量不符合",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "明细表sn重复",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分裂SN_list3": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "分裂SN_list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "匹配sn前三位是否符合工单选择的机型": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "对应sn前三位": {
+      "main": [
+        [
+          {
+            "node": "匹配sn前三位是否符合工单选择的机型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "不良问题标识转换": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "查颜色和机型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "340",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_name": "OQC检测",
+            "production_line": "test",
+            "inspection_num": 100,
+            "inspection_All_num": "100",
+            "badnum_rate": "1.0000%",
+            "bad_num": 1,
+            "work_station": "0",
+            "inspector": "test",
+            "remark": "test",
+            "joborder_id": "1",
+            "sn_list": [
+              {
+                "index": 1749193175903,
+                "SN": "W51AD10041",
+                "bad_problem": [
+                  "花屏",
+                  "闪屏",
+                  "黑屏"
+                ],
+                "result": "test"
+              }
+            ],
+            "tag": "oqc_tag"
+          },
+          "webhookUrl": "https://n8n-dev-mes.coros.team/prod/insert_OQC_msg",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "5c9ba95d-b976-4f3f-b04c-464d559774fa",
+  "activeVersionId": "5c9ba95d-b976-4f3f-b04c-464d559774fa",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-06-10T06:20:05.014Z",
+      "createdAt": "2025-06-10T06:20:05.014Z",
+      "role": "workflow:owner",
+      "workflowId": "uBwjVQ2SYiGxYUXk",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "updatedAt": "2024-04-24T05:58:52.230Z",
+  "createdAt": "2024-01-29T06:00:54.494Z",
+  "id": "UcTZxVMzYERvdFoY",
+  "name": "jobinfo_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select TOP 10000* from consm_jobinfo WHERE jobnumber like '%{{ $json.query.jobnumber }}%'"
+      },
+      "id": "6b90f5dd-05c5-45c9-9718-a78859864f1a",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        680,
+        360
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "4dec43ff-7378-4f33-9ae1-caffd223fc2b",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "54f43b49-9bf9-4827-896f-b86aa10e7bd8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        360
+      ],
+      "webhookId": "4dec43ff-7378-4f33-9ae1-caffd223fc2b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d857c50e-f3e7-4df7-b6d5-61585dec116a",
+              "leftValue": "={{ $json.query.jobnumber }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "2f202b36-6b4d-4461-87e5-ef7bbad4e405",
+              "leftValue": "={{ $json.query.jobnumber }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d0ec525b-90bc-4469-a35e-3c5ae36d3dca",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        460,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst linestagecode = {\n  ASSY: '组装',\n  PACK: '包装',\n  null: '空',\n};\n\nconst productcode = {\n  handloop: '穿戴式手环',\n  watch: '穿戴式手表',\n  pnd: '便携式导航',\n  deviceparts: '配件',\n  coros: '智能头盔',\n  null: '空',\n};\n\nconst customcode= {\n  WELOOP: '唯乐',\n  coros: 'coros',\n  Magellan: '麦哲伦',\n  null: '空',\n  };\n\nfor (const item of $input.all()) {\n  item.json.productcode = productcode[item.json.productcode] ||    \n  item.json.productcode;\n  item.json.customcode = customcode[item.json.customcode] ||    \n  item.json.customcode;\n  item.json.linestagecode = linestagecode[item.json.linestagecode] ||    \n  item.json.linestagecode;  \n\n}\n\nreturn $input.all();\n  \n\n"
+      },
+      "id": "d90a4e1b-7549-459b-a556-788f36a6ee2b",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        360
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "host": "192.168.128.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "jobnumber": "600"
+          },
+          "body": {}
+        }
+      }
+    ]
+  },
+  "versionId": "af5ba83d-23fb-4208-8483-8e9f7c69e70f",
+  "activeVersionId": "af5ba83d-23fb-4208-8483-8e9f7c69e70f",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:41.807Z",
+      "createdAt": "2024-01-29T03:43:19.869Z",
+      "id": "wbylAziHNIuwj3Uh",
+      "name": "MES查询应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-01-29T06:00:54.499Z",
+      "createdAt": "2024-01-29T06:00:54.499Z",
+      "role": "workflow:owner",
+      "workflowId": "UcTZxVMzYERvdFoY",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

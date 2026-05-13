@@ -1,0 +1,338 @@
+{
+  "updatedAt": "2025-05-22T09:20:51.320Z",
+  "createdAt": "2025-05-12T09:09:04.454Z",
+  "id": "Rx4Xtc6TDYvnrJBG",
+  "name": "downloadSN_V_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "downloadSN_V_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1080,
+        80
+      ],
+      "id": "84f2fbd7-f36b-41ac-a0e6-681bcc8a7b9a",
+      "name": "Webhook",
+      "webhookId": "0598ff14-3636-4e18-bf32-bfa85257b51a"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":  \"ok\",\n  \"data\": \"{{ $json.retroid }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        60
+      ],
+      "id": "138528f7-c86e-4f34-9843-b6ed59f53895",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "343bc8d3-32b7-47b5-83bb-65e2f7af6966",
+              "leftValue": "={{ $json.body.beginseries }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ed70cb5b-9350-4c11-bbd1-e50fb12bc65b",
+              "leftValue": "={{ $json.body.endseries }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d0b5f67f-a015-46dc-8541-4b9d75faa013",
+              "leftValue": "={{ $json.body.product_model_name_easy }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "868f21ea-bf65-46d8-a3ac-38c43e5421ed",
+              "leftValue": "={{ $json.body.materials_code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -920,
+        80
+      ],
+      "id": "7dee2b64-b8d9-4b31-bb89-3fcf26a1f25d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Webhook').first().json.body"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        60
+      ],
+      "id": "00483ab6-b24b-4f64-974d-77c145701c3b",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f7c13638-73fe-4c65-8a53-522a1cc85ca7",
+              "name": "=retroid",
+              "value": "={{ $json.sn }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -260,
+        60
+      ],
+      "id": "b5284e62-6abe-4494-a742-8b2117241384",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        60
+      ],
+      "id": "0343f176-06a3-457f-85bb-78532e45f627",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"500\",\n  \"msg\":  \"参数不完整\",\n  \"data\": \" \"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -700,
+        240
+      ],
+      "id": "40bc2945-5c64-497d-9b01-9e20326e4518",
+      "name": "参数不完整"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst result = [];\n\ninput.forEach(item => {\n    const { \n        product_model_name_easy = '',  // 3位型号简写\n        beginseries,                   // 开始序列号\n        endseries,                     // 结束序列号\n        materials_code = ''         // 第4-5位材料编码\n    } = item.json || {};\n\n    // 验证输入\n    if (beginseries > endseries) {\n        console.error(\"Beginseries cannot be greater than Endseries:\", beginseries, endseries);\n        return;\n    }\n\n    // 处理product_model_name_easy，确保3位\n    const modelPrefix = String(product_model_name_easy || 'XXX')\n        .trim()\n        .substring(0, 3)\n        .padEnd(3, 'X')\n        .toUpperCase();\n\n    // 处理materials_coding，确保2位\n    const materialCode = String(materials_code || '00')\n        .trim()\n        .substring(0, 2)\n        .padEnd(2, '0')\n        .toUpperCase();\n\n    // 生成序列号\n    for (let i = beginseries; i <= endseries; i++) {\n        // 将数字部分格式化为7位（因为前5位已占用）\n        const numberPart = String(i).padStart(7, '0');\n        \n        // 组合成12位SN：3位型号 + 2位材料编码 + 7位序列号\n        const sn = `${modelPrefix}${materialCode}${numberPart}`.substring(0, 12);\n        \n        result.push({ \n            json: { \n                sn,\n                model: modelPrefix,\n                materialCode,\n                sequence: numberPart,\n                originalData: item.json\n            } \n        });\n    }\n});\n\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        60
+      ],
+      "id": "777b723f-6f0c-4b54-a28f-223e2cbe3b76",
+      "name": "返回sn",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "参数不完整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "返回sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回sn": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "95",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "beginseries": "1001",
+            "endseries": "1003",
+            "product_model_name_easy": "W51",
+            "materials_code": "bm"
+          },
+          "webhookUrl": "https://n8n-dev-mes.coros.team/prod/downloadSN_V_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "18e9b25f-c552-4430-997b-6e64022e0ac5",
+  "activeVersionId": "18e9b25f-c552-4430-997b-6e64022e0ac5",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-05-12T09:09:04.454Z",
+      "createdAt": "2025-05-12T09:09:04.454Z",
+      "role": "workflow:owner",
+      "workflowId": "Rx4Xtc6TDYvnrJBG",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

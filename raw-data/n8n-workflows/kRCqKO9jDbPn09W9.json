@@ -1,0 +1,288 @@
+{
+  "updatedAt": "2026-02-02T13:26:52.005Z",
+  "createdAt": "2025-09-05T06:31:10.063Z",
+  "id": "kRCqKO9jDbPn09W9",
+  "name": "日本mes数据上传接口",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "日本mes数据上传",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "data",
+              "fieldType": "file",
+              "multipleFiles": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -752,
+        -16
+      ],
+      "id": "849ad844-9687-4a5c-808b-9614e83c4722",
+      "name": "On form submission",
+      "webhookId": "5557086b-a97c-4e9c-9cf8-b8f70759c02f"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -16
+      ],
+      "id": "fb5dec5f-caca-4073-a742-84e018dd2624",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Excel序列号转 JS Date\nfunction excelDateToJSDate(serial) {\n    if (typeof serial !== 'number') return null;\n    // Excel序列号是1900-01-01为1，JS的Date是1970-01-01为0，二者中间差25569天\n    const utc_days = Math.floor(serial - 25569);\n    const utc_value = utc_days * 86400;\n    const fractional_day = serial - Math.floor(serial) + 0.0000001;\n    let totalSeconds = Math.floor(utc_value + (fractional_day * 86400));\n    return new Date(totalSeconds * 1000);\n}\n\n// 补零工具\nconst pad = n => n < 10 ? '0' + n : n;\n\n// 格式化日期为字符串\nfunction formatDate(date) {\n    if (!date) return null;\n    return (\n        date.getFullYear() + '-' +\n        pad(date.getMonth() + 1) + '-' +\n        pad(date.getDate()) + ' ' +\n        pad(date.getHours()) + ':' +\n        pad(date.getMinutes()) + ':' +\n        pad(date.getSeconds())\n    );\n}\n\n// 转换函数\nconst transformData = (input) => {\n  return input.map(item => {\n    // 转换createtime（Excel 日期号转为日期字符串）\n    const date = excelDateToJSDate(item[\"Packing Date\"]);\n    const createtime = formatDate(date);\n\n    // 拷贝原对象并对createtime格式化\n    const data = { ...item };\n    data.createtime = createtime;\n\n    return {\n      \"retroid\": item[\"Serial No\"],\n      \"job_number\": item[\"joborder\"],\n      \"data\": data,\n      \"createtime\": createtime\n    };\n  });\n};\n\n// 获取输入数据\nconst input = items.map(item => item.json);\n\n// 执行转换\nconst output = transformData(input);\n\n// 返回处理后的数据\nreturn output.map(data => ({ json: data }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -16
+      ],
+      "id": "e750b02b-ba35-4b6e-ae30-0c3a768b6f8b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_jp",
+          "mode": "list",
+          "cachedResultName": "mes_jp"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "data": "={{ $json.data }}",
+            "job_number": "={{ $json.job_number }}",
+            "createtime": "={{ $json.createtime }}",
+            "uploadtime": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uploadtime",
+              "displayName": "uploadtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "e2a2f879-ad72-4840-9aac-739c4d95a589",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "上传成功",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "c5a816ce-e855-4f83-9483-22115088201d",
+      "name": "Form",
+      "webhookId": "d8ddccd1-f0f6-4c32-96cc-a9a8cccabacc"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "data": {
+            "filename": "日本mes数据251222-W942.xlsx",
+            "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "size": 42535
+          },
+          "submittedAt": "2025-12-23T11:00:36.769+08:00",
+          "formMode": "production"
+        },
+        "binary": {
+          "data": {
+            "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "fileExtension": "xlsx",
+            "data": "s3",
+            "fileName": "日本mes数据251222-W942.xlsx",
+            "id": "s3:workflows/kRCqKO9jDbPn09W9/executions/temp/binary_data/d4575cfa-a72a-45e5-8594-04d50a63664e",
+            "fileSize": "42.5 kB"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "bb1e98e2-8a8e-417f-b980-0c3d86e9a2e6",
+  "activeVersionId": "bb1e98e2-8a8e-417f-b980-0c3d86e9a2e6",
+  "versionCounter": 60,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-05T06:31:10.063Z",
+      "createdAt": "2025-09-05T06:31:10.063Z",
+      "role": "workflow:owner",
+      "workflowId": "kRCqKO9jDbPn09W9",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

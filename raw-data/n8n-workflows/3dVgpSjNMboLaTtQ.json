@@ -1,0 +1,547 @@
+{
+  "updatedAt": "2025-06-27T07:03:16.980Z",
+  "createdAt": "2025-06-27T05:40:20.436Z",
+  "id": "3dVgpSjNMboLaTtQ",
+  "name": "get_history_delete_info",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "getHistoryDeleteInfo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1740,
+        400
+      ],
+      "id": "34f3532f-9535-4bcb-abed-04dc145ae243",
+      "name": "Webhook",
+      "webhookId": "ce220ab8-a975-4998-b357-38e4d2d2053f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "464814ff-88c9-41ec-9fb9-29a473a07c76",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -520,
+        120
+      ],
+      "id": "08615824-7f79-4c34-851e-6119eb1f1aac",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "25e73832-fb5b-4423-a5cc-bb5be15c0241",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7693a18c-678e-4e89-ab41-b78a325cd324",
+      "name": "If3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1280,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"sn格式错误！\"\n}",
+        "options": {}
+      },
+      "id": "53dc7b37-aed7-425b-8aba-cb189fc9415a",
+      "name": "错误信息：sn或单据编号不能为空",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.sn }}"
+            },
+            {
+              "column": "status",
+              "condition": "<",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -740,
+        240
+      ],
+      "id": "c3b79c75-8e8d-4b7d-83c4-1c81f2c004ab",
+      "name": "获取retroid",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "169dd790-5344-4f8b-ba29-0aae835ca2ff",
+      "name": "错误信息：数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"未找到该SN，请检查SN是否正确！\"\n}",
+        "options": {}
+      },
+      "id": "4ae1413a-7260-48f9-ae41-43d7e4a5cc4d",
+      "name": "错误信息：数据库错误1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT md.* \nFROM mes.mes.machine_data AS md \nWHERE md.retroid_id = {{ $json.retroid_id }} \n  AND md.procedure_detail_id = 91",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -300,
+        20
+      ],
+      "id": "f2457f48-ff7d-4fb0-856e-79a01556aa91",
+      "name": "从machine_Data中查询包装数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ec63604b-0302-41c5-bab2-aa18788aeae1",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9205b84d-c506-48a3-9ea4-9b1616dfd12e",
+      "name": "判断数据是否为空"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"该SN不存在删除数据！\"\n}",
+        "options": {}
+      },
+      "id": "8354f089-51bf-410b-a968-eaa52c67095b",
+      "name": "错误信息：数据库错误2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        420
+      ],
+      "id": "d2811f67-fe0d-4050-aa37-1259ed266aff",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n\n// 假设 $input.all() 是获取所有输入数据的方法\nconst inputData = $input.all().map(item => {\n  const sn=$(\"Webhook\").all()[0].json.body.sn;\n  return {\n    retroid:item.json.sn??sn,\n    retroid_id:item.json.retroid_id,\n    procedure_detail_id:item.json.procedure_detail_id,\n    create_time:item.json.createtime,\n    data:item.json.data\n    \n  }\n}); // 在实际使用中获取数据\nconst response = {\n  code:200,\n  data:inputData\n};\n\n// 返回处理后的结果\nreturn response;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        440
+      ],
+      "id": "6d6b34a5-8064-42e2-836b-afe6c4ac0869",
+      "name": "转换格式",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b47e1693-6d06-4556-a037-607025b8f6b1",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -980,
+        360
+      ],
+      "id": "c4472cbe-d19c-4330-a5af-7f75dcc76ea7",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 遍历输入项并处理每条数据\nlet result = {\n    code: 0,\n    message: '处理成功'\n};\n\nfor (const item of $input.all()) {\n    const requestData = item.json.body;\n    \n    // 校验工序ID必填\n    if (!requestData.procedure_detail_id) {\n        return {\n            code: 1,\n            message: '请选择工序！',\n            data: null\n        };\n    }\n    \n    // 判断SN和工单号哪个存在\n    if (requestData.sn) {\n        result = {\n            code: 2,\n            sn: requestData.sn,\n            procedure_id: requestData.procedure_id  // 保留工序ID\n        };\n    } else if (requestData.jobNumber) {  // 修正了原代码中的拼写错误\n        result = {\n            code: 3,\n            jobNumber: requestData.jobNumber,\n            procedure_id: requestData.procedure_id  // 保留工序ID\n        };\n    } else {\n        return {\n            code: 4,\n            message: '必须提供SN或工单号',\n            data: null\n        };\n    }\n    \n    // 如果只需要处理第一条有效数据就跳出循环\n    break;\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1460,
+        400
+      ],
+      "id": "51c42830-8f84-4a8c-98b2-cedf2e210eeb",
+      "name": "判断查询整个工单号还是查询单独的SN"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\nselect  m.retroid_id,r.retroid as sn,m.data,m.createtime,m.procedure_detail_id \nFROM mes.mes.machine_data m JOIN mes.mes.retroid as r on m.retroid_id=r.retroid_id\nWHERE \n  m.data->>'jobNumber' = '{{ $json.jobNumber }}' \n  AND m.procedure_detail_id = {{ $('Webhook').all()[0].json.body.procedure_detail_id }}\n  -- 修正：移除子查询中的 procedure_detail_id 限制，确保检测所有删除标记\n  AND not EXISTS (\n      SELECT * \n    FROM mes.mes.machine_data m2 \n    WHERE \n      m2.retroid_id=m.retroid_id and\n      (m2.data::jsonb) ? 'machine_data_id_old'  -- 删除标记识别条件\n      and (m2.data->>'procedure_detail_id_old')::integer = {{ Number($('Webhook').all()[0].json.body.procedure_detail_id) }}\n      and m2.createtime>m.createtime\n  )\n  ORDER BY m.createtime ASC \n  \n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -720,
+        460
+      ],
+      "id": "1abb7a36-701c-4a41-8311-82d75e54c6dd",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断查询整个工单号还是查询单独的SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "从machine_Data中查询包装数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：sn或单据编号不能为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取retroid": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从machine_Data中查询包装数据": {
+      "main": [
+        [
+          {
+            "node": "判断数据是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据是否为空": {
+      "main": [
+        [
+          {
+            "node": "转换格式",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误信息：数据库错误2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "转换格式": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "获取retroid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询整个工单号还是查询单独的SN": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "转换格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "e937da1a-d533-4d29-8c6e-6340ecaa4da5",
+  "activeVersionId": "e937da1a-d533-4d29-8c6e-6340ecaa4da5",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-06-27T05:40:20.436Z",
+      "createdAt": "2025-06-27T05:40:20.436Z",
+      "role": "workflow:owner",
+      "workflowId": "3dVgpSjNMboLaTtQ",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,1328 @@
+{
+  "updatedAt": "2025-12-04T02:00:39.024Z",
+  "createdAt": "2025-10-23T02:51:00.294Z",
+  "id": "wrZlOb6d4HipmR53",
+  "name": "PPG_dispensing_api",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "PPG_dispensing_api",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1472,
+        48
+      ],
+      "id": "65aad00f-dc88-4f7d-a41e-0b23b1646579",
+      "name": "Webhook",
+      "webhookId": "ba78ff60-9ba3-4dad-bd8f-279466ecb425"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $(\"Webhook\").all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        16
+      ],
+      "id": "00d8e81a-1827-41d4-95a7-2da9e790551a",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"工艺流程不包含这道工序\"\n}",
+        "options": {}
+      },
+      "id": "f7b93039-1427-42d2-92e5-3cc6660f91d9",
+      "name": "工艺流程不包含该工序",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -528,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iipMI3IDY4ryTUpO",
+          "cachedResultName": "1.Mes重构 — 工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1072,
+        32
+      ],
+      "id": "bb368baa-3ea5-40bd-8772-18deec795295",
+      "name": "工序查询通用接口"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7a4bf665-6f4c-4357-b859-610b92ea332c",
+              "leftValue": "={{ $json.query.sn.length}}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "e49de6fc-a76a-442b-b203-b4b335c21abb",
+              "leftValue": "={{ $json.query.bind_id.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "2c598672-7ed6-41a9-a8e9-0d6ecdd59170",
+              "leftValue": "={{ $json.query.sn.slice(0,3)}}",
+              "rightValue": "={{ $json.query.bind_id.slice(0,3)}}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cb71d59a-a51a-4398-b479-6cfc597363e4",
+      "name": "判断保压盒和sn输入格式是否准确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        -1328,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c535b581-ac4b-4f6b-a6b7-d1a9f1b63f4c",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        32
+      ],
+      "id": "55de170d-da31-46c4-b232-bdacde5aced2",
+      "name": "判断工序是否存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请检查保压盒和sn是否正确\"\n}",
+        "options": {}
+      },
+      "id": "45c39efa-5c9d-4289-af6b-c47b2f8a4402",
+      "name": "请检查保压盒和sn是否正确",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -928,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r \nwhere r.retroid = '{{ $json.body.sn }}'\nand r.status in('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        -96
+      ],
+      "id": "babaed17-d9a2-4c1e-b9e4-75b0613573b1",
+      "name": "查询sn状态",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "13477145-8bfe-4126-8664-b1d00df1adb7",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        -96
+      ],
+      "id": "5fa04100-d89a-4621-9dc0-be0fd3e6ba23",
+      "name": "判断sn是否准确"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库报错\"\n}",
+        "options": {}
+      },
+      "id": "4940aa90-200f-406c-8cb3-25c24f80cf08",
+      "name": "数据库报错",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2192,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请检查sn是否存在\"\n}",
+        "options": {}
+      },
+      "id": "9834a899-92d9-4c18-ac47-9a9d25533fd2",
+      "name": "请检查sn是否存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "material",
+          "mode": "list",
+          "cachedResultName": "material"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "material",
+              "value": "={{ $('Webhook').item.json.query.bind_id }}"
+            },
+            {
+              "column": "status",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        272,
+        -112
+      ],
+      "id": "0303d826-1545-4166-8774-5ddd4b61e179",
+      "name": "查询保压盒是否存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "13477145-8bfe-4126-8664-b1d00df1adb7",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        -192
+      ],
+      "id": "266e38fd-9a02-4a52-94a4-365d5a858dda",
+      "name": "判断保压盒是否准确"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请检查保压盒是否存在\"\n}",
+        "options": {}
+      },
+      "id": "fe9317c5-70c6-4c5a-8950-93acfa958297",
+      "name": "请检查保压盒是否存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "r9luD4UCXwa2jCAp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/r9luD4UCXwa2jCAp",
+          "cachedResultName": "1.Mes重构 — 前置工序校验通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -592,
+        32
+      ],
+      "id": "28b6dda6-2ec2-45ca-ba6c-4e926672f47a",
+      "name": "Call '前置工序校验通用接口'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "46635e02-2b20-4379-930d-ed4226740683",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        32
+      ],
+      "id": "72ab19c0-a466-4ced-96d8-47eec95c5170",
+      "name": "判断前置工序是否完成"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 构造目标格式\nconst result = {\n  body: {\n    sn: $('Webhook').first().json.query.sn || \"\",\n    uuid: \"\",          // IF 没有，留空  \n    procedure_name: $('Webhook').first().json.body.procedure_name || \"\"\n  }\n};\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        32
+      ],
+      "id": "5358ffdb-9bb6-4e2c-bced-26bb6fc49af4",
+      "name": "整理查询数据1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"403\",\n  \"msg\":\"该SN未完成{{ $json.procedure_name }}\"\n}",
+        "options": {}
+      },
+      "id": "660e8209-f480-4e7e-8495-e9a8a7f9f983",
+      "name": "报错信息：该SN未完成上一道工序",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 构造目标格式\nconst result = {\n    sn: $('Webhook').first().json.query.sn || \"\", \n    bind_id:$input.first().json.material,\n    retroidId:$(\"查询sn状态\").first().json.retroid_id\n};\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -208
+      ],
+      "id": "8c6a8519-9617-40d2-b8d8-bad418731686",
+      "name": "构建查询数据"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * \nFROM mes.machine_data md \nWHERE\n    md.data ->>'material' = '{{ $json.bind_id }}'\n  ORDER BY createtime DESC\n  LIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        -208
+      ],
+      "id": "19f8ca82-2511-48e7-95f5-690616ae5561",
+      "name": "查询对应时间阈值",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 针对 Code 节点\nconst inputItems = $input.all(); \nconst row = inputItems[0].json;\n\nconst createTime = new Date(row.createtime);\n\n// --- 修改开始 ---\n// 1. 先尝试转为数字，如果转换失败(NaN)则默认为 0\nlet tempLimit = Number(row.data.timelimit) || 0;\n\n// 2. 如果小于 1，则强制归零，否则保留原值\nconst timeLimit = tempLimit < 1 ? 0 : tempLimit;\n// --- 修改结束 ---\n\nconst createTimestamp = createTime.getTime();\n\n// 计算过期时间\nconst addTimestamp = createTime.getTime() + timeLimit * 60 * 60 * 1000;\nconst nowTimestamp = Date.now();\n\n// 输出新数据\nreturn [\n  {\n    json: {\n      createTimestamp,        \n      timeLimitHours: timeLimit, // 这里输出的就会是 0 (如果原始值是 0.5 或 0.1)\n      afterAddTimestamp: addTimestamp,   \n      nowTimestamp           \n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        -224
+      ],
+      "id": "4483381e-f637-4502-b7a1-f895d09a3335",
+      "name": "计算是否到达阈值"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2fa06f42-6270-4418-98d4-9b3d7d3aa94e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -192
+      ],
+      "id": "8ed8d9c6-a067-47b1-b346-cca244cf1b5b",
+      "name": "校验保压盒是否已经有和胶水的绑定记录"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请检查保压盒是否已经绑定胶水\"\n}",
+        "options": {}
+      },
+      "id": "a2c9ab73-7d31-4f8c-beed-f0aa17114ba0",
+      "name": "请检查保压盒是否已经绑定胶水",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "503bb171-0f80-4a32-a2f2-2a4c058d7482",
+              "leftValue": "={{ $json.afterAddTimestamp }}",
+              "rightValue": "={{ $json.nowTimestamp }}",
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        -256
+      ],
+      "id": "0b807295-2d51-47ba-96c6-273e3ad3f518",
+      "name": "判断阈值"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 构造目标格式\nconst result = {\n    retroidId:$(\"查询sn状态\").first().json.retroid_id,\n    procedure_detail_id:$('工序查询通用接口').first().json.data[0].procedure_detail_id,\n    history_procedure_id:$('工序查询通用接口').first().json.data[0].history_procedure_id,\n    data:$(\"Webhook\").first().json.body,\n}\n  ;\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        -112
+      ],
+      "id": "64b438a5-a353-4e2f-b584-3be70c3fd4ac",
+      "name": "构建插入数据"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $json.retroidId }}",
+            "machine_id": 0,
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}",
+            "history_procedure_id": "={{ $json.history_procedure_id }}",
+            "createtime": "={{ $now }}",
+            "data": "={{ $json.data }}",
+            "user_id": 1
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1584,
+        -112
+      ],
+      "id": "28069a6b-5758-4d80-86e6-839c5b91bfb8",
+      "name": "插入machine_data",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8536947a-8d39-46fb-96f4-67203ad08a8f",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        -112
+      ],
+      "id": "34936d70-37d6-4afa-a495-ee44d5ad503a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"保压盒未到达时间阈值\"\n}",
+        "options": {}
+      },
+      "id": "d47c5a11-b891-4abe-aebf-51af0546a803",
+      "name": "保压盒未到达时间阈值",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2032,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\": \"成功绑定\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2096,
+        -96
+      ],
+      "id": "279b8e22-e2ca-45dc-8a20-193ad7f66b5f",
+      "name": "成功绑定"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "material",
+          "mode": "list",
+          "cachedResultName": "material"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "material_id": "={{$('查询保压盒是否存在').first().json.material_id}}",
+            "status": 1
+          },
+          "matchingColumns": [
+            "material_id"
+          ],
+          "schema": [
+            {
+              "id": "material_id",
+              "displayName": "material_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "joborder_id",
+              "displayName": "joborder_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "material",
+              "displayName": "material",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1936,
+        -112
+      ],
+      "id": "0ff240bb-a806-424e-ba90-8a71b8134e47",
+      "name": "更改保压盒状态",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7a4bf665-6f4c-4357-b859-610b92ea332c",
+              "leftValue": "={{ $json.query.sn.length}}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "e49de6fc-a76a-442b-b203-b4b335c21abb",
+              "leftValue": "={{ $json.query.bind_id.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "2c598672-7ed6-41a9-a8e9-0d6ecdd59170",
+              "leftValue": "={{ $json.query.sn.slice(0,3)}}",
+              "rightValue": "={{ $json.query.bind_id.slice(2,5)}}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "036c9728-4887-418d-b94e-96dfd3dcbda4",
+      "name": "判断保压盒和sn输入格式是否准确1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        -1168,
+        208
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断保压盒和sn输入格式是否准确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "查询sn状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "工序查询通用接口": {
+      "main": [
+        [
+          {
+            "node": "判断工序是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工序是否存在": {
+      "main": [
+        [
+          {
+            "node": "整理查询数据1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工艺流程不包含该工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断保压盒和sn输入格式是否准确": {
+      "main": [
+        [
+          {
+            "node": "工序查询通用接口",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断保压盒和sn输入格式是否准确1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn状态": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否准确",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否准确": {
+      "main": [
+        [
+          {
+            "node": "查询保压盒是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请检查sn是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询保压盒是否存在": {
+      "main": [
+        [
+          {
+            "node": "判断保压盒是否准确",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断保压盒是否准确": {
+      "main": [
+        [
+          {
+            "node": "构建查询数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请检查保压盒是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call '前置工序校验通用接口'": {
+      "main": [
+        [
+          {
+            "node": "判断前置工序是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断前置工序是否完成": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未完成上一道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理查询数据1": {
+      "main": [
+        [
+          {
+            "node": "Call '前置工序校验通用接口'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建查询数据": {
+      "main": [
+        [
+          {
+            "node": "查询对应时间阈值",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应时间阈值": {
+      "main": [
+        [
+          {
+            "node": "校验保压盒是否已经有和胶水的绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验保压盒是否已经有和胶水的绑定记录": {
+      "main": [
+        [
+          {
+            "node": "计算是否到达阈值",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请检查保压盒是否已经绑定胶水",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "计算是否到达阈值": {
+      "main": [
+        [
+          {
+            "node": "判断阈值",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断阈值": {
+      "main": [
+        [
+          {
+            "node": "构建插入数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "保压盒未到达时间阈值",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建插入数据": {
+      "main": [
+        [
+          {
+            "node": "插入machine_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入machine_data": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "更改保压盒状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更改保压盒状态": {
+      "main": [
+        [
+          {
+            "node": "成功绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断保压盒和sn输入格式是否准确1": {
+      "main": [
+        [
+          {
+            "node": "工序查询通用接口",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请检查保压盒和sn是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "84",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {
+            "bind_id": "PPW3600000",
+            "procedure_name": "PPG点胶-保压结束",
+            "sn": "W36XP00015"
+          },
+          "body": {
+            "procedure_name": "PPG点胶-保压结束",
+            "bind_id": "PPW3600000",
+            "sn": "W36XP00015"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/PPG_dispensing_api",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "a450e38c-449f-4bf4-bcbd-67f42abe8414",
+  "activeVersionId": "a450e38c-449f-4bf4-bcbd-67f42abe8414",
+  "versionCounter": 48,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-10-23T02:51:00.294Z",
+      "createdAt": "2025-10-23T02:51:00.294Z",
+      "role": "workflow:owner",
+      "workflowId": "wrZlOb6d4HipmR53",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

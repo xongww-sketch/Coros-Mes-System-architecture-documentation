@@ -1,0 +1,715 @@
+{
+  "updatedAt": "2026-01-20T06:13:56.969Z",
+  "createdAt": "2026-01-19T03:16:11.352Z",
+  "id": "7syowVu3aWi5YFeZ",
+  "name": "批量修改sn备注",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "批量更改sn备注信息",
+        "formDescription": "请提供正确的sn。\n模板请参考：https://www.kdocs.cn/l/criAatMlJjq5",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "sn文档",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".xlsx"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -400,
+        80
+      ],
+      "id": "cbf8ccb7-6a90-4b61-aa82-b148622030b8",
+      "name": "On form submission",
+      "webhookId": "b52c8bdf-18dc-43c4-9436-18071e71d8fd"
+    },
+    {
+      "parameters": {
+        "content": "sn有时候返投需要批量修改备注，如果产线一个个扫描会浪费大量时间，所以通过文档上传sn,批量插入machine_data"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "2ca56244-aa01-4772-879e-092a198c61d4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "retroid_list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -64
+      ],
+      "id": "10dc10d9-3aa7-4968-88d4-7a307e5610b0",
+      "name": "整合sn成为一个list"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "sn__",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        80
+      ],
+      "id": "3c3fa90e-d052-4692-bf81-22e199433b5f",
+      "name": "提取表格内容"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst list = input?.[0]?.json?.retroid_list ?? [];\n\n// 提取SN并去重\nconst sns = [...new Set(\n  list\n    .map(x => (x?.sn ?? '').trim())\n    .filter(Boolean)\n)];\n\n// 生成SQL IN (...) 字符串，注意单引号转义\nconst snInSql = sns\n  .map(sn => `'${sn.replace(/'/g, \"''\")}'`)\n  .join(', ');\n\n// 没有SN时兜底\nif (!snInSql) {\n  return [{\n    json: {\n      sql: `-- no SN provided\nselect null where false;`\n    }\n  }];\n}\n\n// 生成最终SQL\nconst sql = `\nwith r as (\n  select retroid_id, retroid\n  from mes.retroid\n  where status in (1,2)\n    and retroid in (${snInSql})\n),\nmd as (\n  select\n    m.machine_data_id,\n    m.retroid_id,\n    m.procedure_detail_id,\n    m.history_procedure_id,\n    m.data,\n    m.createtime,\n    row_number() over (partition by m.retroid_id order by m.createtime desc) as rn\n  from mes.machine_data m\n  join r on r.retroid_id = m.retroid_id\n  where m.procedure_detail_id = 59\n)\nselect\n  r.retroid as sn,\n  r.retroid_id,\n  md.machine_data_id,\n  md.history_procedure_id,\n  md.procedure_detail_id,\n  md.createtime,\n  md.data\nfrom r\nleft join md on md.retroid_id = r.retroid_id and md.rn = 1\norder by r.retroid;\n`.trim();\n\nreturn [{\n  json: {\n    sns,\n    sql\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -64
+      ],
+      "id": "e6b78855-e98a-4a85-ace7-c2a7a23a209f",
+      "name": "形成sql"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sql }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "883a702c-8759-4844-8c7f-1e2663b06c3b",
+      "name": "查询原有绑定记录",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "sn",
+              "field2": "sn"
+            }
+          ]
+        },
+        "resolve": "preferInput1",
+        "options": {
+          "skipFields": "retroid_id, machine_data_id, procedure_detail_id, createtime, data,, history_procedure_id"
+        }
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        16
+      ],
+      "id": "26f03609-f86f-4bb5-881c-01df1794b8ba",
+      "name": "Compare Datasets"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "新的备注信息",
+              "requiredField": true
+            }
+          ]
+        },
+        "limitWaitTime": true,
+        "resumeAmount": 10,
+        "resumeUnit": "minutes",
+        "options": {
+          "formTitle": "请输入新的备注信息",
+          "formDescription": "=本次一共修改{{$json.founded}}个SN。其中原来的备注为{{$('Merge').first().json.data.remark}},其中{{$json.unfounded}}个sn不存在，分别为：\"{{$json.unfoundedSnList}}\",因此无法新增备注。\n请确认无误后，点击提交按钮。",
+          "buttonLabel": "提交"
+        }
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        48
+      ],
+      "id": "9558a938-b642-494b-89af-3f386d9d6751",
+      "name": "确认更改",
+      "webhookId": "c1878372-db21-4428-aa8e-9055878345e1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) 取入参\nconst input = $input.all();\nconst newRemark = input?.[0]?.json?.[\"新的备注信息\"];\n\nif (!newRemark) {\n  throw new Error('入参缺少字段：\"新的备注信息\"');\n}\n\n// 2) 取“查询原有绑定记录”节点数据\nconst oldItems = $(\"查询原有绑定记录\").all();\n\n// 3) 更新 remark / bind_id\nreturn oldItems.map(item => {\n  // 深拷贝（兼容）\n  const j = JSON.parse(JSON.stringify(item.json));\n\n  if (!j.data) j.data = {};\n\n  j.data.remark = newRemark;\n  j.data.bind_id = newRemark;\n\n  return { json: j };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        48
+      ],
+      "id": "ef4a0b84-d2ce-4b7d-a600-0dd2317cc4d9",
+      "name": "组装新的数据"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $('组装新的数据').item.json.retroid_id }}",
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}",
+            "data": "={{ $('组装新的数据').item.json.data}}",
+            "createtime": "={{ $now }}",
+            "machine_id": 0,
+            "data_type": 0,
+            "user_id": 9,
+            "history_procedure_id": "={{ $json.history_procedure_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1408,
+        48
+      ],
+      "id": "22f013d8-d994-4920-80de-7fcfcf192112",
+      "name": "插入新的备注信息",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        624,
+        48
+      ],
+      "id": "9ea336b2-950f-4e00-9279-833ba272284d",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code 节点（JavaScript）\n// 输出 1 条结果：数量统计 + unfounded 的 sn 列表\n\nlet unfounded = 0;\nlet founded = 0;\nconst unfoundedSnList = [];\n\nfor (const item of items) {\n  const obj = item.json || {};\n  const keys = Object.keys(obj);\n\n  const onlySn =\n    keys.length === 1 &&\n    keys[0] === \"sn\" &&\n    obj.sn !== undefined &&\n    obj.sn !== null &&\n    obj.sn !== \"\";\n\n  if (onlySn) {\n    unfounded++;\n    unfoundedSnList.push(obj.sn);\n  } else {\n    founded++;\n  }\n}\n\nreturn [\n  {\n    json: {\n      unfounded,\n      founded,\n      total: unfounded + founded,\n      unfoundedSnList,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        48
+      ],
+      "id": "3bbe127c-f328-439e-be4c-eff2937d332d",
+      "name": "分类"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "已插入新的备注信息",
+        "completionMessage": "=本次一共更新{{ $input.all().length }}条数据。",
+        "limitWaitTime": true,
+        "resumeAmount": 10,
+        "resumeUnit": "minutes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        48
+      ],
+      "id": "fa301b93-3ea1-4948-b8da-d5d8d70425c9",
+      "name": "Form",
+      "webhookId": "e667af6c-07df-4cff-af8f-8572c7581daf"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT history_procedure_id, procedure_detail_id\nFROM mes.history_procedure_detail\nWHERE procedure_name = '信息备注'\nORDER BY history_procedure_id DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1200,
+        48
+      ],
+      "id": "bdea913f-55db-40ca-9f78-7f14e59ccd97",
+      "name": "查询信息备注最新的工序id",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reamrk": "={{ $json.data.remark }}",
+            "retroid_id": "={{ $json.retroid_id }}"
+          },
+          "matchingColumns": [
+            "retroid_id"
+          ],
+          "schema": [
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "joborder_id",
+              "displayName": "joborder_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_generate_id",
+              "displayName": "retroid_generate_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reamrk",
+              "displayName": "reamrk",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1584,
+        48
+      ],
+      "id": "4183be0f-46e7-4daf-b215-087416838e6c",
+      "name": "更新sn的备注信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "提取表格内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合sn成为一个list": {
+      "main": [
+        [
+          {
+            "node": "形成sql",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取表格内容": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "整合sn成为一个list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "形成sql": {
+      "main": [
+        [
+          {
+            "node": "查询原有绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询原有绑定记录": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "确认更改": {
+      "main": [
+        [
+          {
+            "node": "组装新的数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装新的数据": {
+      "main": [
+        [
+          {
+            "node": "查询信息备注最新的工序id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入新的备注信息": {
+      "main": [
+        [
+          {
+            "node": "更新sn的备注信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "分类",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分类": {
+      "main": [
+        [
+          {
+            "node": "确认更改",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询信息备注最新的工序id": {
+      "main": [
+        [
+          {
+            "node": "插入新的备注信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新sn的备注信息": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "sn文档": {
+            "filename": "模版.xlsx",
+            "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "size": 9818
+          },
+          "submittedAt": "2026-01-20T13:17:20.335+08:00",
+          "formMode": "production"
+        },
+        "binary": {
+          "sn__": {
+            "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "fileExtension": "xlsx",
+            "data": "s3",
+            "fileName": "模版.xlsx",
+            "id": "s3:workflows/7syowVu3aWi5YFeZ/executions/temp/binary_data/11a42c56-17be-43c9-b656-201b939f0daa",
+            "fileSize": "9.82 kB"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "19cf3aa3-dd03-406e-84b9-d81812d7f6ac",
+  "activeVersionId": "19cf3aa3-dd03-406e-84b9-d81812d7f6ac",
+  "versionCounter": 95,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-01-19T03:16:11.352Z",
+      "createdAt": "2026-01-19T03:16:11.352Z",
+      "role": "workflow:owner",
+      "workflowId": "7syowVu3aWi5YFeZ",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

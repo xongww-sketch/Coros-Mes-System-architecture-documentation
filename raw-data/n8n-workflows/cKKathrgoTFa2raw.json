@@ -1,0 +1,275 @@
+{
+  "updatedAt": "2026-02-02T13:13:14.596Z",
+  "createdAt": "2025-12-30T02:08:51.123Z",
+  "id": "cKKathrgoTFa2raw",
+  "name": "发货月报",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -336,
+        -48
+      ],
+      "id": "7251882a-8920-4cfe-83f9-1974c628b22d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ts = $input.first().json.timestamp;\nconst d = new Date(ts);\n\n// 上个月月初\nconst startPrev = new Date(d.getFullYear(), d.getMonth() - 1, 1, 0, 0, 0, 0);\n// 本月月初（作为上个月的“排除性结束”边界）\nconst startThis = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);\n// 上个月月末 23:59:59\nconst endPrevInclusive = new Date(startThis.getTime() - 1000);\n\nfunction pad(n){ return String(n).padStart(2, '0'); }\nfunction fmt(dt){\n  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ` +\n         `${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;\n}\n\nconst monthStart = fmt(startPrev);\nconst monthEnd = fmt(endPrevInclusive);\n\nreturn [{\n  json: {\n    monthStart,\n    monthEnd,\n    monthStartSql: `TIMESTAMP '${monthStart}'`,\n    monthEndSql: `TIMESTAMP '${monthEnd}'`,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        -48
+      ],
+      "id": "2d1395d3-830c-4731-bf51-012f060fe9a6",
+      "name": "整理时间格式"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH dd_dedup AS (\n  SELECT DISTINCT ON (btrim(dd.retroid))\n    dd.id,\n    btrim(dd.retroid) AS retroid\n  FROM mes_daily_data.delivery_detail dd\n  WHERE dd.createtime >= {{ $json.monthStartSql }}\n    AND dd.createtime <= {{ $json.monthEndSql }}\n  ORDER BY btrim(dd.retroid), dd.id DESC\n),\ndd_new AS (\n  SELECT d.*\n  FROM dd_dedup d\n  WHERE NOT EXISTS (\n    SELECT 1\n    FROM mes_daily_data.delivery_detail prev\n    WHERE btrim(prev.retroid) = d.retroid\n      AND prev.createtime < {{ $json.monthStartSql }}\n  )\n),\ndi_dedup AS (\n  SELECT DISTINCT ON (btrim(di.retroid))\n    btrim(di.retroid) AS retroid,\n    di.machine_type\n  FROM mes_daily_data.daily_info di\n  ORDER BY\n    btrim(di.retroid),\n    (di.machine_type IS NOT NULL) DESC,\n    di.id DESC\n)\nSELECT\n  COALESCE(di.machine_type, 'UNKNOWN') AS machine_type,\n  COUNT(*) AS total_cnt\nFROM dd_new dd\nLEFT JOIN di_dedup di\n  ON di.retroid = dd.retroid\nGROUP BY 1\nORDER BY total_cnt DESC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "bf3e9ecf-791b-402f-a1a6-4ce298dfe0b0",
+      "name": "根据delivery_detail抓取发货数据",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node\n// Input items: [{json:{retroid:\"W92...\"}} , ...]\n\n// retroid前三位 -> 机型\nconst map = {\n  W92: 'W942',\n  W51: 'W541',\n  W52: 'W542',\n  W35: 'W335',\n};\n\nconst counts = {\n  W942: 0,\n  W541: 0,\n  W542: 0,\n  W335: 0,\n};\n\nfor (const item of $input.all()) {\n  const r = item.json.retroid;\n  if (!r || typeof r !== 'string') continue;\n\n  const prefix3 = r.slice(0, 3);\n  const mt = map[prefix3];\n  if (mt) counts[mt] += 1;\n}\n\n// 输出为多条 items：{ machine_type, total_cnt }\nreturn Object.entries(counts).map(([machine_type, total_cnt]) => ({\n  json: { machine_type, total_cnt },\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        48
+      ],
+      "id": "e01f54f3-cc2c-4d4c-a745-2be144e8c7ee",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH dd_dedup AS (\n  -- 当月：每个retroid取delivery_detail.id最大的一条（当月内唯一）\n  SELECT DISTINCT ON (btrim(dd.retroid))\n    btrim(dd.retroid) AS retroid,\n    dd.id,\n    dd.createtime\n  FROM mes_daily_data.delivery_detail dd\n  WHERE dd.createtime >= {{ $json.monthStartSql }}\n    AND dd.createtime <= {{ $json.monthEndSql }}\n  ORDER BY btrim(dd.retroid), dd.id DESC\n),\ndd_first_time AS (\n  -- 只保留：在月初之前从未出现过的retroid（即“第一次出现”发生在本月）\n  SELECT d.*\n  FROM dd_dedup d\n  WHERE NOT EXISTS (\n    SELECT 1\n    FROM mes_daily_data.delivery_detail prev\n    WHERE btrim(prev.retroid) = d.retroid\n      AND prev.createtime < {{ $json.monthStartSql }}\n  )\n),\ndi_dedup AS (\n  -- 每个retroid在daily_info里取“机型有值优先，其次id最大”的一条\n  SELECT DISTINCT ON (btrim(di.retroid))\n    btrim(di.retroid) AS retroid,\n    di.machine_type\n  FROM mes_daily_data.daily_info di\n  ORDER BY\n    btrim(di.retroid),\n    (di.machine_type IS NOT NULL) DESC,\n    di.id DESC\n)\nSELECT\n  dd.retroid\nFROM dd_first_time dd\nLEFT JOIN di_dedup di\n  ON di.retroid = dd.retroid\nWHERE di.machine_type IS NULL\nORDER BY dd.retroid;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        48
+      ],
+      "id": "e9bd62b8-c492-4eb4-8ebd-bfa2b3e7652f",
+      "name": "整理旧mes发货数据",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        288,
+        -80
+      ],
+      "id": "d54b271a-cb15-418e-a4f5-6e051584ac2f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node\n// Input: items like { machine_type: \"W335\", total_cnt: \"33082\" }\n\nconst targets = ['W942', 'W541', 'W542', 'W335'];\n\n// 1) 汇总\nconst sums = Object.fromEntries(targets.map(t => [t, 0]));\nfor (const item of $input.all()) {\n  const mt = item.json.machine_type;\n  if (!targets.includes(mt)) continue;\n\n  const n = Number(item.json.total_cnt ?? 0);\n  sums[mt] += Number.isFinite(n) ? n : 0;\n}\nconst grandTotal = targets.reduce((acc, t) => acc + sums[t], 0);\n\n// 2) 上个月月份文本（优先用上游“整理时间格式”节点的 timestamp；没有则用当前时间）\nconst ts =\n  $node?.['整理时间格式']?.json?.timestamp ||\n  $node?.['整理时间格式']?.first?.().json?.timestamp ||\n  new Date().toISOString();\n\nconst d = new Date(ts);\nconst prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);\nconst year = prev.getFullYear();\nconst monthNum = prev.getMonth() + 1;\nconst monthLabel = `${year}-${String(monthNum).padStart(2, '0')}`;\nconst reportTitle = `${monthNum}月发货月报`;\n\nfunction escHtml(s) {\n  return String(s)\n    .replaceAll('&', '&amp;')\n    .replaceAll('<', '&lt;')\n    .replaceAll('>', '&gt;')\n    .replaceAll('\"', '&quot;')\n    .replaceAll(\"'\", '&#39;');\n}\n\nconst rows = targets.map((mt) => `\n  <tr>\n    <td style=\"padding:10px 12px;border-bottom:1px solid #eef2f7;color:#0f172a;\">${escHtml(monthLabel)}</td>\n    <td style=\"padding:10px 12px;border-bottom:1px solid #eef2f7;color:#0f172a;font-weight:600;\">${escHtml(mt)}</td>\n    <td style=\"padding:10px 12px;border-bottom:1px solid #eef2f7;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums;\">\n      ${sums[mt].toLocaleString('en-US')}\n    </td>\n  </tr>\n`).join('\\n');\n\nconst html = `\n<div style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#0f172a;\">\n  <!-- Title (center + color) -->\n  <div style=\"text-align:center;margin:4px 0 14px 0;\">\n    <div style=\"font-size:20px;font-weight:900;letter-spacing:0.6px;color:#2563eb;\">\n      ${escHtml(reportTitle)}\n    </div>\n    <div style=\"margin-top:6px;font-size:12px;color:#64748b;\">\n      统计月份：<span style=\"font-weight:700;color:#334155;\">${escHtml(monthLabel)}</span>\n      <span style=\"margin:0 10px;color:#cbd5e1;\">|</span>\n      机型范围：${targets.map(escHtml).join(' / ')}\n    </div>\n  </div>\n\n  <div style=\"border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,0.05);\">\n    <table style=\"width:100%;border-collapse:collapse;background:#ffffff;\">\n      <thead>\n        <tr style=\"background:linear-gradient(180deg,#f8fafc,#f1f5f9);\">\n          <th style=\"text-align:left;padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#334155;\">月份</th>\n          <th style=\"text-align:left;padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#334155;\">机型</th>\n          <th style=\"text-align:right;padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#334155;\">发货总数量</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${rows}\n        <tr style=\"background:#f8fafc;\">\n          <td style=\"padding:12px;border-top:1px solid #e2e8f0;font-weight:800;color:#0f172a;\">合计</td>\n          <td style=\"padding:12px;border-top:1px solid #e2e8f0;color:#64748b;\">—</td>\n          <td style=\"padding:12px;border-top:1px solid #e2e8f0;text-align:right;font-weight:900;color:#0f172a;font-variant-numeric:tabular-nums;\">\n            ${grandTotal.toLocaleString('en-US')}\n          </td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n\n  <div style=\"margin-top:10px;font-size:12px;color:#94a3b8;\">\n    说明：本报表仅统计机型 ${targets.map(escHtml).join(' / ')}；数量为汇总值。\n  </div>\n</div>\n`.trim();\n\nreturn [{\n  json: {\n    monthLabel,\n    reportTitle,\n    sums,\n    grandTotal,\n    html,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -80
+      ],
+      "id": "130b0b8c-1dad-4b96-ac7b-f0c4b7efb0c7",
+      "name": "整理格式"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "wangxiaohu@coros.com;xiongwang@coros.com",
+        "subject": "={{ $json.reportTitle }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "5aaafc3a-f13f-43e4-ac8f-6c77f4c6fb70",
+      "name": "特殊机型发货月报",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        -80
+      ],
+      "webhookId": "53e19254-5825-4b9e-ba70-65fbeadb220c",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "整理时间格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理时间格式": {
+      "main": [
+        [
+          {
+            "node": "根据delivery_detail抓取发货数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "整理旧mes发货数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据delivery_detail抓取发货数据": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理旧mes发货数据": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "整理格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理格式": {
+      "main": [
+        [
+          {
+            "node": "特殊机型发货月报",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c2fae95d-eb05-41e7-ba77-cd31ff96f1b0",
+  "activeVersionId": "c2fae95d-eb05-41e7-ba77-cd31ff96f1b0",
+  "versionCounter": 42,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-12-30T02:08:51.123Z",
+      "createdAt": "2025-12-30T02:08:51.123Z",
+      "role": "workflow:owner",
+      "workflowId": "cKKathrgoTFa2raw",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

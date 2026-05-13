@@ -1,0 +1,857 @@
+{
+  "updatedAt": "2025-07-30T06:19:02.232Z",
+  "createdAt": "2025-07-29T02:58:11.873Z",
+  "id": "MM56rKw8yXYEbFD1",
+  "name": "校验工艺流程是否存在该工序",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r \nwhere r.retroid ='{{ $json.body.retroid }}'\nand r.status in('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2192,
+        16
+      ],
+      "id": "a27005e7-3e73-4aff-9e69-8e58f08cfddd",
+      "name": "查找sn的工单号",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_id,j.procedure_list_id,j.history_procedure_list_id,hpl.procedure_detail_id,hpl.procedure_list_name from mes.joborder j \njoin mes.history_procedure_list hpl on hpl.history_procedure_list_id =j.history_procedure_list_id \nwhere j.joborder_id ='{{ $json.body.joborder_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1856,
+        48
+      ],
+      "id": "bb408e3a-b822-4565-a9be-0da707d4b7a8",
+      "name": "查找工艺流程1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select pd.procedure_detail_id from mes.procedure_detail pd \nwhere pd.procedure_name ='{{ $('When Executed by Another Workflow').item.json.body.procedure_name }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1296,
+        208
+      ],
+      "id": "86b300d2-4465-44de-8fd7-7b89cec1ade3",
+      "name": "查找工序id",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6c358a39-a699-4f7f-8c7c-f82cd0d1a868",
+              "leftValue": "={{ $json.exists_in_flow }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1184,
+        -16
+      ],
+      "id": "285349d5-cc9e-4301-b09d-fa1253a75083",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.procedure_detail pd \njoin mes.history_procedure_detail hpd on hpd.procedure_name =pd.procedure_name\nwhere pd.procedure_detail_id ={{ $json.input_procedure_detail_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -992,
+        32
+      ],
+      "id": "7cce83ed-2b2c-401c-8ecc-9fa0f360f2fc",
+      "name": "查找历史该工序id",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6c358a39-a699-4f7f-8c7c-f82cd0d1a868",
+              "leftValue": "={{ $json.exists_in_flow }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -672,
+        32
+      ],
+      "id": "9312b3f4-f233-4974-b98a-d574dbe4c8db",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6c358a39-a699-4f7f-8c7c-f82cd0d1a868",
+              "leftValue": "={{ $json.exists_in_flow }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -832,
+        208
+      ],
+      "id": "e22070c2-2d79-436e-b885-3e6e66cce3b1",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select hpd.procedure_detail_id from mes.history_procedure_detail hpd  \nwhere hpd.procedure_name ='{{ $('When Executed by Another Workflow').item.json.body.procedure_name }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -656,
+        288
+      ],
+      "id": "ac88f52b-9888-4e1f-bf11-3e124c5f772d",
+      "name": "查找历史该工序id1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e96331b4-cfc6-46e9-a613-43c8cdc7875e",
+              "leftValue": "={{ $json.body.retroid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2384,
+        112
+      ],
+      "id": "3afdfe5d-ff62-434c-94ec-7126344d12ea",
+      "name": "优先校验SN"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    body:{\n     joborder_id:$input.first().json.joborder_id\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2032,
+        16
+      ],
+      "id": "b3c77013-8df5-4c0f-8d8a-8b668eb2a226",
+      "name": "统一工单id格式"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ddda9751-0af9-4b23-b645-1674b75617fc",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.body.procedure_detail_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1680,
+        48
+      ],
+      "id": "a4ff10d4-f2a6-4cd2-a883-2ae2b7069b10",
+      "name": "优先判断工序id"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    body: {\n      procedure_detail_id: Number($('When Executed by Another Workflow').first().json.body.procedure_detail_id)\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1488,
+        -16
+      ],
+      "id": "b9100763-af30-4d26-aeb6-840806817e39",
+      "name": "统一工序id格式"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    body:{    procedure_detail_id:$input.first().json.procedure_detail_id\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        208
+      ],
+      "id": "67f07a57-6570-44c4-b683-2bcf5c1917b0",
+      "name": "统一工序id格式1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取上一个节点的输出数据\nconst previousNodeData = $input.all()[0].json.body;\nconst targetProcedureDetailId = previousNodeData.procedure_detail_id;\n\n// 获取\"查找工艺流程1\"节点的输出数据\nconst processFlowData = $('查找工艺流程1').all()[0].json\nconst procedureDetailIds = processFlowData.procedure_detail_id.procedure_detail_id;\n\n// 检查目标ID是否存在\nconst isExist = procedureDetailIds.includes(targetProcedureDetailId);\n\n// 构建输出结果\nconst result = {\n  input_procedure_detail_id: targetProcedureDetailId,\n  exists_in_flow: isExist,\n  matched_flow_name: isExist ? processFlowData.procedure_list_name : null,\n  //all_procedure_detail_ids: procedureDetailIds\n};\n\n// 返回结果\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        -16
+      ],
+      "id": "efdc3a9b-70ed-4634-8a96-689c8d6dc38e",
+      "name": "判断该工序id是否存在工艺流程中"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96896633-1707-4b17-a4be-a960b22cea6e",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.body.procedure_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1488,
+        208
+      ],
+      "id": "00f0e015-5933-48f7-96e4-09b2119c1341",
+      "name": "次校验工序名称"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8612cfe7-4966-46c4-aca7-467bba9d1bde",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2176,
+        256
+      ],
+      "id": "4ea8e9a4-8599-4266-b2f0-fe33567aa04d",
+      "name": "次校验工单"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:0 //0代表工艺流程存在该工序\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -80
+      ],
+      "id": "e9ce7839-7aef-4ff3-bf1e-5a69b7ad0471",
+      "name": "工序存在，返回tag:0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6c358a39-a699-4f7f-8c7c-f82cd0d1a868",
+              "leftValue": "={{ $json.exists_in_flow }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        288
+      ],
+      "id": "03c98305-5f0f-40f3-b908-b2203775fc8d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1 //1代表工艺流程不存在该工序\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        224
+      ],
+      "id": "ba9cab09-4b6f-4e8f-9e06-f9b59dab6c6f",
+      "name": "工序不存在，返回tag:1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取上一个节点的输出数据\nconst previousNodeData = $input.all()[0].json.body;\nconst targetProcedureDetailId = previousNodeData.procedure_detail_id;\n\n// 获取\"查找工艺流程1\"节点的输出数据\nconst processFlowData = $('查找工艺流程1').all()[0].json\nconst procedureDetailIds = processFlowData.procedure_detail_id.procedure_detail_id;\n\n// 检查目标ID是否存在\nconst isExist = procedureDetailIds.includes(targetProcedureDetailId);\n\n// 构建输出结果\nconst result = {\n  input_procedure_detail_id: targetProcedureDetailId,\n  exists_in_flow: isExist,\n  matched_flow_name: isExist ? processFlowData.procedure_list_name : null,\n  //all_procedure_detail_ids: procedureDetailIds\n};\n\n// 返回结果\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        208
+      ],
+      "id": "8b897ee8-991e-4469-8c99-434b5ec50c63",
+      "name": "判断该工序id是否存在工艺流程中1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入项\nconst previousNodeItems = $input.all();\n\n// 正确获取\"查找工艺流程1\"节点的输出数据\nconst processFlowData = $('查找工艺流程1').all()[0].json;\n\n// 安全地获取procedure_detail_id数组\nconst procedureDetailIds = processFlowData?.procedure_detail_id?.procedure_detail_id || [];\n\n// 检查所有输入的ID是否存在（只要有一个存在即为true）\nconst anyExist = previousNodeItems.some(item => {\n  const targetId = item.json?.procedure_detail_id || item.json?.body?.procedure_detail_id;\n  return procedureDetailIds.includes(targetId);\n});\n\n// 获取所有输入的ID\nconst inputIds = previousNodeItems.map(item => \n  item.json?.procedure_detail_id || item.json?.body?.procedure_detail_id\n);\n\n// 构建单一输出结果\nconst result = {\n  input_procedure_detail_ids: inputIds,\n  exists_in_flow: anyExist,\n  matched_flow_name: anyExist ? processFlowData.procedure_list_name : null,\n  checked_ids_count: inputIds.length,\n  existing_ids_count: anyExist ? \"至少1个\" : 0\n};\n\n// 返回单一结果\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        32
+      ],
+      "id": "3478d445-f40e-4f54-a6a9-e99d6dc1f935",
+      "name": "判断该工序id是否存在工艺流程中2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入项\nconst previousNodeItems = $input.all();\n\n// 正确获取\"查找工艺流程1\"节点的输出数据\nconst processFlowData = $('查找工艺流程1').all()[0].json;\n\n// 安全地获取procedure_detail_id数组\nconst procedureDetailIds = processFlowData?.procedure_detail_id?.procedure_detail_id || [];\n\n// 检查所有输入的ID是否存在（只要有一个存在即为true）\nconst anyExist = previousNodeItems.some(item => {\n  const targetId = item.json?.procedure_detail_id || item.json?.body?.procedure_detail_id;\n  return procedureDetailIds.includes(targetId);\n});\n\n// 获取所有输入的ID\nconst inputIds = previousNodeItems.map(item => \n  item.json?.procedure_detail_id || item.json?.body?.procedure_detail_id\n);\n\n// 构建单一输出结果\nconst result = {\n  input_procedure_detail_ids: inputIds,\n  exists_in_flow: anyExist,\n  matched_flow_name: anyExist ? processFlowData.procedure_list_name : null,\n  checked_ids_count: inputIds.length,\n  existing_ids_count: anyExist ? \"至少1个\" : 0\n};\n\n// 返回单一结果\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        288
+      ],
+      "id": "433f8d6d-b12e-41a6-9781-d9170283bfb7",
+      "name": "判断该工序id是否存在工艺流程中3"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2576,
+        112
+      ],
+      "id": "3a0e02f0-f6db-4473-bfb0-c2f5ec431ec3",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "查找sn的工单号": {
+      "main": [
+        [
+          {
+            "node": "统一工单id格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查找工艺流程1": {
+      "main": [
+        [
+          {
+            "node": "优先判断工序id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查找工序id": {
+      "main": [
+        [
+          {
+            "node": "统一工序id格式1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "工序存在，返回tag:0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查找历史该工序id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查找历史该工序id": {
+      "main": [
+        [
+          {
+            "node": "判断该工序id是否存在工艺流程中2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "工序存在，返回tag:0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工序不存在，返回tag:1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "工序存在，返回tag:0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查找历史该工序id1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查找历史该工序id1": {
+      "main": [
+        [
+          {
+            "node": "判断该工序id是否存在工艺流程中3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "优先校验SN": {
+      "main": [
+        [
+          {
+            "node": "查找sn的工单号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "次校验工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统一工单id格式": {
+      "main": [
+        [
+          {
+            "node": "查找工艺流程1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "优先判断工序id": {
+      "main": [
+        [
+          {
+            "node": "统一工序id格式",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "次校验工序名称",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统一工序id格式": {
+      "main": [
+        [
+          {
+            "node": "判断该工序id是否存在工艺流程中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统一工序id格式1": {
+      "main": [
+        [
+          {
+            "node": "判断该工序id是否存在工艺流程中1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断该工序id是否存在工艺流程中": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "次校验工序名称": {
+      "main": [
+        [
+          {
+            "node": "查找工序id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "次校验工单": {
+      "main": [
+        [
+          {
+            "node": "查找工艺流程1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "工序存在，返回tag:0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工序不存在，返回tag:1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断该工序id是否存在工艺流程中1": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断该工序id是否存在工艺流程中2": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断该工序id是否存在工艺流程中3": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "优先校验SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "body": {
+            "procedure_name": "看放大镜/SN二维码贴附",
+            "joborder_id": "1",
+            "retroid": "W51AC01000",
+            "procedure_detail_id": "13"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "93f8a64b-d7e6-416b-b8ff-4954a6f5d61a",
+  "activeVersionId": "93f8a64b-d7e6-416b-b8ff-4954a6f5d61a",
+  "versionCounter": 16,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-07-29T02:58:11.873Z",
+      "createdAt": "2025-07-29T02:58:11.873Z",
+      "role": "workflow:owner",
+      "workflowId": "MM56rKw8yXYEbFD1",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,3923 @@
+{
+  "updatedAt": "2025-12-06T10:16:58.520Z",
+  "createdAt": "2024-12-10T02:00:56.663Z",
+  "id": "mHnvlHD1Nun7LAgx",
+  "name": "cplcupload_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"OK\"\n}",
+        "options": {}
+      },
+      "id": "8464fe90-643f-4144-8a1a-87fa3b0f0e66",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3680,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://metro.snowballtech.com:6569/kds-front/v2/business",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Content-Type\": \"application/json\",\n  \"x-snbps-vendor\": \"COROS\",\n  \"x-snbps-module\": \"{{ $json.product_model_name }}\",  \n  \"x-snbps-platformId\": \"2002\",\n  \"x-snbps-timestamp\": \"{{ Date.now() }}\"  \n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"operType\": \"01\",\n  \"cplcs\": [{\"cplc\":\"{{ $json.data.cplc.toUpperCase() }}\"}]\n}\n\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 300
+            }
+          },
+          "allowUnauthorizedCerts": true,
+          "timeout": 30000
+        }
+      },
+      "id": "38712f22-223a-4e12-983b-a8aafd469cd0",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        -240
+      ],
+      "credentials": {
+        "httpSslAuth": {
+          "id": "uNetzf5LL7xQ0vEk",
+          "name": "SSL Certificates account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    md.machine_data_id,\n    md.retroid_id,\n    md.procedure_detail_id,\n    md.history_procedure_id,\n    md.user_id,\n    md.machine_id,\n    md.data,\n    pm.product_model_name\nFROM \n    mes.machine_data md\nJOIN \n    mes.retroid r ON md.retroid_id = r.retroid_id  -- 注意这里r.retroid_id应该和md.retroid_id类型一致\nJOIN \n    mes.joborder jo ON r.joborder_id = jo.joborder_id\nJOIN \n    mes.product_info pi ON jo.product_id = pi.product_id\nJOIN \n    mes.product_model pm ON pi.product_model_id = pm.product_model_id\nWHERE\n    md.machine_data_id = CAST('{{ $json.machine_data_id }}' AS INTEGER);\n",
+        "options": {}
+      },
+      "id": "30a7538e-e33a-4e1c-a6fe-3bbfb4c22a18",
+      "name": "整合查询资料",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2256,
+        -240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "15dded68-91f3-4fda-ba1d-933ea1ebaa0d",
+              "leftValue": "={{ $json.respCode }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cceb9d1e-7afc-4dca-970d-5dbce7234c30",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2560,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://metro.snowballtech.com:6569/kds-front/v2/business",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Content-Type\": \"application/json\",\n  \"x-snbps-vendor\": \"COROS\",\n  \"x-snbps-module\": \"{{ $('整合查询资料').item.json.product_model_name }}\",  \n  \"x-snbps-platformId\": \"2002\",\n  \"x-snbps-timestamp\": \"{{ Date.now() }}\"  \n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"operType\": \"02\",\n  \"cplcs\": [{\"cplc\":\"{{ $json.cplc.toUpperCase() }}\"}]\n}\n\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 300
+            }
+          },
+          "allowUnauthorizedCerts": true,
+          "timeout": 30000
+        }
+      },
+      "id": "4c0ccc30-7406-45ae-a455-3e44ab8616fe",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2864,
+        -288
+      ],
+      "credentials": {
+        "httpSslAuth": {
+          "id": "uNetzf5LL7xQ0vEk",
+          "name": "SSL Certificates account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cplcupload",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "bebb8600-79f3-465d-9002-0029d6f11760",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2848,
+        272
+      ],
+      "webhookId": "bcd8ec16-fe36-4b26-9967-b14e36708c5e"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $json.retroid_id }}",
+            "user_id": 1,
+            "data": "={{ {...$('Webhook').all()[0].json.body,bind_id:$('整理数据1').all()[0].json.body.cplc } }}",
+            "createtime": "={{ $now }}",
+            "history_procedure_id": "={{ $json.history_procedure_id }}",
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}",
+            "machine_id": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "162ef746-480f-4615-a417-b29f1da797e5",
+      "name": "插入工序信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1712,
+        -208
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6e0dd130-0cdc-48ba-942c-12b7963484a3",
+              "leftValue": "={{ $json }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        0
+      ],
+      "id": "a51249a0-e12a-4ccf-b359-342614f4cf9f",
+      "name": "判断sn是否存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": " {\n  \"code\": \"400\",\n  \"msg\":\"sn不存在\"\n }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        800
+      ],
+      "id": "8c73d088-cdf0-4851-a84d-bea99a89a61d",
+      "name": "返回sn不存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "87503fa5-ed54-4cff-ad2c-99e34c09bce4",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7e5f164c-491a-41e4-9f98-ac7d5858d4d3",
+      "name": "判断插入数据是否成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1856,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cplc",
+          "mode": "list",
+          "cachedResultName": "cplc"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.body.id }}",
+            "sn": "={{ $json.body.sn }}",
+            "cplc": "={{ $json.body.cplc }}",
+            "status": 1,
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "serial_id",
+              "displayName": "serial_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sn",
+              "displayName": "sn",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cplc",
+              "displayName": "cplc",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        -144
+      ],
+      "id": "905fdbf2-e2d0-4dc1-9454-1d0c0f13abd3",
+      "name": "插入cplc",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc753a46-04af-4daa-984e-7bd484d42af0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        -16
+      ],
+      "id": "a5dcfdc2-9637-4595-87c3-f0ad807121aa",
+      "name": "判断上节点结果"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"400\",\n  \"msg\":\"{{ $json.respMsg }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        1264
+      ],
+      "id": "f3f882cf-b5d5-430f-bfd5-0f893f71935c",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cplc",
+          "mode": "list",
+          "cachedResultName": "cplc"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": 2,
+            "serial_id": "={{ $('插入cplc').item.json.serial_id }}"
+          },
+          "matchingColumns": [
+            "serial_id"
+          ],
+          "schema": [
+            {
+              "id": "serial_id",
+              "displayName": "serial_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sn",
+              "displayName": "sn",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cplc",
+              "displayName": "cplc",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2720,
+        -288
+      ],
+      "id": "3bdcb8f8-76ee-4488-83ab-963a352c52b0",
+      "name": "更新状态",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": " {\n  \"code\": \"400\",\n  \"msg\":\"数据库执行失败\"\n }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4416,
+        1344
+      ],
+      "id": "419ac444-5576-4734-b8c8-c2a6cb4a8987",
+      "name": "数据库执行失败"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cplc",
+          "mode": "list",
+          "cachedResultName": "cplc"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "serial_id": "={{ $('插入cplc').item.json.serial_id }}",
+            "status": 3,
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "serial_id"
+          ],
+          "schema": [
+            {
+              "id": "serial_id",
+              "displayName": "serial_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sn",
+              "displayName": "sn",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cplc",
+              "displayName": "cplc",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3408,
+        -480
+      ],
+      "id": "61396362-0c53-4987-9b8d-508df1bed63f",
+      "name": "更新状态（第二次）",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cplc",
+          "mode": "list",
+          "cachedResultName": "cplc"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Code12').item.json.body.id }}",
+            "sn": "={{ $('Code1').item.json.data.sn }}",
+            "cplc": "={{ $('Code12').item.json.body.cplc }}",
+            "status": 1,
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "serial_id",
+              "displayName": "serial_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sn",
+              "displayName": "sn",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cplc",
+              "displayName": "cplc",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        960,
+        240
+      ],
+      "id": "536b88ad-6b1d-46e5-9435-a78c4e1e1799",
+      "name": "插入cplc1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $('查询sn对应信息-uuid').item.json.retroid_id }}",
+            "user_id": 1,
+            "data": "={{ {...$('Webhook').all()[0].json.body, bind_id:$('Webhook').all()[0].json.body.cplc } }}",
+            "createtime": "={{ $now }}",
+            "history_procedure_id": "={{ $json.history_procedure_id }}",
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}",
+            "machine_id": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "78839fc4-b166-492e-af58-fd75f9c90b0d",
+      "name": "插入工序信息1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1472,
+        224
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "87503fa5-ed54-4cff-ad2c-99e34c09bce4",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b9851cb7-8d74-4646-a185-06f741980622",
+      "name": "判断插入数据是否成功1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1664,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "45ec3df9-b3de-49b0-9a0a-09b7f20d55e9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        -96
+      ],
+      "id": "06b41b5d-4c58-4259-9d5a-39c8245b8501",
+      "name": "判断插入cplc是否成功"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "45ec3df9-b3de-49b0-9a0a-09b7f20d55e9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1072,
+        208
+      ],
+      "id": "bbcbb063-87c9-405e-9335-30f0b05abe74",
+      "name": "判断插入cplc是否成功1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": " {\n  \"code\": \"400\",\n  \"msg\":\"传参不完整\"\n }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -736,
+        576
+      ],
+      "id": "d33feefe-440b-4205-bc2f-68252c5b5d5f",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "939d7583-7cf7-42d3-bed9-af2cd963361b",
+              "leftValue": "={{ $('Code3').item.json.body.sn.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1376,
+        0
+      ],
+      "id": "e548defe-4463-46b7-9eb2-9b6708ad4f39",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zIsWkclkRfztC4WQ",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — uuidGetSn"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1904,
+        240
+      ],
+      "id": "47ce9be2-b141-4efd-a4f4-dabc3588da7d",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据1').all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2032,
+        240
+      ],
+      "id": "5d7ad532-fc65-42a8-aa9c-63bf8f580aa4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    r.retroid_id,\n    r.joborder_id,\n    r.retroid_generate_id,\n    r.status,\n    r.retroid\nFROM mes.retroid r\nWHERE r.retroid = '{{ $json.body.sn}}'\nand r.status in ('1','2')",
+        "options": {}
+      },
+      "id": "4c4897fc-10bf-47dd-b73c-6d7f9f510732",
+      "name": "查询sn对应信息2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1232,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * \nFROM mes.cplc c \nWHERE c.status NOT IN ('3', '4') \nAND c.sn = '{{ $json.body.sn }}' and c.cplc = '{{ $json.body.cplc }}';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -768,
+        0
+      ],
+      "id": "f1702df5-19d2-4794-b466-3c59cf8cb0da",
+      "name": "判断sn是否已经绑定cplc2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": " {\n  \"code\": \"401\",\n  \"msg\":\"该sn已绑定该cplc\"\n }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        816
+      ],
+      "id": "10ca8e19-cafc-49c5-b709-4038125f9f20",
+      "name": "sn重复绑定该cplc"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    r.retroid_id,\n    r.joborder_id,\n    r.retroid_generate_id,\n    r.status,\n    r.retroid\nFROM mes.retroid r\nWHERE r.retroid = '{{ $json.data.sn }}'\nand r.status in ('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -976,
+        272
+      ],
+      "id": "25ef7120-0ce3-4ce8-ac11-c2cafbebb9cf",
+      "name": "查询sn对应信息-uuid",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fcaa88e0-dfdb-443e-831a-515f95ed3eaf",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -832,
+        272
+      ],
+      "id": "7bb4ed7a-bcd9-4785-8a6b-2f0435d097e7",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.cplc c WHERE c.status NOT IN ('3', '4') AND c.sn = '{{ $json.retroid }}' AND c.cplc = '{{ $json.body.cplc }}';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -704,
+        272
+      ],
+      "id": "6b338e9c-572d-4097-960e-b106086daab4",
+      "name": "判断sn是否已经绑定cplc-uuid",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb5de138-8d92-40a2-9b96-7933ded78ae6",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        288
+      ],
+      "id": "c2a5d011-f77e-44b1-bbb8-74640a51d49b",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": " {\n  \"code\": \"400\",\n  \"msg\":\"sn未绑定uuid\"\n }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1552,
+        464
+      ],
+      "id": "8594bb34-9179-46c4-942e-17a8c48870dd",
+      "name": "Respond to Webhook6"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"403\",\n  \"msg\":\"该SN未完成{{ $json.procedure_name }}\"\n}",
+        "options": {}
+      },
+      "id": "65b1fe03-e036-437b-ae7f-511945792089",
+      "name": "报错信息：该SN未完成上一道工序",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const uploadDate = $('Webhook').first().json.body.uploadDate;\nconst uuid = $('Webhook').first().json.body.uuid;\nconst sn = $('Webhook').first().json.body.sn;\nconst cplc = $('Webhook').first().json.body.cplc;\nconst id = $('Webhook').first().json.body.id;\nconst procedure_name = \n$('Webhook').first().json.body.procedure_name\n// 使用正则替换所有换行符（\\n、\\r）为空字符串\nconst cleanSn = sn.replace(/\\s/g, '');\nconst cleanUuid = uuid.replace(/\\s/g, '');\nconst cleanProcedure_name = procedure_name.replace(/\\s/g, '');\n\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n      uploadDate:uploadDate,\n      uuid:cleanUuid,\n      sn: cleanSn,\n      cplc: cplc,\n      id:id,\n      procedure_name: cleanProcedure_name\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1520,
+        0
+      ],
+      "id": "1007b23b-6129-4bc5-a759-5a9975a81c7a",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据1').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        0
+      ],
+      "id": "1d7235d7-9978-404a-9c54-3124362bf224",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据1').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -144
+      ],
+      "id": "fab279f2-5126-4f41-82ef-f1831583aaa2",
+      "name": "Code7"
+    },
+    {
+      "parameters": {
+        "jsCode": "const retroidId = $('查询sn对应信息2').first().json.retroid_id;\n\nconst prosedureData = $('查工序名称对应信息').first().json.data[0];\nconst procedureDetailId = prosedureData.procedure_detail_id;\nconst historyProcedureId = prosedureData.history_procedure_id;\n\n// 构建返回的结果对象\nconst result = {\n  retroid_id: retroidId,\n  procedure_detail_id: procedureDetailId,\n  history_procedure_id: historyProcedureId\n};\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        -304
+      ],
+      "id": "78263f4c-bff7-49f3-ba18-a8b594434adf",
+      "name": "Code8"
+    },
+    {
+      "parameters": {
+        "jsCode": "const retroidId = $('查询sn对应信息-uuid').first().json.retroid_id;\n\nconst prosedureData = $('查工序名称对应信息').first().json.data[0];\nconst procedureDetailId = prosedureData.procedure_detail_id;\nconst historyProcedureId = prosedureData.history_procedure_id;\nconst sn = \n$('Execute Workflow').first().json.data.sn\n// 构建返回的结果对象\nconst result = {\n  retroid_id: retroidId,\n  procedure_detail_id: procedureDetailId,\n  history_procedure_id: historyProcedureId,\n  sn:sn\n};\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        208
+      ],
+      "id": "4c747f12-c3d5-44be-9608-fd79587d301b",
+      "name": "Code11"
+    },
+    {
+      "parameters": {
+        "jsCode": "const uploadDate = $('Webhook').first().json.body.uploadDate;\nconst uuid = $('Webhook').first().json.body.uuid;\nconst sn = $('Webhook').first().json.body.sn;\nconst cplc = $('Webhook').first().json.body.cplc;\nconst id = $('Webhook').first().json.body.id;\nconst procedure_name = \n$('Webhook').first().json.body.procedure_name\n// 使用正则替换所有换行符（\\n、\\r）为空字符串\nconst cleanSn = sn.replace(/\\s/g, '');\nconst cleanUuid = uuid.replace(/\\s/g, '');\nconst cleanProcedure_name = procedure_name.replace(/\\s/g, '');\n\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n      uploadDate:uploadDate,\n      uuid:cleanUuid,\n      sn: cleanSn,\n      cplc: cplc,\n      id:id,\n      procedure_name: cleanProcedure_name\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        288
+      ],
+      "id": "27248f55-eb38-49fd-9605-5531ecee8f32",
+      "name": "Code12"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据1').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -112
+      ],
+      "id": "8ef49b68-042c-4d3a-ac98-390ce5a95dba",
+      "name": "Code13"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "611798de-b082-4b9f-958a-10c7c8d188e9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        -112
+      ],
+      "id": "cee2889b-827d-46a7-9a64-6a8597518508",
+      "name": "If22"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.cplc  where cplc = '{{ $json.body.cplc }}' and sn != '{{ $json.body.sn }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        272
+      ],
+      "id": "d970ccbb-2dac-499b-a888-6701f5c4ac31",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据1').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        272
+      ],
+      "id": "34f01918-18c5-45d5-9478-bec180e9b574",
+      "name": "Code14"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "611798de-b082-4b9f-958a-10c7c8d188e9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        272
+      ],
+      "id": "92216987-ecd4-4284-a9c7-52ea740138bf",
+      "name": "If23"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "= {\n  \"code\": \"400\",\n  \"msg\":\"该cplc已被绑定,过往绑定的sn是{{$json.sn}}\"\n }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        48
+      ],
+      "id": "e952bf55-78e8-400a-b476-1ae7629416eb",
+      "name": "cplc重复"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cplc",
+          "mode": "list",
+          "cachedResultName": "cplc"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "serial_id": "={{ $('插入cplc').item.json.serial_id }}",
+            "status": 2,
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "serial_id"
+          ],
+          "schema": [
+            {
+              "id": "serial_id",
+              "displayName": "serial_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sn",
+              "displayName": "sn",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cplc",
+              "displayName": "cplc",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3408,
+        -272
+      ],
+      "id": "f5e1b695-4eab-4217-959d-dc39c334be62",
+      "name": "更新状态（第二次）1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "15dded68-91f3-4fda-ba1d-933ea1ebaa0d",
+              "leftValue": "={{ $json.respCode }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "9835f8d0-786a-4a7a-9fed-1fdaffd13126",
+              "leftValue": "={{ $json.respData[0].status }}",
+              "rightValue": "0001",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0e0d7a3a-0774-43ce-a77d-b353bbbcfb65",
+      "name": "If6",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        3200,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "15dded68-91f3-4fda-ba1d-933ea1ebaa0d",
+              "leftValue": "={{ $json.respCode }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "9835f8d0-786a-4a7a-9fed-1fdaffd13126",
+              "leftValue": "={{ $json.respData[0].status }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e9a20de6-e5e2-47d5-87d5-30af631403ba",
+      "name": "判断密钥是否获取成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        3008,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"400\",\n  \"msg\":\"{{ $json.respMsg }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3440,
+        -64
+      ],
+      "id": "9528e566-9f49-476b-9ba0-221dd233aa89",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.cplc  where cplc = '{{ $json.body.cplc }}' and sn != '{{ $json.body.sn }}' and status != 4;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        -112
+      ],
+      "id": "e41f6054-0cfc-4fdf-90b1-87781ae485c0",
+      "name": "查询该cplc是否被其他sn绑定",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": " {\n  \"code\": \"400\",\n  \"msg\":\"工序不存在该工艺流程中\"\n }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2208,
+        448
+      ],
+      "id": "5cdbbaae-bb5b-4cca-be13-9cc720a885b5",
+      "name": "工序不存在该工艺流程中"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "828edbc0-2379-4dd9-85ad-a5be377bfe87",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7087266d-95d4-43f1-abea-63592b358fe9",
+      "name": "判断工序是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        -2416,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "acdc94f2-2b04-4b09-8e1c-b1360a1ab4af",
+              "leftValue": "={{ $('整理数据1').item.json.body.uuid}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2240,
+        208
+      ],
+      "id": "ca4277f6-c1fa-41e1-95fc-2cd348a7ea7c",
+      "name": "判断是否通过uuid或sn查询"
+    },
+    {
+      "parameters": {
+        "jsCode": "const uploadDate = $('Webhook').first().json.body.uploadDate;\nconst uuid = $('Webhook').first().json.body.uuid;\nconst sn = $('Webhook').first().json.body.sn;\nconst cplc = $('Webhook').first().json.body.cplc;\nconst id = $('Webhook').first().json.body.id;\nconst procedure_name = \n$('Webhook').first().json.body.procedure_name\n// 使用正则替换所有换行符（\\n、\\r）为空字符串\nconst cleanSn = sn.replace(/\\s/g, '');\nconst cleanUuid = uuid.replace(/\\s/g, '');\nconst cleanProcedure_name = procedure_name.replace(/\\s/g, '');\n\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n      uploadDate:uploadDate,\n      uuid:cleanUuid,\n      sn: cleanSn,\n      cplc: cplc,\n      id:id,\n      procedure_name: cleanProcedure_name\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        0
+      ],
+      "id": "6de46be0-fe71-440a-8aad-522f30206d1b",
+      "name": "整理数据"
+    },
+    {
+      "parameters": {
+        "jsCode": "const uploadDate = $('Webhook').first().json.body.uploadDate;\nconst uuid = $('Webhook').first().json.body.uuid;\nconst sn = $('Webhook').first().json.body.sn;\nconst cplc = $('Webhook').first().json.body.cplc;\nconst id = $('Webhook').first().json.body.id;\nconst procedure_name = \n$('Webhook').first().json.body.procedure_name\n// 使用正则替换所有换行符（\\n、\\r）为空字符串\nconst cleanSn = sn.replace(/\\s/g, '');\nconst cleanUuid = uuid.replace(/\\s/g, '');\nconst cleanProcedure_name = procedure_name.replace(/\\s/g, '');\n\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n      uploadDate:uploadDate,\n      uuid:cleanUuid,\n      sn: cleanSn,\n      cplc: cplc,\n      id:id,\n      procedure_name: cleanProcedure_name\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2704,
+        272
+      ],
+      "id": "18a69b17-2a7c-41fd-82ce-2607c123a3bf",
+      "name": "整理数据1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "r9luD4UCXwa2jCAp",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — 前置工序校验通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1840,
+        0
+      ],
+      "id": "953ea9ab-095a-488e-9b61-4b6c32b72555",
+      "name": "查询上一道工序是否完成2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93701f5d-2a48-4867-9de5-9d6c9a3d4a21",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1680,
+        0
+      ],
+      "id": "c8446dde-32e5-4312-abd0-618e70e41cfa",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iipMI3IDY4ryTUpO",
+          "cachedResultName": "1.Mes重构 — 工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2560,
+        272
+      ],
+      "id": "ab741a1e-c8eb-4eaa-8717-8e776fd36772",
+      "name": "查工序名称对应信息"
+    },
+    {
+      "parameters": {
+        "jsCode": "const uploadDate = $('Webhook').first().json.body.uploadDate;\nconst uuid = $('Webhook').first().json.body.uuid;\nconst sn = $input.first().json.data[0].json.data.sn;\nconst cplc = $('Webhook').first().json.body.cplc;\nconst id = $('Webhook').first().json.body.id;\nconst procedure_name = \n$('Webhook').first().json.body.procedure_name\n// 使用正则替换所有换行符（\\n、\\r）为空字符串\nconst cleanSn = sn.replace(/\\s/g, '');\nconst cleanUuid = uuid.replace(/\\s/g, '');\nconst cleanProcedure_name = procedure_name.replace(/\\s/g, '');\n\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n      uploadDate:uploadDate,\n      uuid:cleanUuid,\n      sn: cleanSn,\n      cplc: cplc,\n      id:id,\n      procedure_name: cleanProcedure_name\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1584,
+        240
+      ],
+      "id": "7b0829a9-5869-4a87-a1f4-b6671510efec",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "r9luD4UCXwa2jCAp",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — 前置工序校验通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1440,
+        256
+      ],
+      "id": "58342403-bd44-47a0-8995-fd61eea0088a",
+      "name": "查询上一道工序是否完成"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93701f5d-2a48-4867-9de5-9d6c9a3d4a21",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1232,
+        256
+      ],
+      "id": "bc0103d6-909f-42a7-8bbd-f5662dd9344e",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Execute Workflow').all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        256
+      ],
+      "id": "1f6350eb-7e67-4302-8c6c-f22eccb07ca2",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3934be25-ec7c-432f-985b-8d0c5af410cc",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1760,
+        240
+      ],
+      "id": "52050f2e-ae4b-4841-b70c-70504e633ccc",
+      "name": "判断sn是否存在1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM mes.machine_data\nWHERE procedure_detail_id = {{ $('查工序名称对应信息').item.json.data[0].procedure_detail_id }}\n  AND retroid_id = {{ $('查询sn对应信息2').item.json.retroid_id }}\n  AND data ->> 'bind_id' <> '{{ $('Code6').item.json.body.cplc }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -448,
+        -256
+      ],
+      "id": "565cfb82-2265-44e0-b797-992eb1c8f4d3",
+      "name": "查询machine_data中是否有cplc绑定记录",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc753a46-04af-4daa-984e-7bd484d42af0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -144,
+        -384
+      ],
+      "id": "c49c040c-8ab4-4282-aa3f-d3d7844758f4",
+      "name": "判断上节点结果1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM mes.machine_data\nWHERE data ->> 'machine_data_id_old' = '{{ $json.machine_data_id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        112,
+        -32
+      ],
+      "id": "84338b86-d61d-467c-831c-be3d2ba1077f",
+      "name": "查询machine_data中是否有cplc解绑记录",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": " {\n  \"code\": \"400\",\n  \"msg\":\"该sn已有cplc绑定记录，请先解绑\"\n }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        608
+      ],
+      "id": "d6752dbd-10f3-4475-9b68-63202ca57d42",
+      "name": "sn有cplc绑定记录"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc753a46-04af-4daa-984e-7bd484d42af0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "dc289a4f-04d8-4e8e-a089-a6b4fa9f7e34",
+      "name": "判断有无解绑记录"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM mes.machine_data\nWHERE procedure_detail_id = {{ $('查工序名称对应信息').item.json.data[0].procedure_detail_id }}\n  AND retroid_id = {{ $('查询sn对应信息2').item.json.retroid_id }}\n  AND data ->> 'bind_id' <> '{{ $('Code6').item.json.body.cplc }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -160,
+        272
+      ],
+      "id": "e297d9ea-d517-4ed6-9dea-b820092eec79",
+      "name": "查询machine_data中是否有cplc绑定记录1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc753a46-04af-4daa-984e-7bd484d42af0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        288
+      ],
+      "id": "d21a8ff7-aebe-4b41-b3c1-a63002a42f7e",
+      "name": "判断上节点结果2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM mes.machine_data\nWHERE data ->> 'machine_data_id_old' = '{{ $json.machine_data_id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        176,
+        384
+      ],
+      "id": "963a59bc-a4ce-44b5-8b9e-78144503109d",
+      "name": "查询machine_data中是否有cplc解绑记录1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc753a46-04af-4daa-984e-7bd484d42af0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        432
+      ],
+      "id": "5a23ccc7-9dae-48f3-a039-647c6e19cf5a",
+      "name": "判断有无解绑记录1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.sn }}"
+            },
+            {
+              "column": "status",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -448,
+        48
+      ],
+      "id": "f2f03f66-e62d-46e6-b0fb-7c55f8970c51",
+      "name": "查询是否属于返投设备",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b445db5d-bfff-4b3a-8625-3c56886e678e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        -16
+      ],
+      "id": "91e671a9-2583-417c-a2ce-40537ae3c750",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const retroidId = $('查询sn对应信息2').first().json.retroid_id;\n\nconst prosedureData = $('查工序名称对应信息').first().json.data[0];\nconst procedureDetailId = prosedureData.procedure_detail_id;\nconst historyProcedureId = prosedureData.history_procedure_id;\n\n// 构建返回的结果对象\nconst result = {\n  retroid_id: retroidId,\n  procedure_detail_id: procedureDetailId,\n  history_procedure_id: historyProcedureId\n};\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        0
+      ],
+      "id": "a7e24da8-531a-4804-a3ee-b1e725929081",
+      "name": "Code9"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $json.retroid_id }}",
+            "user_id": 1,
+            "data": "={{ {...$('Webhook').all()[0].json.body,bind_id:$('整理数据1').all()[0].json.body.cplc } }}",
+            "createtime": "={{ $now }}",
+            "history_procedure_id": "={{ $json.history_procedure_id }}",
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}",
+            "machine_id": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c22b6063-c77f-48a5-8897-2f084ed4757a",
+      "name": "插入工序信息(返投设备）",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -32,
+        112
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.sn }}"
+            },
+            {
+              "column": "status",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -464,
+        624
+      ],
+      "id": "4562c440-b99c-4067-92c1-8f46ad8279c9",
+      "name": "查询是否属于返投设备1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b445db5d-bfff-4b3a-8625-3c56886e678e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        560
+      ],
+      "id": "b0831a18-d05c-4926-93df-986de3d2f300",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const retroidId = $('查询sn对应信息-uuid').first().json.retroid_id;\n\nconst prosedureData = $('查工序名称对应信息').first().json.data[0];\nconst procedureDetailId = prosedureData.procedure_detail_id;\nconst historyProcedureId = prosedureData.history_procedure_id;\nconst sn = \n$('Execute Workflow').first().json.data.sn\n// 构建返回的结果对象\nconst result = {\n  retroid_id: retroidId,\n  procedure_detail_id: procedureDetailId,\n  history_procedure_id: historyProcedureId,\n  sn:sn\n};\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        592
+      ],
+      "id": "71e52aeb-15bb-4c9b-b5f8-d7934dcbc232",
+      "name": "Code10"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $json.retroid_id }}",
+            "user_id": 1,
+            "data": "={{ {...$('Webhook').all()[0].json.body,bind_id:$('整理数据1').all()[0].json.body.cplc } }}",
+            "createtime": "={{ $now }}",
+            "history_procedure_id": "={{ $json.history_procedure_id }}",
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}",
+            "machine_id": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "73b5a13f-3fb7-445d-9324-a69f47674bb4",
+      "name": "插入工序信息(返投设备）1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        144,
+        560
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "整合查询资料": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "更新状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "判断密钥是否获取成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "整理数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入工序信息": {
+      "main": [
+        [
+          {
+            "node": "判断插入数据是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否存在": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回sn不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断插入数据是否成功": {
+      "main": [
+        [
+          {
+            "node": "整合查询资料",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入cplc": {
+      "main": [
+        [
+          {
+            "node": "判断插入cplc是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断上节点结果": {
+      "main": [
+        [
+          {
+            "node": "查询machine_data中是否有cplc绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询是否属于返投设备",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新状态": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新状态（第二次）": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入cplc1": {
+      "main": [
+        [
+          {
+            "node": "判断插入cplc是否成功1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入工序信息1": {
+      "main": [
+        [
+          {
+            "node": "判断插入数据是否成功1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断插入数据是否成功1": {
+      "main": [
+        [
+          {
+            "node": "整合查询资料",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断插入cplc是否成功": {
+      "main": [
+        [
+          {
+            "node": "Code8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断插入cplc是否成功1": {
+      "main": [
+        [
+          {
+            "node": "Code11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "查询sn对应信息2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否存在1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn对应信息2": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否已经绑定cplc2": {
+      "main": [
+        [
+          {
+            "node": "判断上节点结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn对应信息-uuid": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否已经绑定cplc-uuid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回sn不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否已经绑定cplc-uuid": {
+      "main": [
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "查询machine_data中是否有cplc绑定记录1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询是否属于返投设备1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否已经绑定cplc2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code7": {
+      "main": [
+        [
+          {
+            "node": "插入cplc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code8": {
+      "main": [
+        [
+          {
+            "node": "插入工序信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code11": {
+      "main": [
+        [
+          {
+            "node": "插入工序信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code12": {
+      "main": [
+        [
+          {
+            "node": "插入cplc1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code13": {
+      "main": [
+        [
+          {
+            "node": "查询该cplc是否被其他sn绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If22": {
+      "main": [
+        [
+          {
+            "node": "Code7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cplc重复",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "If23",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code14": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If23": {
+      "main": [
+        [
+          {
+            "node": "Code12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cplc重复",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断密钥是否获取成功": {
+      "main": [
+        [
+          {
+            "node": "更新状态（第二次）",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "更新状态（第二次）1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新状态（第二次）1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询该cplc是否被其他sn绑定": {
+      "main": [
+        [
+          {
+            "node": "If22",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工序是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断是否通过uuid或sn查询",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工序不存在该工艺流程中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否通过uuid或sn查询": {
+      "main": [
+        [
+          {
+            "node": "整理数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据": {
+      "main": [
+        [
+          {
+            "node": "查询上一道工序是否完成2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据1": {
+      "main": [
+        [
+          {
+            "node": "查工序名称对应信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询上一道工序是否完成2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未完成上一道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查工序名称对应信息": {
+      "main": [
+        [
+          {
+            "node": "判断工序是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "查询上一道工序是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询上一道工序是否完成": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未完成上一道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "查询sn对应信息-uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否存在1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中是否有cplc绑定记录": {
+      "main": [
+        [
+          {
+            "node": "判断上节点结果1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断上节点结果1": {
+      "main": [
+        [
+          {
+            "node": "Code13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询machine_data中是否有cplc解绑记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中是否有cplc解绑记录": {
+      "main": [
+        [
+          {
+            "node": "判断有无解绑记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "判断有无解绑记录": {
+      "main": [
+        [
+          {
+            "node": "Code13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn有cplc绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中是否有cplc绑定记录1": {
+      "main": [
+        [
+          {
+            "node": "判断上节点结果2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断上节点结果2": {
+      "main": [
+        [
+          {
+            "node": "Code14",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询machine_data中是否有cplc解绑记录1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中是否有cplc解绑记录1": {
+      "main": [
+        [
+          {
+            "node": "判断有无解绑记录1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断有无解绑记录1": {
+      "main": [
+        [
+          {
+            "node": "Code14",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn有cplc绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询是否属于返投设备": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn重复绑定该cplc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code9": {
+      "main": [
+        [
+          {
+            "node": "插入工序信息(返投设备）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入工序信息(返投设备）": {
+      "main": [
+        [
+          {
+            "node": "sn重复绑定该cplc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询是否属于返投设备1": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Code10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn重复绑定该cplc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code10": {
+      "main": [
+        [
+          {
+            "node": "插入工序信息(返投设备）1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入工序信息(返投设备）1": {
+      "main": [
+        [
+          {
+            "node": "sn重复绑定该cplc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.240",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "256",
+            "user-agent": "python-requests/2.32.5",
+            "accept-encoding": "gzip, deflate",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "uploadDate": "2025-12-06T10:01:53.274Z",
+            "sn": "W35B021598",
+            "uuid": "",
+            "cplc": "REDACTED",
+            "id": "COROS APEX 4 42mm 58CC58",
+            "procedure_name": "气压计校准"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/cplcupload",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "a85ad55d-42bc-4b3a-aab4-71ae864a2d0e",
+  "activeVersionId": "a85ad55d-42bc-4b3a-aab4-71ae864a2d0e",
+  "versionCounter": 44,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:33:10.099Z",
+      "createdAt": "2025-04-24T03:33:10.099Z",
+      "role": "workflow:owner",
+      "workflowId": "mHnvlHD1Nun7LAgx",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

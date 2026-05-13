@@ -1,0 +1,1049 @@
+{
+  "updatedAt": "2025-09-01T08:51:07.686Z",
+  "createdAt": "2025-09-01T08:16:37.624Z",
+  "id": "zFbsDT103E2OcfgM",
+  "name": "手动同步",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.000",
+              "type": "number"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.999",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "b2cf991c-ead5-4d63-8ae0-9b95338c0acf",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        64,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "fdac6bc0-18dc-42b0-968f-a46da67ac31d",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "7007fe93-70e6-4b46-93a9-5575993aceac",
+      "name": "Date & Time1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "id": "cdd746d7-646a-45cd-822e-3796ff19e520",
+      "name": "定时触发",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM public.mes_delivery_order_details WHERE create_time BETWEEN '{{ $json.startdate }} 'AND '{{ $json.enddate }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        -256
+      ],
+      "id": "cea24f4e-fcb6-43d8-9fdc-0f0a0d356844",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 提取输入数据\nconst input = $input.all();\n\n// 手动解析日期字符串\nconst parseDate = (dateString) => {\n  const [date, time] = dateString.split(' ');\n  const [year, month, day] = date.split('-').map(Number);\n  const [hours, minutes, seconds] = time.split(':').map((v, i) => i === 2 ? parseFloat(v) : Number(v));\n  return new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));\n};\n\nconst startdate = parseDate(input[0].json.startdate);\nconst enddate = parseDate(input[0].json.enddate);\n\n// 使用 ISOString 方法直接格式化\nconst formattedStartDate = startdate.toISOString(); // 保持原始的 ISO 格式带 Z\nconst formattedEndDate = enddate.toISOString(); // 保持原始的 ISO 格式带 Z\n\nreturn [\n  {\n    json: {\n      startdate: formattedStartDate,\n      enddate: formattedEndDate\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -256
+      ],
+      "id": "75a83577-0596-40fc-9f0a-5cda71fc962a",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bebb37a1-a5f9-4f0c-b64f-a06c4a8f8bbf",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        -256
+      ],
+      "id": "25ebb064-d595-490c-bbc6-fe903d6bf969",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8c108d4-26f1-411b-99ce-2e50df7feaab",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "1f2580be-ebd5-4a1c-81d1-f6441905be4e",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "48357567-78da-41aa-81b7-a1dd29635c9f",
+              "name": "delivery_time",
+              "value": "={{ $json.create_time }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        -320
+      ],
+      "id": "4ab67aa0-8fb6-416f-b626-b6edf1debcef",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_detail",
+          "mode": "list",
+          "cachedResultName": "delivery_detail"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "channel": "={{ $json.channel }}",
+            "retroid": "={{ $json.retroid }}",
+            "createtime": "={{ $json.delivery_time }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1184,
+        -320
+      ],
+      "id": "019fa92a-2fa8-4f1d-b989-1392f97a5ece",
+      "name": "插入到每日出库表中",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bebb37a1-a5f9-4f0c-b64f-a06c4a8f8bbf",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        -320
+      ],
+      "id": "679c7d15-df78-44c9-be25-e7e6330e82a2",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "collection": "snoutbounds",
+        "options": {},
+        "query": "={\n  \"isDelete\": 0,\n  \"outboundTime\": {\n    \"$gte\": {{ $json.formattedstartDate }},\n    \"$lte\": {{ $json.formattedendDate }}\n  }\n}\n"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        -80
+      ],
+      "id": "7b2cc04a-52a2-44fe-8356-6fd2e91335d7",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "拉取国内发货数据失败",
+        "options": {},
+        "path": "dfea9850-63e8-495c-a1f5-9461070130c5"
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        944,
+        192
+      ],
+      "id": "3a5c5854-7af2-4aab-814b-7a1308c3e87f",
+      "name": "数据库报错",
+      "webhookId": "dfea9850-63e8-495c-a1f5-9461070130c5",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "插入国内发货数据失败",
+        "options": {},
+        "path": "ccf56e54-a61c-43e8-b022-a8acb2f334fd"
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1664,
+        -80
+      ],
+      "id": "06f739e5-be2f-4bb2-8a12-9a3b80a51e54",
+      "name": "数据库报错1",
+      "webhookId": "ccf56e54-a61c-43e8-b022-a8acb2f334fd",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "拉取国内发货数据成功",
+        "html": "={{JSON.stringify( $json.data )}}",
+        "options": {},
+        "path": "f10e89d8-46fc-40c7-ad0c-014015cfd8bc"
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2320,
+        -304
+      ],
+      "id": "63df0778-9d4f-49cc-8543-8b90383a50d5",
+      "name": "成功",
+      "webhookId": "f10e89d8-46fc-40c7-ad0c-014015cfd8bc",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.enddate }}",
+        "format": "x",
+        "outputFieldName": "formattedendDate",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "id": "83495e2e-2eeb-4a0f-9d1c-9cf401516c1e",
+      "name": "Date & Time2",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.startdate }}",
+        "format": "x",
+        "outputFieldName": "formattedstartDate",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "id": "ac7747ef-c01d-4baf-93f9-50c892bd154f",
+      "name": "日期转换",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8c108d4-26f1-411b-99ce-2e50df7feaab",
+              "name": "retroid",
+              "value": "={{ $json.sn }}",
+              "type": "string"
+            },
+            {
+              "id": "1f2580be-ebd5-4a1c-81d1-f6441905be4e",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "48357567-78da-41aa-81b7-a1dd29635c9f",
+              "name": "delivery_time",
+              "value": "={{ $json.outboundTime.toDateTime('ms') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        -80
+      ],
+      "id": "b1857fa7-74c0-466b-93b7-bd2348a8006a",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1024,
+        -320
+      ],
+      "id": "69180da5-2b7c-4036-8b3a-2a125dfb9b53",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "production_detail",
+          "mode": "list",
+          "cachedResultName": "production_detail"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.retroid }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "createtime",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1360,
+        -320
+      ],
+      "id": "f1fdba80-0144-4678-a1dd-3ed27da30057",
+      "name": "查询生产数据中的相关资料",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const productionData = $input.all();\nconst deliveryData = $('插入到每日出库表中').all();\n\nconst combinedData = [];\n\nproductionData.forEach(prodItem => {\n  const matchingDelivery = deliveryData.find(deliveryItem => deliveryItem.json.retroid === prodItem.json.retroid);\n  if (matchingDelivery) {\n    combinedData.push({\n      production_id: prodItem.json.id,\n      delivery_id: matchingDelivery.json.id,\n      retroid: prodItem.json.retroid,\n      machine_type: prodItem.json.machine_type,\n      job_number: prodItem.json.job_number,\n      uuid: prodItem.json.uuid,\n      phase: prodItem.json.phase,\n      wifi_mac: prodItem.json.wifi_mac,\n      battery: prodItem.json.battery,\n      screen: prodItem.json.screen,\n      remark: prodItem.json.remark,\n      channel:matchingDelivery.json.channel\n    });\n  }\n});\n\nreturn combinedData;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        -320
+      ],
+      "id": "bec9477e-e8a3-4262-9011-50b733fd7371",
+      "name": "整合资料"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "daily_info",
+          "mode": "list",
+          "cachedResultName": "daily_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "production_id": "={{ $json.production_id }}",
+            "delivery_id": "={{ $json.delivery_id }}",
+            "machine_type": "={{ $json.machine_type }}",
+            "job_number": "={{ $json.job_number }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac.replace(/\\n/g, '') }}",
+            "battery": "={{ $json.battery.replace(/\\n/g, '')  }}",
+            "screen": "={{ $json.screen.replace(/\\n/g, '')  }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $now }}",
+            "channel": "={{ $json.channel }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "production_id",
+              "displayName": "production_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_id",
+              "displayName": "delivery_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1728,
+        -320
+      ],
+      "id": "ed222c81-f2fa-426f-a077-4a31d71e9694",
+      "name": "插入到daily_info",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        -304
+      ],
+      "id": "edc7bdab-e8a1-4af7-bb9b-36df7582aeca",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定时触发": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "日期转换",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到每日出库表中": {
+      "main": [
+        [
+          {
+            "node": "查询生产数据中的相关资料",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time2": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期转换": {
+      "main": [
+        [
+          {
+            "node": "Date & Time2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "插入到每日出库表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询生产数据中的相关资料": {
+      "main": [
+        [
+          {
+            "node": "整合资料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合资料": {
+      "main": [
+        [
+          {
+            "node": "插入到daily_info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到daily_info": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:定时触发": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "定时触发": [
+      {
+        "json": {
+          "timestamp": "2025-08-22T03:00:21.689+08:00",
+          "Readable date": "August 22nd 2025, 3:00:21 am",
+          "Readable time": "3:00:21 am",
+          "Day of week": "Friday",
+          "Year": "2025",
+          "Month": "August",
+          "Day of month": "22",
+          "Hour": "03",
+          "Minute": "00",
+          "Second": "21",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ]
+  },
+  "versionId": "d4967e87-daf5-444f-90f8-7d58584932ae",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-01T08:16:37.624Z",
+      "createdAt": "2025-09-01T08:16:37.624Z",
+      "role": "workflow:owner",
+      "workflowId": "zFbsDT103E2OcfgM",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,1180 @@
+{
+  "updatedAt": "2026-03-11T07:20:57.473Z",
+  "createdAt": "2026-03-11T07:09:15.555Z",
+  "id": "UZ07D6bOIMNwY2qJ",
+  "name": "我的工作流 17",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "0502e27d-8b87-44fe-8f20-6b03fe03c7b3",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "2b6f582d-b03a-427a-968c-b0b21bae48be",
+      "name": "Date & Time1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bac1aa53-ea2f-4d95-81d4-9193e8420af6",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.000",
+              "type": "number"
+            },
+            {
+              "id": "5cb9784d-ec74-4fba-99da-369719f7f636",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.999",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "eb78e1f2-029d-4972-b902-0a673950db9a",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -192,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst parseDate = (dateString) => {\n  const [date, time] = dateString.split(' ');\n  const [year, month, day] = date.split('-').map(Number);\n  const [hours, minutes, seconds] = time.split(':').map((v, i) => i === 2 ? parseFloat(v) : Number(v));\n  return new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));\n};\nconst startdate = parseDate(input[0].json.startdate);\nconst enddate = parseDate(input[0].json.enddate);\nreturn [{ json: { startdate: startdate.toISOString(), enddate: enddate.toISOString() } }];"
+      },
+      "id": "77c2e8aa-f372-40ef-9326-5656bdae855d",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM public.mes_delivery_order_details WHERE create_time BETWEEN '{{ $json.startdate }} 'AND '{{ $json.enddate }}' AND channel is not NULL;",
+        "options": {}
+      },
+      "id": "0c06dc20-26f3-4c16-ad5d-b7f4db846207",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fc024928-6ad0-4b4e-b6d4-106c03760291",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a5d2d859-0956-4272-b380-401b534ac546",
+      "name": "If-PG数据",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9849dfa-cc5c-429d-8148-d9f8ff880768",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "9c6e2865-0202-47ce-94ae-61c40382a6e9",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "03a63217-2e90-481b-ae07-1db95e732071",
+              "name": "delivery_time",
+              "value": "={{ $json.create_time }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "74d1ecae-3c61-4f0a-af72-3ba942ca79d5",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        608,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.formattedDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "335a8eaf-845d-4982-bda7-59dad13e16dc",
+      "name": "日期转换",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.formattedDate }}",
+        "format": "=yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "options": {}
+      },
+      "id": "57bdea8a-6d76-4805-ab09-0f2b7cb096ae",
+      "name": "Date & Time2",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        144,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "collection": "snoutbounds",
+        "options": {},
+        "query": "={\n  \"isDelete\": 0,\n  \"outboundTime\": {\n    \"$gte\": {{ $json.formattedstartDate }},\n    \"$lte\": {{ $json.formattedendDate }}\n  }\n}"
+      },
+      "id": "716f6228-e457-4cf5-9a84-f82e5b0b53f4",
+      "name": "MongoDB",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dc56c461-05da-4367-aa5a-07ef81ecab18",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6138abcf-4e37-4b85-906b-d6e6392c2949",
+      "name": "If-Mongo数据",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0dfba270-c6f2-48ed-896d-14fac046b7e5",
+              "name": "retroid",
+              "value": "={{ $json.sn }}",
+              "type": "string"
+            },
+            {
+              "id": "8445b96c-52ca-4fc1-aee1-1cf1242e4495",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "de18a4c4-2c9c-4715-a16d-dcc0ed53d6d1",
+              "name": "delivery_time",
+              "value": "={{ $json.outboundTime.toDateTime('ms') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1648af4e-8c10-46ef-9d30-d2daec06a792",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        720,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f0b96c46-3bcb-4f45-8e39-e8b2f468aa18",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1216,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "745a2649-db7a-45b8-a9ed-6e34f29ce50c",
+              "leftValue": "={{ $json.retroid.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c116e259-3e92-49bb-9bd8-d841b3a55d0a",
+      "name": "Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.1,
+      "position": [
+        1408,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 500,
+        "options": {}
+      },
+      "id": "1b81e462-0a21-4d6a-a50c-2b51c033e700",
+      "name": "分批处理",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1616,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length === 0) {\n  return [{ json: { query: null, count: 0, retroids: [] } }];\n}\n\nconst esc = (v) => v == null ? 'NULL' : \"'\" + String(v).replace(/'/g, \"''\") + \"'\";\n\nconst values = items.map(item => {\n  const j = item.json;\n  return '(' + esc(j.retroid) + ', ' + esc(j.channel) + ', ' + esc(j.delivery_time) + ')';\n}).join(',\\n  ');\n\nconst query = `INSERT INTO mes_daily_data.delivery_detail (retroid, channel, createtime)\nVALUES\n  ${values}\nON CONFLICT (retroid) DO NOTHING\nRETURNING id, retroid, channel, createtime;`;\n\nconst retroids = items.map(item => item.json.retroid);\nreturn [{ json: { query, count: items.length, retroids } }];"
+      },
+      "id": "4419d08f-0faf-48e4-91c4-f845acfc733b",
+      "name": "生成批量INSERT-出库",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.query }}",
+        "options": {}
+      },
+      "id": "871b5ac6-e0a6-4f4d-8ffe-177b81f4450a",
+      "name": "批量写入delivery_detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2016,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "766b4645-91d4-4193-970e-1a26d765e022",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "96775759-24c9-46c8-83c2-10c71073bdce",
+      "name": "delivery写入成功?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2208,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const retryKey = 'delivery_retry_count';\nconst maxRetries = 3;\nconst staticData = $getWorkflowStaticData('global');\nconst currentCount = (staticData[retryKey] || 0) + 1;\nstaticData[retryKey] = currentCount;\n\nif (currentCount >= maxRetries) {\n  staticData[retryKey] = 0;\n  return [{ json: { action: 'skip', retries: currentCount, error: 'delivery批次写入失败已达最大重试次数' } }];\n}\n\nawait new Promise(resolve => setTimeout(resolve, 5000));\nreturn [{ json: { action: 'retry', retries: currentCount } }];"
+      },
+      "id": "20c9710e-fce6-4841-a13e-b061bc50afb3",
+      "name": "重试-delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "db283e5c-ddde-4ffb-acd3-08a945dd8f88",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "retry",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "abc7a4d8-ea03-4e01-86ee-542a6bb37b04",
+      "name": "delivery可重试?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2608,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const batchNode = $('生成批量INSERT-出库').first();\nconst retroids = batchNode.json.retroids || [];\n\nif (retroids.length === 0) {\n  return [{ json: { query: 'SELECT 1 WHERE false', retroids: [] } }];\n}\n\nconst esc = (v) => \"'\" + String(v).replace(/'/g, \"''\") + \"'\";\nconst inList = retroids.map(esc).join(', ');\n\nconst query = `SELECT DISTINCT ON (retroid) *\nFROM mes_daily_data.production_detail\nWHERE retroid IN (${inList})\nORDER BY retroid, id DESC;`;\n\nreturn [{ json: { query, retroids } }];"
+      },
+      "id": "0c7c7240-d3d0-444e-98f5-ebac8914ac87",
+      "name": "生成批量查询-生产数据",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.query }}",
+        "options": {}
+      },
+      "id": "5044669f-d655-48aa-87f0-db64c566e692",
+      "name": "批量查询production_detail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2608,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从delivery_detail插入结果获取出库数据\nconst deliveryItems = $('批量写入delivery_detail').all();\nconst productionItems = $input.all();\n\n// production lookup by retroid\nconst prodMap = {};\nfor (const item of productionItems) {\n  if (item.json.retroid) {\n    prodMap[item.json.retroid] = item.json;\n  }\n}\n\nconst results = [];\nfor (const d of deliveryItems) {\n  const retroid = d.json.retroid;\n  if (!retroid) continue;\n  const prod = prodMap[retroid] || {};\n  \n  results.push({\n    json: {\n      retroid,\n      delivery_id: d.json.id || null,\n      channel: d.json.channel || null,\n      production_id: prod.id || null,\n      machine_type: prod.machine_type || null,\n      job_number: prod.job_number || null,\n      uuid: prod.uuid || null,\n      phase: prod.phase || null,\n      wifi_mac: prod.wifi_mac ? prod.wifi_mac.replace(/\\n/g, '') : null,\n      battery: prod.battery ? prod.battery.replace(/\\n/g, '') : null,\n      screen: prod.screen ? prod.screen.replace(/\\n/g, '') : null,\n      remark: prod.remark || null,\n      country: prod.country || null\n    }\n  });\n}\n\nif (results.length === 0) {\n  return [{ json: { _empty: true } }];\n}\nreturn results;"
+      },
+      "id": "b5bf1007-fdec-45ec-b09a-dbdc990b5596",
+      "name": "合并出库+生产数据",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().filter(i => !i.json._empty);\n\nif (items.length === 0) {\n  return [{ json: { query: null, count: 0 } }];\n}\n\nconst esc = (v) => v == null ? 'NULL' : \"'\" + String(v).replace(/'/g, \"''\") + \"'\";\nconst now = new Date().toISOString();\n\nconst values = items.map(item => {\n  const j = item.json;\n  return '(' + [\n    esc(j.retroid), j.production_id || 'NULL', j.delivery_id || 'NULL',\n    esc(j.machine_type), esc(j.job_number), esc(j.uuid), esc(j.phase),\n    esc(j.wifi_mac), esc(j.battery), esc(j.screen), esc(j.remark),\n    esc(now), esc(j.channel), esc(j.country)\n  ].join(', ') + ')';\n}).join(',\\n  ');\n\nconst query = `INSERT INTO mes_daily_data.daily_info\n  (retroid, production_id, delivery_id, machine_type, job_number, uuid, phase, wifi_mac, battery, screen, remark, createtime, channel, country)\nVALUES\n  ${values}\nON CONFLICT (retroid) DO NOTHING;`;\n\nreturn [{ json: { query, count: items.length } }];"
+      },
+      "id": "1f0df351-d8ca-49f1-8fd5-a4d3a2cce8b8",
+      "name": "生成批量INSERT-dailyinfo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3216,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.query }}",
+        "options": {}
+      },
+      "id": "8763e4fd-43c3-4a1e-b3ec-a1fa23c3ebe4",
+      "name": "批量写入daily_info",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3408,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "955f02bb-fcd7-48a2-aa97-35849888aa3f",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dcc34e87-fbe4-496c-a8d6-084a92d1f947",
+      "name": "dailyinfo写入成功?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        3616,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const retryKey = 'dailyinfo_retry_count';\nconst maxRetries = 3;\nconst staticData = $getWorkflowStaticData('global');\nconst currentCount = (staticData[retryKey] || 0) + 1;\nstaticData[retryKey] = currentCount;\n\nif (currentCount >= maxRetries) {\n  staticData[retryKey] = 0;\n  return [{ json: { action: 'skip', retries: currentCount, error: 'daily_info批次写入失败已达最大重试次数' } }];\n}\n\nawait new Promise(resolve => setTimeout(resolve, 5000));\nreturn [{ json: { action: 'retry', retries: currentCount } }];"
+      },
+      "id": "7bc94ded-5411-45f4-8747-91abd0827870",
+      "name": "重试-dailyinfo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3808,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0e0186f-4f9f-4a5c-a124-8967b7986fe4",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "retry",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7b68a952-b308-4c9d-a92a-b2c73d238e2e",
+      "name": "dailyinfo可重试?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        4016,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nstaticData['delivery_retry_count'] = 0;\nstaticData['dailyinfo_retry_count'] = 0;\n\nconst batchCount = $('生成批量INSERT-出库').first().json.count || 0;\nstaticData['total_success'] = (staticData['total_success'] || 0) + batchCount;\n\nreturn [{ json: { batch_success: batchCount, total_success: staticData['total_success'] } }];"
+      },
+      "id": "81d0ce8e-231f-46fd-af45-5fa9ce74d277",
+      "name": "重置计数器",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3808,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const errorInfo = $input.first().json;\nconst batchData = $('生成批量INSERT-出库').first().json;\nconsole.log('DELIVERY BATCH FAILED:', JSON.stringify({ error: errorInfo.error, count: batchData.count, retroids_sample: (batchData.retroids || []).slice(0, 5) }));\nreturn [{ json: { failed: 'delivery', count: batchData.count } }];"
+      },
+      "id": "613495cc-0a68-44d7-afe9-31557172556a",
+      "name": "记录失败批次-delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const errorInfo = $input.first().json;\nconst batchData = $('生成批量INSERT-dailyinfo').first().json;\nconsole.log('DAILYINFO BATCH FAILED:', JSON.stringify({ error: errorInfo.error, count: batchData.count }));\nreturn [{ json: { failed: 'dailyinfo', count: batchData.count } }];"
+      },
+      "id": "975f494e-9383-492a-ade9-e39b00f1513d",
+      "name": "记录失败批次-dailyinfo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst totalSuccess = staticData['total_success'] || 0;\n// 清理\nstaticData['total_success'] = 0;\nstaticData['delivery_retry_count'] = 0;\nstaticData['dailyinfo_retry_count'] = 0;\n\nreturn [{ json: { total_synced: totalSuccess, completed_at: new Date().toISOString() } }];"
+      },
+      "id": "e815a3dd-b378-4208-ac55-ce2effb8f6b8",
+      "name": "汇总结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "e05f0f42-a6e5-4211-b5b5-8ebcdedce66e",
+      "name": "Remove Duplicates3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        880,
+        400
+      ],
+      "id": "77521958-e98e-490e-ac38-62ecb0f07586",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -848,
+        208
+      ],
+      "id": "81a829a4-a5c8-4b08-8f09-ac03e9bc78cd",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "日期转换",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If-PG数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If-PG数据": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期转换": {
+      "main": [
+        [
+          {
+            "node": "Date & Time2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time2": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "If-Mongo数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If-Mongo数据": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "分批处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分批处理": {
+      "main": [
+        [
+          {
+            "node": "汇总结果",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "生成批量INSERT-出库",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成批量INSERT-出库": {
+      "main": [
+        [
+          {
+            "node": "批量写入delivery_detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "批量写入delivery_detail": {
+      "main": [
+        [
+          {
+            "node": "delivery写入成功?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重试-delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delivery写入成功?": {
+      "main": [
+        [
+          {
+            "node": "生成批量查询-生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重试-delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重试-delivery": {
+      "main": [
+        [
+          {
+            "node": "delivery可重试?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delivery可重试?": {
+      "main": [
+        [
+          {
+            "node": "生成批量INSERT-出库",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录失败批次-delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成批量查询-生产数据": {
+      "main": [
+        [
+          {
+            "node": "批量查询production_detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "批量查询production_detail": {
+      "main": [
+        [
+          {
+            "node": "合并出库+生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成批量INSERT-dailyinfo": {
+      "main": [
+        [
+          {
+            "node": "批量写入daily_info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "批量写入daily_info": {
+      "main": [
+        [
+          {
+            "node": "dailyinfo写入成功?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重试-dailyinfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dailyinfo写入成功?": {
+      "main": [
+        [
+          {
+            "node": "重置计数器",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "重试-dailyinfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重试-dailyinfo": {
+      "main": [
+        [
+          {
+            "node": "dailyinfo可重试?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dailyinfo可重试?": {
+      "main": [
+        [
+          {
+            "node": "生成批量INSERT-dailyinfo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录失败批次-dailyinfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重置计数器": {
+      "main": [
+        [
+          {
+            "node": "分批处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "记录失败批次-delivery": {
+      "main": [
+        [
+          {
+            "node": "分批处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "记录失败批次-dailyinfo": {
+      "main": [
+        [
+          {
+            "node": "重置计数器",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "versionId": "79007995-6f66-4529-99f1-a4b54059e535",
+  "activeVersionId": null,
+  "versionCounter": 2,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-11T07:09:15.555Z",
+      "createdAt": "2026-03-11T07:09:15.555Z",
+      "role": "workflow:owner",
+      "workflowId": "UZ07D6bOIMNwY2qJ",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

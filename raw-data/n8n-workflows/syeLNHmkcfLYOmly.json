@@ -1,0 +1,619 @@
+{
+  "updatedAt": "2025-01-02T06:31:13.162Z",
+  "createdAt": "2024-03-01T05:38:26.143Z",
+  "id": "syeLNHmkcfLYOmly",
+  "name": "样机试用到期提醒",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17,
+              "triggerAtMinute": 48
+            }
+          ]
+        }
+      },
+      "id": "5836aba3-2e86-48f2-b9fb-d09a20d0ff9c",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "28c0abf1-bb5b-4abb-8502-5a8fc91924b4",
+              "leftValue": "={{ $json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "927dc5cb-c4dd-4bd3-8c1d-304dd3f7c622",
+      "name": "判断是否存在试用过期",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        0,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ $input.all().length}}",
+        "options": {}
+      },
+      "id": "9f502de5-7b60-495d-b2fe-169fd989234f",
+      "name": "Loop Over Items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst token=$('获取token并生成试用过期审批实例列表').all()[0].json.token;\nlet timeline=$input.all()[0].json.data.timeline;\n//去除重复的userId 使用mapObject 判断当前数组中是否有对应的userID，来进行去重\nconst messageObj=timeline.reduce((accumulator,currentValue)=>{\n  if(!accumulator.mapObject.hasOwnProperty(currentValue.user_id)){\n    accumulator.mapObject[currentValue.user_id] = true;  \n    accumulator.unique.push(currentValue);   \n  }\n  return accumulator;\n},{ unique: [], mapObject: {} }).unique;\nfor(let i=0;i<messageObj.length;i++){\n  messageObj[i].approval_name=$input.all()[0].json.data.approval_name;\n  messageObj[i].approval_code=$input.all()[0].json.data.approval_code;\n  messageObj[i].instance_code=$input.all()[0].json.data.instance_code;\n}\nreturn messageObj;"
+      },
+      "id": "08f1a61c-5a29-4795-9e2b-719bf2ddfbcd",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v1/message/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"template_id\":\"1021\",\n    \"user_id\":\"{{ $json.user_id }}\",\n    \"custom_title\":\"@i18n@1\",\n    \"custom_content\":\"@i18n@2\",\n    \"note\":\"@i18n@3\",\n    \"actions\":[\n        {\n            \"action_name\":\"@i18n@4\",\n            \"url\":\" https://bytedance.com\",\n            \"android_url\":\"https://bytedance.com\",\n            \"ios_url\":\"https://bytedance.com\",\n            \"pc_url\":\"https://bytedance.com\"\n        }\n    ],\n    \"i18n_resources\":[\n        {\n            \"locale\":\"en-US\",\n            \"is_default\":true,\n            \"texts\":{\n                \"@i18n@1\":\"{{ $json.approval_name }}\",\n                \"@i18n@2\":\"数据库错误\",\n                \"@i18n@3\":\"更新订单号出错！\",\n                \"@i18n@4\":\"查看详情\"\n            }\n        }\n    ]\n} ",
+        "options": {}
+      },
+      "id": "c8d037b0-dcee-4295-b6ef-3f82418835ca",
+      "name": "飞书机器人发送数据库更新错误信息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1960,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {}
+      },
+      "id": "7bbf8389-88c4-4eca-b694-828916ccf122",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        260,
+        1020
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT  p.* \nFROM delivery_order_details d\nJOIN public.prototype_trial p\n    ON d.order_number = ANY(p.order_number)  -- 如果 order_number 是数组\nWHERE p.trial_expiration_date < CURRENT_DATE\n  AND p.is_remind = 1 AND d.watch_status=1;",
+        "options": {}
+      },
+      "id": "220f6d30-adcb-4fbb-8c1b-e4f8b6995407",
+      "name": "查询试用过期列表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        880
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\n//修改飞书获取到的token属性名\nfunction renameProperty(obj, oldProp, newProp) {\n    if (obj.hasOwnProperty(oldProp)) {\n        obj[newProp] = obj[oldProp];\n        delete obj[oldProp];\n    }\n}\n//获取到过期审批实例id\nlet res;\nlet result=[];\n//获取token\nif(!$input.all()[0].json.config){\n  //token过期重新获取token\n  const jsonObject=$('获取飞书token').all()[0].json;\n  renameProperty(jsonObject, 'tenant_access_token', 'token');\n  res=$('获取飞书token').all()[0];\n}else{\n  //token未过期则使用当前数据库中的token\n  $('获取到当前时间戳').all()[0].json.token=$('获取到当前时间戳').all()[0].json.config.token;\n  res=$('获取到当前时间戳').all()[0];\n}\n//循环便利过期列表生成对象包含token，和 instanceCode\n$('查询试用过期列表').all().forEach(item=>{\n  console.log(item)\n  result.push({\n    instanceCode:item.json.id,\n    token:res.json.token,\n    \n  })\n})\n\nreturn result;\n"
+      },
+      "id": "2734c8b5-e279-4262-b0d6-5f54960bf9b7",
+      "name": "获取token并生成试用过期审批实例列表",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{$('查询试用过期列表').all().length}}",
+        "options": {}
+      },
+      "id": "d2dbfe07-b22e-4e2b-83b9-5f3cb7b62b7e",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        700,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\n\nfor (const item of $input.all()) {\n  let res={};\n  console.log(typeof item.json.data.form)\n  JSON.parse(item.json.data.form).forEach(el=>{\n    if(el.name===\"合作方名称\"){\n      res.name=el.value;\n    }\n  })\n  res.approval_name=item.json.data.approval_name;\n  res.instance_code=item.json.data.instance_code;\n  res.user_id=item.json.data.user_id;\n  result.push(res);\n}\n\nreturn result;"
+      },
+      "id": "f0f84d16-9af1-4a2c-979a-e1d2790e2647",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/approval/v4/instances/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "8b5438d0-d1bf-4026-b3e9-51e8830c39a5",
+      "name": "获取审批实例详情",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        280,
+        800
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v1/message/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"template_id\":\"1021\",\n    \"user_id\":\"{{ $json.user_id }}\",\n    \"custom_title\":\"@i18n@1\",\n    \"custom_content\":\"@i18n@2\",\n    \"note\":\"@i18n@3\",\n   \"actions\":[\n         {\n            \"action_name\":\"@i18n@4\",\n            \"url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\",\n            \"android_url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\",\n            \"ios_url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\",\n            \"pc_url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\"\n        }\n    ],\n    \"i18n_resources\":[\n        {\n            \"locale\":\"en-US\",\n            \"is_default\":true,\n            \"texts\":{\n                \"@i18n@1\":\"{{ $json.approval_name }}\",\n                \"@i18n@2\":\"试用到期\",\n                \"@i18n@3\":\"{{ $json.name }}的试用机已到期\",\n                \"@i18n@4\":\"查看详情\"\n            }\n        }\n    ]\n} ",
+        "options": {}
+      },
+      "id": "daa1f8a3-0306-4360-9b5e-9eb6cc09cfe3",
+      "name": "飞书机器人发送消息试用时间到期",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        760,
+        780
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "0bb8f23f-6497-4310-8d56-537a435d5949",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        960,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  飞书API调用失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "4ff847f2-d0ed-4a31-9454-bd4b5caf1eed",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1160,
+        980
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "prototype_trial",
+          "mode": "list",
+          "cachedResultName": "prototype_trial"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_remind": 2,
+            "id": "={{ $('判断是否存在试用过期').item.json[\"id\"] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_phonenumber",
+              "displayName": "order_phonenumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "trial_expiration_date",
+              "displayName": "trial_expiration_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_remind",
+              "displayName": "is_remind",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "partners",
+              "displayName": "partners",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8186ecbe-cd0d-4fe0-95b1-fcd802857c13",
+      "name": "更新试用到期提醒状态",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1060,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "查询试用过期列表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在试用过期": {
+      "main": [
+        [
+          {
+            "node": "获取审批实例详情",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "飞书机器人发送数据库更新错误信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询试用过期列表": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在试用过期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取token并生成试用过期审批实例列表": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "飞书机器人发送消息试用时间到期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取审批实例详情": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "飞书机器人发送消息试用时间到期": {
+      "main": [
+        [
+          {
+            "node": "更新试用到期提醒状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "489da544-2cf7-4573-a69a-f1b7fc03018e",
+  "activeVersionId": "489da544-2cf7-4573-a69a-f1b7fc03018e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:12:55.284Z",
+      "createdAt": "2024-04-24T09:12:55.284Z",
+      "id": "I6FeqDLYYpIOV1kH",
+      "name": "样机试用申请API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-01T05:38:26.148Z",
+      "createdAt": "2024-03-01T05:38:26.148Z",
+      "role": "workflow:owner",
+      "workflowId": "syeLNHmkcfLYOmly",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    },
+    {
+      "updatedAt": "2025-11-04T02:52:15.521Z",
+      "createdAt": "2025-11-04T02:52:15.521Z",
+      "role": "workflow:editor",
+      "workflowId": "syeLNHmkcfLYOmly",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

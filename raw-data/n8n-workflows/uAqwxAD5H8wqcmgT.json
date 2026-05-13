@@ -1,0 +1,1475 @@
+{
+  "updatedAt": "2025-02-05T08:05:07.180Z",
+  "createdAt": "2025-01-08T06:52:07.790Z",
+  "id": "uAqwxAD5H8wqcmgT",
+  "name": "[Sync] - 1.同步OMS渠道到MES上 - 获取同步任务经销商",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('create_task_log').item.json.id }}",
+            "task_result": "任务正在执行，本次检查结束 。"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start_id",
+              "displayName": "start_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "79da2aee-cb8a-4b65-92c0-d383378fff40",
+      "name": "update_task_log2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1290,
+        -298
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.job_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c945a55e-6847-4b4c-8cc1-4b8842f92eef",
+      "name": "get_job_info",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        80,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "execution",
+        "operation": "get",
+        "executionId": "={{ $json.last_n8n_execution_id || 0  }}",
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "4c43ceef-78c9-4ed7-a98e-e4857faa0f20",
+      "name": "n8n",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        560,
+        300
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{ $json.id }}",
+            "task_start_time": "={{ $now }}",
+            "previous_id": "={{ $json.last_nosql_id||\"empty\" }}",
+            "n8n_execution_id": "={{ parseInt($execution.id) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "previous_id",
+              "displayName": "previous_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "n8n_execution_id",
+              "displayName": "n8n_execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "job_id"
+          ]
+        }
+      },
+      "id": "ace0719f-3910-4469-9acf-64bbe4b4b41b",
+      "name": "create_task_log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        800,
+        -440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "task_end_time": "={{ $now }}",
+            "task_result": "={{ $json.task_result }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start_id",
+              "displayName": "start_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f5f9746-d1e8-45ba-b5b8-33e1d5359219",
+      "name": "update_task_log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        3010,
+        -318
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2ac3bf83-4353-48a0-839f-9dc19367a4d9",
+              "leftValue": "={{ $json?.status || \"404\" }}",
+              "rightValue": "running",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "21d4b2ab-9b41-4500-8813-2d6f09c2d18a",
+      "name": "If_running",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "0d135ce2-4fad-4994-b074-ec9517497f55",
+      "name": "When clicking \"Test workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "8f3d2d68-9ebd-4f7f-902d-0a0c4ee7ded2",
+      "name": "Merge_wait_task_finish",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2860,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "b56fbc25-6a69-4f89-9bcf-78a42838841a",
+      "name": "Merge_taskid_and_loginfo",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2760,
+        -380
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5584a6cf-4088-4646-abba-351861b37775",
+      "name": "No Operation, do nothing1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Task - 更新任务日志",
+        "height": 367.8073421100579,
+        "width": 2514.8339215441674
+      },
+      "id": "1a422e71-9650-442f-a4ce-b87b10fa90f7",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -500
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Job - 更新同步工作表",
+        "height": 182.83597166044598,
+        "width": 2228.1376779713923
+      },
+      "id": "dc342fb4-1665-46bd-a938-b280d8b7a225",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2b8eedab-d796-4602-9613-886c2a675054",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a84b2752-061f-4d07-af77-4eb69c9a6722",
+      "name": "If_job_status_eq_1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        300,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "dfbed334-6b42-4981-bed9-b54d93c9f800",
+      "name": "Merge_taskid_order_id",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1710,
+        -298
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "e3203df3-384c-403c-a371-7a0f46229c4f",
+      "name": "Merge_taskid_runningid",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1090,
+        -298
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('get_job_info').item.json.id }}",
+            "last_n8n_execution_id": "={{ parseInt($execution.id) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_nosql_id",
+              "displayName": "last_nosql_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_n8n_execution_id",
+              "displayName": "last_n8n_execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c5c40814-4788-46e7-9606-bddaa0ed4caf",
+      "name": "update_job_n8n_execution_id",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1100,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('get_job_info').item.json.id }}",
+            "last_nosql_id": "={{ $json.deliverTime }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_nosql_id",
+              "displayName": "last_nosql_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_datetime",
+              "displayName": "last_datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "80d07724-2ec7-4de5-8d70-e095c9aa6de6",
+      "name": "update_job_last_nosql_id",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1920,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "20f8ace2-d0a2-4332-a831-8f4ed317fbc3",
+              "leftValue": "={{ $json?._id.toString() || null}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "66a90840-cf42-4397-add9-baa73f92ba79",
+      "name": "If_id_esists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "id": "e14e6abe-4274-42fa-b21d-fef6ed4dcc5a",
+      "name": "Wait_10S",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3080,
+        260
+      ],
+      "webhookId": "183686d0-a0f5-4873-87cc-d58514cfdc21"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task",
+          "mode": "list",
+          "cachedResultName": "task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "current_id": "={{ $json?._id.toString() || '' }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start_id",
+              "displayName": "start_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "539d3c33-0eb5-4cb7-92f8-741d8134fe1d",
+      "name": "update_task_log1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1930,
+        -298
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "pending_task",
+          "mode": "list",
+          "cachedResultName": "pending_task"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{ $('get_job_info').item.json.id }}",
+            "task_state": 0,
+            "task_start_time": "={{ $now }}",
+            "current_id": "={{ $json._id.toString() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "current_id",
+              "displayName": "current_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_start_time",
+              "displayName": "task_start_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_end_time",
+              "displayName": "task_end_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_result",
+              "displayName": "task_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_state",
+              "displayName": "task_state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "job_id"
+          ]
+        }
+      },
+      "id": "9689af16-57a4-4955-830b-d9ac7850208d",
+      "name": "create_pending_task",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2020,
+        420
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.id }}",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "de67dccb-f44c-4e16-ae36-de5cf8062e3b",
+      "name": "Execute Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3300,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      },
+      "id": "2bd116ba-af5f-4e5d-8655-82621748d8b4",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -460,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "collection": "customerdelivernotes",
+        "options": {
+          "limit": 1,
+          "sort": "{\"deliverTime\":1}"
+        },
+        "query": "={{ $('get_job_info').item.json.last_nosql_id ?\nJSON.stringify(\n{ \"deliverTime\": { \"$gt\": parseInt($('get_job_info').item.json.last_nosql_id) },\"status\":30 })\n: \n '{\"status\":30}'\n\n }}\n\n "
+      },
+      "id": "1af48fd1-a6f7-44c1-9dfd-93201e155364",
+      "name": "customerdelivernotes",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"job_id\": 2\n}\n",
+        "options": {}
+      },
+      "id": "32cfcf67-fae9-4b69-ab9c-c6fe0f4ade8b",
+      "name": "set_job_id=2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -160,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fceafb24-dab3-4eff-80c7-20a99a29b730",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        540
+      ],
+      "id": "6592cd6b-0caf-49fd-a4b1-b8c986b9c717",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "get_job_info": {
+      "main": [
+        [
+          {
+            "node": "If_job_status_eq_1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n": {
+      "main": [
+        [
+          {
+            "node": "If_running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_task_log": {
+      "main": [
+        [
+          {
+            "node": "Merge_taskid_and_loginfo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge_taskid_order_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge_taskid_runningid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_running": {
+      "main": [
+        [
+          {
+            "node": "Merge_taskid_runningid",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "update_job_n8n_execution_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "customerdelivernotes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \"Test workflow\"": {
+      "main": [
+        [
+          {
+            "node": "set_job_id=2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_wait_task_finish": {
+      "main": [
+        [
+          {
+            "node": "Wait_10S",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_taskid_and_loginfo": {
+      "main": [
+        [
+          {
+            "node": "update_task_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        [
+          {
+            "node": "Merge_wait_task_finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_job_status_eq_1": {
+      "main": [
+        [
+          {
+            "node": "create_task_log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_taskid_order_id": {
+      "main": [
+        [
+          {
+            "node": "update_task_log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_taskid_runningid": {
+      "main": [
+        [
+          {
+            "node": "update_task_log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_job_last_nosql_id": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_id_esists": {
+      "main": [
+        [
+          {
+            "node": "update_job_last_nosql_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait_10S": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_pending_task": {
+      "main": [
+        [
+          {
+            "node": "Merge_wait_task_finish",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "set_job_id=2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "customerdelivernotes": {
+      "main": [
+        [
+          {
+            "node": "Merge_taskid_order_id",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "If_id_esists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge_taskid_and_loginfo",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_job_id=2": {
+      "main": [
+        [
+          {
+            "node": "get_job_info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "create_pending_task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "callerPolicy": "any",
+    "executionTimeout": 600,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrencyRules": [],
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8b88fb30-5d32-40e7-b207-da69dafdd338",
+  "activeVersionId": "8b88fb30-5d32-40e7-b207-da69dafdd338",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-05-30T08:42:25.307Z",
+      "createdAt": "2024-05-22T06:32:04.530Z",
+      "id": "TMB7KjfrkAxTdTwk",
+      "name": "[DATA SYNC] - 数据同步任务"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-01-28T16:54:39.965Z",
+      "createdAt": "2025-01-28T16:54:39.965Z",
+      "role": "workflow:owner",
+      "workflowId": "uAqwxAD5H8wqcmgT",
+      "projectId": "W2w8tFYL8Ed6J49w",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:55.733Z",
+        "createdAt": "2025-01-28T16:53:34.840Z",
+        "id": "W2w8tFYL8Ed6J49w",
+        "name": "4.OMS_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

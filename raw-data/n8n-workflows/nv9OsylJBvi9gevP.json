@@ -1,0 +1,901 @@
+{
+  "updatedAt": "2025-02-24T08:52:00.791Z",
+  "createdAt": "2024-08-23T03:12:11.878Z",
+  "id": "nv9OsylJBvi9gevP",
+  "name": "updateLarkToken",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "5b587739-a2fd-460a-8b68-38f38779e5b4",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        560,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet ids;\nfor (const item of $input.all()) {\n  const updateTokenList=$('Aggregate1').all()[0].json.data;\n  console.log(updateTokenList)\n  ids=item.json.data.filter(e=>{\n    if(updateTokenList.find(el=>el.key==e.key)){\n      return e;\n    }\n  });\n   \n  \n}\n\nreturn {ids};"
+      },
+      "id": "8dc5e603-3f4b-44c3-bb53-07acabd6c63f",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 刷新Redis\n\n",
+        "height": 333.24375453774564,
+        "width": 1035.5642352702184
+      },
+      "id": "f0b96898-589d-41b2-a3c4-ca5d1f2371d2",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "21104072-1279-4d1e-8881-d31ff287b8b2",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 获取Token",
+        "height": 332.06305142395695,
+        "width": 885.8941381247607
+      },
+      "id": "a2eb1eec-f49b-4d13-b951-acdf839b42dc",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "1d655124-e785-49e9-9539-19f2cdf9f84b",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        1260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "variables",
+          "mode": "list",
+          "cachedResultName": "variables"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "ab7ac68b-b206-4819-8004-a0afc770d696",
+      "name": "read all variables from db",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2820,
+        380
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "juhfqcgzSwg9TAtS",
+          "name": "Local Postgres "
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "REDACTED",
+        "value": "={{ $json.data }}"
+      },
+      "id": "54ed477c-3395-4f86-8528-c740c6142903",
+      "name": "Reflash Redis",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3260,
+        380
+      ],
+      "credentials": {
+        "redis": {
+          "id": "MVUAC2wFL3dgbgoU",
+          "name": "Local Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet data=\"\"\nlet arr=[]\nfor (const item of $input.all()) {\n     arr.push(item.json)\n   //data=JSON.stringify(item.json)\n  \n}\n\ndata=JSON.stringify(arr)\n\nreturn {data};"
+      },
+      "id": "48f2c36d-1415-47e6-8401-27ff324349a4",
+      "name": "Code - JSON to String",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  飞书token获取失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "3affa3e6-62ff-4908-bb1a-5877d5d3358d",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1640,
+        1340
+      ],
+      "retryOnFail": false,
+      "webhookId": "d74fd96b-f88a-4d99-b5e5-f5c297cd552c",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"app_id\": \"{{ $vars.lark_refund_app_id }}\",\n    \"app_secret\": \"{{ $vars.lark_refund_app_secret }}\"\n}  ",
+        "options": {}
+      },
+      "id": "93848872-07cd-421b-887c-0b40f560b9c6",
+      "name": "获取飞书退款审批token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        820,
+        780
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dd1a6acc-8525-456f-94f9-95f98b92b522",
+              "name": "key",
+              "value": "=lark_refund_tenant_access_token",
+              "type": "string"
+            },
+            {
+              "id": "4058a229-3601-4152-ba5b-d9fedbf92835",
+              "name": "tenant_access_token",
+              "value": "={{ $json.tenant_access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "548f2c24-7ada-4498-bbca-e15eb6d122c3",
+              "name": "msg",
+              "value": "={{ $json.msg }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1eb83ddd-6940-47de-a6c2-d374f1d9bc59",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1040,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dd1a6acc-8525-456f-94f9-95f98b92b522",
+              "name": "key",
+              "value": "=lark_tenant_access_token",
+              "type": "string"
+            },
+            {
+              "id": "4058a229-3601-4152-ba5b-d9fedbf92835",
+              "name": "tenant_access_token",
+              "value": "={{ $json.tenant_access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "548f2c24-7ada-4498-bbca-e15eb6d122c3",
+              "name": "msg",
+              "value": "={{ $json.msg }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4dae4684-80de-460d-b96d-c5801a17eba7",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1040,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"app_id\": \"{{ $vars.lark_app_id }}\",\n    \"app_secret\": \"{{ $vars.lark_app_secret }}\"\n}  ",
+        "options": {}
+      },
+      "id": "dcc7135e-94c7-44d9-9065-388674d1e7c9",
+      "name": "获取飞书试用审批token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        820,
+        940
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "7058aeae-c42a-4038-af60-a47086699c4e",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "8b4645fc-d6a2-478d-b9d4-8e49c6a18037",
+              "leftValue": "={{$json.msg}}",
+              "rightValue": "ok",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5104e0ab-6416-4e22-bd21-571b4ad04652",
+      "name": "If msg is ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://n8n.mes.coros.team/api/v1/variables/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {}
+      },
+      "id": "2db723c9-8019-4475-bf1f-dbd86a44f702",
+      "name": "delete token variables",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2560,
+        860
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $('If msg is ok').all();"
+      },
+      "id": "84b5a73b-df74-44a2-a2f8-a760b975c6e1",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "72df6681-eeea-40b4-87d6-8cee49c22880",
+      "name": "Aggregate1",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        840
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "ids",
+        "options": {}
+      },
+      "id": "d84f2a8d-7508-42d5-80d4-63cea269ed3f",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2380,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  飞书token获取失败: n8nAPI调用失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "bd48b5da-72c7-402f-ab44-5524980f700e",
+      "name": "Send Warn Email1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3200,
+        1300
+      ],
+      "retryOnFail": false,
+      "webhookId": "e6abd871-b169-477e-854e-c0dace198081",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://n8n.mes.coros.team/api/v1/variables",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {}
+      },
+      "id": "9add3524-54f4-4902-967e-855f9950f2c3",
+      "name": "get variables Ids",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        860
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.mes.coros.team/api/v1/variables",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"key\": \"{{ $json.key }}\",\n  \"value\": \"{{ $json.tenant_access_token }}\"\n}",
+        "options": {}
+      },
+      "id": "7ecb33a2-848b-4b44-b4b7-2f812a486842",
+      "name": "create variables",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2960,
+        860
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "gZxWTaTGPKoEfhAt",
+          "name": "MES - n8n account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"app_id\": \"{{ $vars.lark_prototype_test_id }}\",\n    \"app_secret\": \"{{ $vars.lark_prototype_test_secret }}\"\n}  ",
+        "options": {}
+      },
+      "id": "690e29c8-227b-4269-b1c9-9f2280cad2a6",
+      "name": "获取飞书试用审批token1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        820,
+        1120
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dd1a6acc-8525-456f-94f9-95f98b92b522",
+              "name": "key",
+              "value": "=lark_prototype_test_access_token",
+              "type": "string"
+            },
+            {
+              "id": "4058a229-3601-4152-ba5b-d9fedbf92835",
+              "name": "tenant_access_token",
+              "value": "={{ $json.tenant_access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "548f2c24-7ada-4498-bbca-e15eb6d122c3",
+              "name": "msg",
+              "value": "={{ $json.msg }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "40d145af-2d58-498c-97ec-80fa427fb115",
+      "name": "Edit Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1040,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "c154e908-14fd-4bc1-bd97-8b9bb3366e4b",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1320,
+        860
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "获取飞书退款审批token",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "获取飞书试用审批token",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "获取飞书试用审批token1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read all variables from db": {
+      "main": [
+        [
+          {
+            "node": "Code - JSON to String",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - JSON to String": {
+      "main": [
+        [
+          {
+            "node": "Reflash Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书退款审批token": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书试用审批token": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If msg is ok": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete token variables": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "create variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "get variables Ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "delete token variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get variables Ids": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create variables": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书试用审批token1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If msg is ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-02-17T10:00:41.019+08:00",
+          "Readable date": "February 17th 2025, 10:00:41 am",
+          "Readable time": "10:00:41 am",
+          "Day of week": "Monday",
+          "Year": "2025",
+          "Month": "February",
+          "Day of month": "17",
+          "Hour": "10",
+          "Minute": "00",
+          "Second": "41",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ]
+  },
+  "versionId": "efc2b868-d7c6-4e7a-a642-28fb8709a9dc",
+  "activeVersionId": "efc2b868-d7c6-4e7a-a642-28fb8709a9dc",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-08-23T03:12:11.878Z",
+      "createdAt": "2024-08-23T03:12:11.878Z",
+      "role": "workflow:owner",
+      "workflowId": "nv9OsylJBvi9gevP",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

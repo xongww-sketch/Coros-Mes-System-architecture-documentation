@@ -1,0 +1,743 @@
+{
+  "updatedAt": "2025-12-23T09:25:55.682Z",
+  "createdAt": "2025-09-18T02:12:59.799Z",
+  "id": "yBorTO5GpZjkOF15",
+  "name": "get_sndetail",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_sndetail",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -592,
+        -96
+      ],
+      "id": "675f79e6-09cb-4714-939e-fe257021ce49",
+      "name": "Webhook",
+      "webhookId": "56617587-99d8-4fa4-9a22-dba466f1a7e3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2048,
+        -752
+      ],
+      "id": "c98e94fb-b009-4d0f-b4f9-e11f909af659",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "27eda1f1-bb26-4332-a476-122b8421255a",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -416,
+        -96
+      ],
+      "id": "9ba2a389-152c-4c50-9269-af7a894184c5",
+      "name": "判断是否填写入参"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请选择一个工单\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        48
+      ],
+      "id": "94200897-bf57-4cdf-9b3e-8229c75b414c",
+      "name": "报错：请选择一个工单"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "joborder_id",
+              "value": "={{ $json.joborder_id }}"
+            },
+            {
+              "column": "status",
+              "condition": "!=",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        80,
+        -304
+      ],
+      "id": "503f5a7b-857a-4de5-9a55-17adf9451c87",
+      "name": "查询该工单生成的sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid_id"
+            }
+          ]
+        },
+        "options": {
+          "mergeLists": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -304
+      ],
+      "id": "b2dac7b2-8e15-41c8-accb-8a55e5b1544d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.machine_data WHERE retroid_id IN ({{ $json.retroid_id }});",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        576,
+        -320
+      ],
+      "id": "88ce4fe5-b4c8-45f3-90a9-e7f2b975a507",
+      "name": "查询sn是否存在绑定记录",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const fqcData = $('查询fqcid').first().json;\nconst fqcId = fqcData ? fqcData.procedure_detail_id : null; // 获取到 58\n\nconst items = $input.all()\n    .map(item => item.json)\n    .filter(item => {\n        // 原有逻辑：剔除 13\n        if (item.procedure_detail_id === 13) {\n            return false;\n        }\n        \n        // 新增逻辑：剔除 FQC 的 ID (即 58)\n        // 只有当 fqcId 存在，且当前条目的 id 等于 fqcId 时才剔除\n        if (fqcId !== null && item.procedure_detail_id === fqcId) {\n            return false;\n        }\n\n        return true;\n    });\n\n// --- 下列逻辑保持不变 ---\n\n// createtime升序\nitems.sort((a, b) => new Date(a.createtime) - new Date(b.createtime));\n\n// Map按retroid_id分组\nconst retroidMap = new Map();\nfor (const item of items) {\n    const id = item.retroid_id;\n    if (!retroidMap.has(id)) {\n        retroidMap.set(id, []);\n    }\n    retroidMap.get(id).push(item);\n}\n\nconst activeBindings = new Set();\n\nretroidMap.forEach((list, retroidId) => {\n    const boundItemIds = new Set();\n    const unboundItemIds = new Set();\n\n    for (const obj of list) {\n        if (obj.procedure_detail_id === 62 || obj.procedure_detail_id === 91) {\n            // 解绑：记录machine_data_id_old\n            let oldId = obj.data.machine_data_id_old;\n            if (oldId !== undefined && oldId !== null) {\n                unboundItemIds.add(Number(oldId));\n                unboundItemIds.add(String(oldId));\n            }\n        } else {\n            // === 关键逻辑 ===\n            // 只统计有bind_id的才算绑定\n            // procedure_detail_id=42&无bind_id跳过\n            if (obj.procedure_detail_id === 42 && !obj.data?.bind_id) {\n                continue;\n            }\n            // 其它没有bind_id的也跳过\n            if (!obj.data?.bind_id) continue;\n            boundItemIds.add(Number(obj.machine_data_id));\n            boundItemIds.add(String(obj.machine_data_id));\n        }\n    }\n\n    // debug打印\n    // console.log(`retroid_id: ${retroidId}\\n绑定:${[...boundItemIds]}\\n解绑:${[...unboundItemIds]}\\nstillActive: ${[...boundItemIds].some(id => !unboundItemIds.has(id))}`);\n\n    // 判断还有没被解绑的绑定\n    if ([...boundItemIds].some(id => !unboundItemIds.has(id))) {\n        activeBindings.add(retroidId);\n    }\n});\n\n// 输出\nreturn [...activeBindings].map(id => ({ json: { retroid_id: id } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -320
+      ],
+      "id": "12d59781-3fce-497e-9b55-73746fba435f",
+      "name": "统计拥有绑定数据的sn",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c2062e6-58c1-441f-a819-e3422f0b2a0f",
+              "name": "retroid_id",
+              "value": "={{ $json.retroid_id.join(', ') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -304
+      ],
+      "id": "0f247cdc-9051-4297-8588-b555e2458afb",
+      "name": "整理数据"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "joborder",
+          "mode": "list",
+          "cachedResultName": "joborder"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "joborder_id",
+              "value": "={{ $('Webhook').first().json.body.joborder_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -112,
+        -304
+      ],
+      "id": "7e0a535b-cd8f-4668-97e1-33faa545646c",
+      "name": "查询工单信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        -304
+      ],
+      "id": "53455421-1a63-4ad1-88dc-b5525da73699",
+      "name": "整合sn"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 工单信息：保持原来\nconst orderInfo = $(\"查询工单信息\").first().json;\nconst productQuantity = Number(orderInfo.product_quantity) || 0;\nconst joborderNumber = orderInfo.joborder_number;\nconst joborder_id = orderInfo.joborder_id;\n\n// 从“统计拥有绑定数据的sn”节点获取数据并统计 retroid_id 数量\nconst snItems = $(\"统计拥有绑定数据的sn\").all();  // 拿到该节点全部 items\n\nconst boundCount = snItems.filter(item => {\n  const v = item.json?.retroid_id;\n  return v !== undefined && v !== null && v !== \"\";\n}).length;\n\n// totalRetroidCount = productQuantity - 统计数量\nconst totalRetroidCount = boundCount;\n\nreturn [\n  {\n    json: {\n      code: 200,\n      msg: \"查询成功\",\n      data: [\n        {\n          joborder_id,\n          totalRetroidCount,\n          productQuantity,\n          joborder_number: joborderNumber,\n        },\n      ],\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -736
+      ],
+      "id": "df4660c1-8b98-4ffb-8d64-d0ec0155a373",
+      "name": "比较工单数量和对应的数量"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a33887ef-f78c-4c28-8e64-f1b7c4f0cd38",
+              "leftValue": "={{ $('Webhook').first().json.body.type}}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        -320
+      ],
+      "id": "382e1d08-a550-4024-bb6f-956fcae8cd22",
+      "name": "判断查询类型"
+    },
+    {
+      "parameters": {
+        "jsCode": "const snData = $(\"查询该工单生成的sn\").all().map(item => item.json);\nconst bindingData = $(\"统计拥有绑定数据的sn\").all().map(item => item.json);\n\n// 打印拿到的工单SN数据\nconsole.log(\"snData:\", snData);\n\n// 打印拿到的绑定SN数据\nconsole.log(\"bindingData:\", bindingData);\n\n// 处理出已绑定id集合（注意类型都做字符串保证一致）\nconst bindingIdSet = new Set(bindingData.map(x => String(x.retroid_id)));\n\n// 打印已绑定id集合\nconsole.log(\"bindingIdSet:\", [...bindingIdSet]);\n\n// 做差集过滤\nconst resultData = snData\n    .filter(sn => !bindingIdSet.has(String(sn.retroid_id)))\n    .map(sn => ({\n        retroid_id: sn.retroid_id,\n        retroid: sn.retroid\n    }));\n\n// 打印最后未绑定的retroid_id\nconsole.log(\"未绑定retroid_id:\", resultData.map(d=>d.retroid_id));\n\nconst result = [{\n    json: {\n        code: 200,\n        msg: \"查询未绑定数据sn成功\",\n        data: resultData\n    }\n}];\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        -144
+      ],
+      "id": "41bc728f-6317-4a73-84f9-55af1ec3c85e",
+      "name": "整理绑定数据",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1584,
+        -144
+      ],
+      "id": "2a004613-fcc8-4509-8371-8a06c4ec71f2",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "joborder_id",
+              "value": "={{ $('查询工单信息').first().json.joborder_id }}"
+            },
+            {
+              "column": "status",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1408,
+        -368
+      ],
+      "id": "585558ba-ef62-4417-9434-fafbeeb28381",
+      "name": "查询该工单生成的失效sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1680,
+        -736
+      ],
+      "id": "7d6eb3cc-77df-401a-a6ab-717c63ec34fb",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid_id",
+              "renameField": true,
+              "outputFieldName": "deactivate_retroid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        -400
+      ],
+      "id": "469419e5-6aa6-4567-8e0e-fbcb53ccb5e7",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_detail",
+          "mode": "list",
+          "cachedResultName": "procedure_detail"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_name",
+              "value": "FQC测试"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -256,
+        -320
+      ],
+      "id": "318fcb6b-b12c-4170-81e4-84311ef9fc59",
+      "name": "查询fqcid",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否填写入参",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否填写入参": {
+      "main": [
+        [
+          {
+            "node": "查询fqcid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错：请选择一个工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询该工单生成的sn": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "整理数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否存在绑定记录": {
+      "main": [
+        [
+          {
+            "node": "统计拥有绑定数据的sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统计拥有绑定数据的sn": {
+      "main": [
+        [
+          {
+            "node": "整合sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否存在绑定记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工单信息": {
+      "main": [
+        [
+          {
+            "node": "查询该工单生成的sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合sn": {
+      "main": [
+        [
+          {
+            "node": "判断查询类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "比较工单数量和对应的数量": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询类型": {
+      "main": [
+        [
+          {
+            "node": "查询该工单生成的失效sn",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "整理绑定数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "整理绑定数据": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询该工单生成的失效sn": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "比较工单数量和对应的数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "查询fqcid": {
+      "main": [
+        [
+          {
+            "node": "查询工单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "22",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "type": "0",
+            "joborder_id": "316"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/get_sndetail",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "1e0382f3-9dee-4eaf-ace5-cafc111bdec5",
+  "activeVersionId": "1e0382f3-9dee-4eaf-ace5-cafc111bdec5",
+  "versionCounter": 68,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-18T02:12:59.799Z",
+      "createdAt": "2025-09-18T02:12:59.799Z",
+      "role": "workflow:owner",
+      "workflowId": "yBorTO5GpZjkOF15",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

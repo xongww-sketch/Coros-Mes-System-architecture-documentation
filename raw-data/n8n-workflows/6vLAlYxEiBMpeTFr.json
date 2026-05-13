@@ -1,0 +1,385 @@
+{
+  "updatedAt": "2025-09-15T05:51:33.564Z",
+  "createdAt": "2025-09-15T03:39:01.060Z",
+  "id": "6vLAlYxEiBMpeTFr",
+  "name": "工厂日报 copy",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        -128
+      ],
+      "id": "bcd1ac32-533f-46a0-8e31-3a51a2c56b4c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.00",
+              "type": "number"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.99",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "4878b36f-0404-4ca0-b99d-668bf2a4522c",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        128,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "33223f38-72f3-4107-adbc-2d6b450667a0",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "5111ae6d-7c37-4300-ab5d-d0cb92003827",
+      "name": "Date & Time1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH CompletedJobs AS (\n  SELECT \n    DISTINCT b.retroid_id,\n    e.product_model_name,\n    c.joborder_number,\n    c.product_quantity\n  FROM \n    mes.machine_data a\n  JOIN \n    mes.retroid b ON a.retroid_id::int = b.retroid_id\n  JOIN \n    mes.joborder c ON b.joborder_id = c.joborder_id\n  JOIN \n    mes.product_info d ON c.product_id = d.product_id\n  JOIN \n    mes.product_model e ON d.product_model_id = e.product_model_id\n  WHERE \n    a.procedure_detail_id = 58\n    AND a.createtime BETWEEN '{{ $json.startdate }}' AND '{{ $json.enddate }}'\n    AND b.status <> 3\n    AND c.status = 1\n)\n, OverallCompletedCount AS (\n  SELECT \n    c.joborder_number,\n    COUNT(DISTINCT b.retroid_id) AS total_completed_count\n  FROM \n    mes.machine_data a\n  JOIN \n    mes.retroid b ON a.retroid_id::int = b.retroid_id\n  JOIN \n    mes.joborder c ON b.joborder_id = c.joborder_id\n  WHERE \n     a.createtime >= c.createtime\n    AND a.procedure_detail_id = 58\n    AND b.status <> 3\n    AND c.status = 1\n  GROUP BY \n    c.joborder_number\n)\nSELECT \n  cj.retroid_id,\n  cj.product_model_name,\n  cj.joborder_number,\n  cj.product_quantity,\n  oc.total_completed_count\nFROM \n  CompletedJobs cj\nJOIN \n  OverallCompletedCount oc ON cj.joborder_number = oc.joborder_number;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        288,
+        -256
+      ],
+      "id": "b5d7330b-aaab-46c1-9d3c-0b4984326161",
+      "name": "查询machine_data中新增数据（FQC)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 第一步: 获取满足条件的 unique retroid_id 和 jobNumber\nWITH RelevantData AS (\n    SELECT DISTINCT ON (md.retroid_id)\n        md.retroid_id,\n        md.data->>'jobNumber' AS jobNumber\n    FROM \n        mes.machine_data md\n    WHERE \n        md.createtime BETWEEN '{{ $json.startdate }}'::timestamp AND '{{ $json.enddate }}'::timestamp\n        AND md.procedure_detail_id = '79'\n    ORDER BY md.retroid_id\n),\n\n-- 第二步: 定义已完成的工单\nCompletedJobs AS (\n    SELECT \n        DISTINCT b.retroid_id,\n        e.product_model_name,\n        c.joborder_number,\n        c.product_quantity,\n        c.joborder_id\n    FROM \n        mes.retroid b\n    JOIN \n        RelevantData rd ON rd.retroid_id = b.retroid_id\n    JOIN \n        mes.joborder c ON rd.jobNumber = c.joborder_number\n    JOIN \n        mes.product_info d ON c.product_id = d.product_id\n    JOIN \n        mes.product_model e ON d.product_model_id = e.product_model_id\n    WHERE \n        b.status <> 3\n        AND c.status = 1\n),\n\n-- 第三步: 计算每个工单的累积完成数\nOverallCompletedCount AS (\n    SELECT \n        c.joborder_number,\n        COUNT(DISTINCT b.retroid_id) AS total_completed_count\n    FROM \n        mes.retroid b\n    JOIN \n        RelevantData rd ON rd.retroid_id = b.retroid_id\n    JOIN \n        mes.joborder c ON rd.jobNumber = c.joborder_number\n    WHERE \n        b.status <> 3\n        AND c.status = 1\n    GROUP BY \n        c.joborder_number\n)\n\n-- 最终结果\nSELECT \n    cj.retroid_id,\n    cj.product_model_name,\n    cj.joborder_number,\n    cj.product_quantity,\n    cj.joborder_id,\n    oc.total_completed_count\nFROM \n    CompletedJobs cj\nJOIN \n    OverallCompletedCount oc ON cj.joborder_number = oc.joborder_number;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        288,
+        -32
+      ],
+      "id": "4798c734-0334-48c7-be60-1f5eac36a551",
+      "name": "查询machine_data中新增数据（称重）",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 如果输入是空数组或者仅包含空对象，返回数量为0的信息\nif (items.length === 0 || items.every(item => Object.keys(item.json || {}).length === 0)) {\n    console.log('Returning early with count 0 due to empty input or input containing only empty objects');\n    return [{\n        json: {\n            组装段汇总信息: {\n                今日工单总数量: 0,\n                累计完成数量: 0,\n                今日完成数量: 0,\n                未完成数量: 0\n            }\n        }\n    }];\n}\n\nconst result = {};\nlet overallCompletedCount = 0;\nlet overallOrderQuantity = 0;\nlet overallDayCompletedCount = 0;\nconst uniqueJobOrders = new Map();\n\nfor (const item of items) {\n    console.log('Processing item:', JSON.stringify(item, null, 2));\n    if (item.json && Object.keys(item.json).length > 0) {\n        const productModelName = item.json.product_model_name || \"未知机型\";\n        const jobOrderNumber = item.json.joborder_number || \"未知工单号\";\n        const productQuantity = item.json.product_quantity || 0;\n        const totalCompletedCount = parseInt(item.json.total_completed_count) || 0;\n\n        if (!result[productModelName]) {\n            result[productModelName] = {\n                joborders: {},\n                total_count: 0,\n                total_completed_count: 0,\n                total_day_completed_count: 0\n            };\n        }\n        \n        if (!result[productModelName].joborders[jobOrderNumber]) {\n            result[productModelName].joborders[jobOrderNumber] = {\n                total_quantity: productQuantity,\n                complete_count: 0,\n                day_completed_count: 0\n            };\n\n            result[productModelName].total_count += productQuantity;\n            overallOrderQuantity += productQuantity;\n        }\n\n        // 增加今日完成数量\n        result[productModelName].joborders[jobOrderNumber].day_completed_count += 1;\n        \n        // 确保同一工单的累计完成数只计算一次\n        if (!uniqueJobOrders.has(jobOrderNumber)) {\n            uniqueJobOrders.set(jobOrderNumber, true);\n            result[productModelName].joborders[jobOrderNumber].complete_count = totalCompletedCount;\n            result[productModelName].total_completed_count += totalCompletedCount;\n            overallCompletedCount += totalCompletedCount;\n        }\n        \n        // 增加“今日完成数量”到总计\n        result[productModelName].total_day_completed_count += 1;\n        overallDayCompletedCount += 1;\n    }\n}\n\nconst overallUncompletedCount = overallOrderQuantity - overallCompletedCount;\n\nconst overallSummary = {\n    组装段汇总信息: {\n        今日工单总数量: overallOrderQuantity,\n        累计完成数量: overallCompletedCount,\n        今日完成数量: overallDayCompletedCount,\n        未完成数量: overallUncompletedCount\n    }\n};\n\nconst output = [overallSummary].concat(Object.entries(result).map(([productModelName, data]) => ({\n    机型: productModelName,\n    总数量: data.total_count,\n    累计完成数量: data.total_completed_count,\n    今日完成数量: data.total_day_completed_count,\n    未完成数量: data.total_count - data.total_completed_count,\n    具体完成情况: Object.entries(data.joborders).map(([jobOrderNumber, counts]) => ({\n        工单号: jobOrderNumber,\n        总数量: counts.total_quantity,\n        累计完成数量: counts.complete_count,\n        今日完成数量: counts.day_completed_count,\n        未完成数量: counts.total_quantity - counts.complete_count\n    }))\n})));\n\nreturn output.map(data => ({ json: data }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        -272
+      ],
+      "id": "24977d74-9ab2-4aef-af47-081e2b837708",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 如果输入是空数组或者仅包含空对象，返回数量为0的信息\nif (items.length === 0 || items.every(item => Object.keys(item.json || {}).length === 0)) {\n    console.log('Returning early with count 0 due to empty input or input containing only empty objects');\n    return [{\n        json: {\n            包装段汇总信息: {\n                今日工单总数量: 0,\n                累计完成数量: 0,\n                今日完成数量: 0,\n                未完成数量: 0\n            }\n        }\n    }];\n}\n\nconst result = {};\nlet overallCompletedCount = 0;\nlet overallOrderQuantity = 0;\nlet overallDayCompletedCount = 0;\nconst uniqueJobOrders = new Map();\n\nfor (const item of items) {\n    console.log('Processing item:', JSON.stringify(item, null, 2));\n    if (item.json && Object.keys(item.json).length > 0) {\n        const productModelName = item.json.product_model_name || \"未知机型\";\n        const jobOrderNumber = item.json.joborder_number || \"未知工单号\";\n        const productQuantity = item.json.product_quantity || 0;\n        const totalCompletedCount = parseInt(item.json.total_completed_count) || 0;\n\n        if (!result[productModelName]) {\n            result[productModelName] = {\n                joborders: {},\n                total_count: 0,\n                total_completed_count: 0,\n                total_day_completed_count: 0\n            };\n        }\n        \n        if (!result[productModelName].joborders[jobOrderNumber]) {\n            result[productModelName].joborders[jobOrderNumber] = {\n                total_quantity: productQuantity,\n                complete_count: 0,\n                day_completed_count: 0\n            };\n\n            result[productModelName].total_count += productQuantity;\n            overallOrderQuantity += productQuantity;\n        }\n\n        // 增加今日完成数量\n        result[productModelName].joborders[jobOrderNumber].day_completed_count += 1;\n        \n        // 确保同一工单的累计完成数只计算一次\n        if (!uniqueJobOrders.has(jobOrderNumber)) {\n            uniqueJobOrders.set(jobOrderNumber, true);\n            result[productModelName].joborders[jobOrderNumber].complete_count = totalCompletedCount;\n            result[productModelName].total_completed_count += totalCompletedCount;\n            overallCompletedCount += totalCompletedCount;\n        }\n        \n        // 增加“今日完成数量”到总计\n        result[productModelName].total_day_completed_count += 1;\n        overallDayCompletedCount += 1;\n    }\n}\n\nconst overallUncompletedCount = overallOrderQuantity - overallCompletedCount;\n\nconst overallSummary = {\n    包装段汇总信息: {\n        今日工单总数量: overallOrderQuantity,\n        累计完成数量: overallCompletedCount,\n        今日完成数量: overallDayCompletedCount,\n        未完成数量: overallUncompletedCount\n    }\n};\n\nconst output = [overallSummary].concat(Object.entries(result).map(([productModelName, data]) => ({\n    机型: productModelName,\n    总数量: data.total_count,\n    累计完成数量: data.total_completed_count,\n    今日完成数量: data.total_day_completed_count,\n    未完成数量: data.total_count - data.total_completed_count,\n    具体完成情况: Object.entries(data.joborders).map(([jobOrderNumber, counts]) => ({\n        工单号: jobOrderNumber,\n        总数量: counts.total_quantity,\n        累计完成数量: counts.complete_count,\n        今日完成数量: counts.day_completed_count,\n        未完成数量: counts.total_quantity - counts.complete_count\n    }))\n})));\n\nreturn output.map(data => ({ json: data }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -32
+      ],
+      "id": "93d4ee56-753d-46a7-a2c7-773b65f65502",
+      "name": "Code1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        688,
+        -176
+      ],
+      "id": "8c26a8d0-6b3a-4d79-a769-6c208b5fadff",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 获取当前日期并减去一天\nconst now = new Date();\nconst yesterday = new Date(now);\nyesterday.setDate(now.getDate() - 1);\nconst formattedDate = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;\n\nlet htmlContent = `\n<style>\n    body { font-family: Arial, sans-serif; color: #333; margin: 20px; line-height: 1.4; }\n    .header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }\n    .icon { width: 68px; height: 60px; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAolBMVEUAAAD5KTv/RFD5KDv5KDv4KDv4KTv5KDv/LEL/O074KTz5Kjz/LUL5KTv7Kz3/K0D/Mkb4KDv5KTv5KDv5KTv6Kj38Kj/5KDv5KDv5KDv5KDz5KDz6Kz35KDv5KTz4KDv4KDv4KTv6KTz6KTz5KDv6KDz5KDz5KDv5KTz7Kj36KDz5KDz6KTz5Kj37KD35KTz5Kz76KT36Kj3/LUD4KDusf4k7AAAANXRSTlMAtgP2+r7hqxEIlVUWr0AfDOXUzZs0JKbt2NGzLvGAcendwmthxpDJoYU6inpnTUV1KVtIG1tiRusAAASRSURBVHja7ZrpdqowEIDDoqAoIgpete5LFbe2dt7/1e5mHUgqkITAuff4/fMUz/kkM5OkM+TJkydP/gvc3tYm1dGxAGB+0kk1NKYG/GHkkipw6nDH6pCyealBHGPqkTKxmyZQdD9IaeirH/ANm4CUgzuCB/RbRCGYeo+ZvDWIKjD1UlmciRIw9TLR3okCMPWyMdVUZ0y9bH6ssDorSb1sfKzOylIPscbA0g7Vpx5uReF2AjTG3lOferjc3mwBNN218tQzmzZGyZlNktdAberVXqiH+8y72n2qS726880XjvT7Mo4NNalnTBv359Zh7EvOhq7OjpLU68SeoyI+2JnUUoUqUg+fY88jrekc4hwJP7tclVbfG9+fRxrrHiBTws8gLfWQtfHwPBJZ95XYiwtkp94Q/zaZ6cllPNyi+CAukJ16XvxJ/0JV0ZMPv2jKC2DqsayMtE3oMgboSwlkXz+CReomFG5F3oCVknoMdrv4K4LFd8iZmUVfESw69TKI6gVfESwq9TKxNUAwJXmxWYGuQ/JxxGXAlOSj096SGxhW+UPY7cqdC/WZAW1W4I3kplWTORdGIwDosQIOz2/Yi9/ap/CbOSvAl1LXueit/RbEX8UWz/qcCfW5FLm1o0BICxiEE/0ACKZkXgGXFvAJN2fmLOlfcgusaQFN5DzXA5pxmFPgiB+xDHDTaAKNsc4n0KcF3ogQzoSJxXwCGi3gEDHCkZiATwsI76yNvpDAhBaQ2FfnIgJgJz8aRJyukMBt769hGShIYJdT4JwU0EoXOCUFmqUL7JMCb6ULDJICDhGnLiSwTAoEpQvUkwKtwgQGOQXMv3v3EstAyQLwGRfwKxCI4gIakWAhJuDEBZoVCMzIbzZYBgoSsPIKbOMCTgUC7bhAQCQYCgjcL0evWAbKFpjHBAxSgQA0UMAvUKCdRwAvRz0sA6ULuPgGmkQGn18AL0etHZaBUgXwchRsAJwCBcZZAuzx9aMbVCKwiMgNr0FkGHEKIANsNZUtgP+WLlxAyyOA1D+IND0RAWQTVCUg33V0t+IC8l1H7+RDXV4AezQ8fDXS5QWQJUco6Fft5n3f0pFapoDseJCNLfxiBWCSEQrYOpcRiBIrxtmA1p0lIGICRF93c80KsLSO1DdfIzzYZgsg3sEA4A6FaGCyoxscAnKTYtikZpsU3pBHAMdUsybF2OYw293ErjKyzJvLp3nOULi0gaYXkS9OBvAKYCiYaYMzrb8PrYYpczvY0uYRQELqtzHth/dm+uRSsJAt6pdRisKwBumt7ZWZ0XiXDQWWnku1shk7fuytCTmZr3X8XlBPseMjHEMezIP3sI8uO/t98SEDqkFrj9n5SrWDjCOXauJzTJjKhgL7eo/Uo8MzKYJ37eHi24lNUWMLRkFc2arHtgLdrsI5a32W1QzVp1ThfVE51csOtXzWOOqudCiwuXWd03VXCech5lbK2MKgQ1ShzyYAwyt9jFpSRwKVtJornWnWU7tCuegHalcomc4rVRhKxo5VKP9KKsD7mvv+IVx35cPSxKNqNbxbtRfy5MmTJ/8gPwHn2gnsPSYOHwAAAABJRU5ErkJggg==); background-size: 100% 100%; background-repeat: no-repeat; }\n    .text { font-family: Arial, sans-serif; font-size: 32px; font-weight: 900; color: #000; letter-spacing: -0.5px; white-space: nowrap; }\n    .total-count { color: #d9534f; font-weight: bold; }\n    .completed-count { color: #5cb85c; font-weight: bold; }\n    .unfinished-count { color: #f0ad4e; font-weight: bold; }\n    h2 { background-color: #f8f9fa; padding: 10px; border-left: 4px solid #007bff; margin-top: 20px; margin-bottom: 10px; margin-left: 20px; }\n    .summary-info { font-size: 18px; margin-bottom: 15px; padding: 10px; background-color: #f0f4f8; border-left: 4px solid #5bc0de; margin-left: 20px; }\n    .model-info { margin: 20px 0 5px; color: #007bff; font-weight: bold; font-size: 16px; margin-left: 20px; }\n    .model-details { font-size: 15px; color: #555; margin-bottom: 10px; padding: 8px; background-color: #e9ecef; margin-left: 20px; }\n    ul { padding: 0 0 0 45px; list-style-type: none; margin: 0; }\n    li { padding: 4px 0; margin-bottom: 4px; background-color: #f9f9f9; font-size: 14px; }\n    li span { margin-right: 20px; }\n</style>\n\n<div class=\"header\">\n  <div class=\"icon\"></div>\n  <h1 class=\"text\">生产日报 (${formattedDate})</h1>\n</div>`;\n\nlet currentSegment = \"\";\n\nitems.forEach(item => {\n    if (item.json.组装段汇总信息) {\n        currentSegment = \"组装段\";\n        htmlContent += `<h2>${currentSegment}</h2>`;\n        htmlContent += `<p class=\"summary-info\">今日工单总数量: <span class=\"total-count\">${item.json.组装段汇总信息.今日工单总数量}</span>，累计完成数量: <span class=\"completed-count\">${item.json.组装段汇总信息.累计完成数量}</span>，今日完成数量: <span class=\"completed-count\">${item.json.组装段汇总信息.今日完成数量}</span>，未完成数量: <span class=\"unfinished-count\">${item.json.组装段汇总信息.未完成数量}</span></p>`;\n    } else if (item.json.包装段汇总信息) {\n        currentSegment = \"包装段\";\n        htmlContent += `<h2>${currentSegment}</h2>`;\n        htmlContent += `<p class=\"summary-info\">今日工单总数量: <span class=\"total-count\">${item.json.包装段汇总信息.今日工单总数量}</span>，累计完成数量: <span class=\"completed-count\">${item.json.包装段汇总信息.累计完成数量}</span>，今日完成数量: <span class=\"completed-count\">${item.json.包装段汇总信息.今日完成数量}</span>，未完成数量: <span class=\"unfinished-count\">${item.json.包装段汇总信息.未完成数量}</span></p>`;\n    } else {\n        if (currentSegment) {\n            htmlContent += `<div class=\"model-info\">机型: ${item.json.机型}</div>`;\n            htmlContent += `<p class=\"model-details\">机型总数量: <span class=\"total-count\">${item.json.总数量}</span>，累计完成数量: <span class=\"completed-count\">${item.json.累计完成数量}</span>，今日完成数量: <span class=\"completed-count\">${item.json.今日完成数量}</span>，未完成数量: <span class=\"unfinished-count\">${item.json.未完成数量}</span></p>`;\n            htmlContent += '<ul>';\n            item.json.具体完成情况.forEach(detail => {\n                htmlContent += `<li>\n                                  <span>工单号: ${detail.工单号}</span>\n                                  <span>总: <span class=\"total-count\">${detail.总数量}</span></span>\n                                  <span>累计完成: <span class=\"completed-count\">${detail.累计完成数量}</span></span>\n                                  <span>今日完成: <span class=\"completed-count\">${detail.今日完成数量}</span></span>\n                                  <span>未完成: <span class=\"unfinished-count\">${detail.未完成数量}</span></span>\n                                </li>`;\n            });\n            htmlContent += '</ul>';\n        }\n    }\n});\n\n// 返回格式化的 HTML 邮件内容\nreturn [{ json: { html: htmlContent } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -176
+      ],
+      "id": "9f6dcf80-b7ab-4f5f-a969-64f211877fac",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "gaohongmei@coros.com;liyuelong@coros.com;oujunyan@coros.com;chendamei@coros.com;xuyingchao@coros.com;chenyongqi@coros.com;lizhen@coros.com;yaojun@coros.com;wangxiaohu@coros.com;zhouhuiling@coros.com",
+        "subject": "生产日报",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "2481ed0d-80f7-4412-b148-f57c270a4a06",
+      "name": "工厂日报",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        -384
+      ],
+      "webhookId": "f0dc1d81-1e86-424b-90a5-b6b0f244326f",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "查询machine_data中新增数据（FQC)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询machine_data中新增数据（称重）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中新增数据（FQC)": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中新增数据（称重）": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-09-04T00:00:29.014+08:00",
+          "Readable date": "September 4th 2025, 12:00:29 am",
+          "Readable time": "12:00:29 am",
+          "Day of week": "Thursday",
+          "Year": "2025",
+          "Month": "September",
+          "Day of month": "04",
+          "Hour": "00",
+          "Minute": "00",
+          "Second": "29",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ]
+  },
+  "versionId": "26e8eb3b-e810-4267-bb2a-8c7ef2522847",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-15T03:39:01.060Z",
+      "createdAt": "2025-09-15T03:39:01.060Z",
+      "role": "workflow:owner",
+      "workflowId": "6vLAlYxEiBMpeTFr",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

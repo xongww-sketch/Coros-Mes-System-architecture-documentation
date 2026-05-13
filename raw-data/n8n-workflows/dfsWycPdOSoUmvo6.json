@@ -1,0 +1,246 @@
+{
+  "updatedAt": "2025-07-22T09:28:11.377Z",
+  "createdAt": "2025-05-12T06:07:56.474Z",
+  "id": "dfsWycPdOSoUmvo6",
+  "name": "查询接口—获取绑定信息",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "getprocedure",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        -20
+      ],
+      "id": "298b4304-4c89-4e67-ab02-97519ac4fb0d",
+      "name": "Webhook",
+      "webhookId": "364fdc51-d6d1-4e7e-b1b0-5fd61b6497e9"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_detail",
+          "mode": "list",
+          "cachedResultName": "history_procedure_detail"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_dataupload",
+              "value": "2"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "createtime",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "history_procedure_id",
+            "procedure_name",
+            "procedure_detail_id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -300,
+        -20
+      ],
+      "id": "c4432b0f-fdc4-4dff-b08f-491028874863",
+      "name": "查询所有需要上传数据的工序",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "procedure_detail_id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        -20
+      ],
+      "id": "32dbac29-48c0-41c6-aeec-da6381a3debe",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_detail",
+          "mode": "list",
+          "cachedResultName": "procedure_detail"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_detail_id",
+              "value": "={{ $json.procedure_detail_id }}"
+            },
+            {
+              "column": "status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "procedure_name",
+            "procedure_detail_id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        20,
+        -20
+      ],
+      "id": "ecb284c1-bd54-4198-aded-ef2d60498bb8",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -20
+      ],
+      "id": "61516712-d032-445a-93c4-5d01e8288cdb",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "查询所有需要上传数据的工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询所有需要上传数据的工序": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "025aeb33-9a50-4d38-a52c-3263ec2bbc81",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-12T06:07:56.474Z",
+      "createdAt": "2025-05-12T06:07:56.474Z",
+      "role": "workflow:owner",
+      "workflowId": "dfsWycPdOSoUmvo6",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

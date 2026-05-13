@@ -1,0 +1,371 @@
+{
+  "updatedAt": "2025-09-16T07:27:53.046Z",
+  "createdAt": "2025-01-06T10:45:36.836Z",
+  "id": "5NrbNTIYqucTpna8",
+  "name": "getSNbyUuid",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 201,\n  \"message\":\"{{ $json.message }}\"\n}",
+        "options": {}
+      },
+      "id": "ef10909d-6e5a-4dd6-a51f-763f1d8e65d6",
+      "name": "返回查询结果1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "137ed774-8bf1-4e98-aa0a-d3421d931e94",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b3ce933-4056-499e-a646-e092fe713c22",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "16288217-7f26-4f1e-bc3c-780bff5eb53c",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2968e52c-1cd9-41f1-94ea-4097ce943531",
+      "name": "判断参数是否合法",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet res={};\nfor (const item of $input.all()) {\n  if(item.json.query.uuid_unique){\n    res.uuid_unique=item.json.query.uuid_unique;\n    res.code=1;\n  }else{\n    res.code=2;\n    res.message='uuid或uuid_unique不能为空！'\n  }\n  \n}\n\nreturn res;"
+      },
+      "id": "aa4c4b64-6c88-4f41-bfe5-a21e0309117a",
+      "name": "参数校验",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{\n   \"retroid\":\"{{ $json.retroid }}\"\n}\n} ",
+        "options": {}
+      },
+      "id": "66260dcf-dc7e-4e64-8b5b-451f9f6f7ced",
+      "name": "返回查询结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM YFConsumer.dbo.consm_barcodebindinfo WHERE  uuid_unique='{{ $json.uuid_unique }}';"
+      },
+      "id": "dfa39352-5ab9-46ce-9fc1-a255285bc737",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        1260,
+        140
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "FNgMAIvmy5GiZUlV",
+          "name": "Microsoft SQL_mes_YFConsumer"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/print/getSNbyUuid",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "bd9210bc-bb5d-48e7-a257-362d72e959a7",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        580,
+        300
+      ],
+      "webhookId": "c1d7bee0-1827-48a1-b573-d689b997b8eb"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"sn\":\"{{ $json.retroid }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        -20
+      ],
+      "id": "f84440a3-5d7f-43f0-ac3e-bfe63f1a63e4",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "81177f9b-6ce6-49e1-8d65-7f86d3cdd6c7",
+              "leftValue": "={{ $json.body.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        820,
+        300
+      ],
+      "id": "85071ef0-037a-41a9-81ee-6ac2158056e0",
+      "name": "判断入参"
+    },
+    {
+      "parameters": {
+        "jsCode": "let inputArray = $input.all();\n\n\nlet result = null;\n\n// 检查输入是否为非空数组且至少有一个元素\nif (Array.isArray(inputArray) && inputArray.length > 0) {\n    let firstItem = inputArray[0];\n\n\n    if (firstItem && firstItem.json && firstItem.json.body) {\n        let body = firstItem.json.body;\n  \n\n        if (body && body.uuid) {\n            let url = body.uuid;\n  \n\n            // 正则表达式调整：捕获所有包含数字和字母的部分\n            const regex = /a=[\\w\\s]+?([A-Fa-f\\d]+)&b=([A-Fa-f\\d]+)&c=([A-Fa-f\\d]+)/;\n            const match = url.match(regex);\n        \n\n            if (match && match.length === 4) { // 如果成功匹配\n                // 用 a 参数末尾、b 和 c 生成 uuidId\n                body.uuidId = [match[1], match[2], match[3]].join('').toLowerCase();\n //     const uuid = [match[2], match[3], match[4]].join('').toUpperCase();  //完整的uuid\n    //     const uuid_unique = [match[2], match[4]].join('').toUpperCase();      //更新后uuid_unique\n\n                // 用 a 参数末尾和 c 生成 uuid_unique\n                body.uuid_unique = [match[1], match[3]].join('').toUpperCase(); \n              \n    \n            }\n            \n            result = body; // 设置最终结果体\n            console.log(\"Result: \", result); // 调试输出\n        } else {\n            console.log(\"UUID not found in body.\"); // 当UUID属性不存在时的输出\n        }\n\n        // 转换 retroid 为大写\n        if (body.retroid) {\n            body.retroid = body.retroid.toUpperCase();\n            console.log(\"Retroid: \", body.retroid); // 调试输出\n        }\n    } else {\n        console.log(\"Body not found in first item.\"); // 当body属性不存在时的输出\n    }\n} else {\n    console.log(\"Input array is empty or not an array.\"); // 当输入不是有效数组时的输出\n}\n\n// 返回最终处理的 JSON 对象\nreturn result;\n"
+      },
+      "id": "d3eb0536-4729-41ab-af91-5127ae666177",
+      "name": "根据入参获取uuid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"uuid格式错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        320
+      ],
+      "id": "3f73a882-fc3f-4ed7-8eeb-d27da4572e0e",
+      "name": "uuid格式错误"
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数是否合法": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "参数校验": {
+      "main": [
+        [
+          {
+            "node": "判断参数是否合法",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回查询结果1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断入参",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断入参": {
+      "main": [
+        [
+          {
+            "node": "根据入参获取uuid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uuid格式错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据入参获取uuid": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.208",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "98",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "uuid": "https://r.coros.com/6?a=COROS PACE 3 A4DAB3&b=F7EF1319058F&c=1319058DF7FC&d=0&e=0&f=0\r"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/print/getSNbyUuid",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "83f341e0-dd7e-4aea-8c2b-5fe4e87a6d84",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T06:56:59.343Z",
+      "createdAt": "2025-04-24T06:56:59.343Z",
+      "role": "workflow:owner",
+      "workflowId": "5NrbNTIYqucTpna8",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

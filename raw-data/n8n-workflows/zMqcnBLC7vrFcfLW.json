@@ -1,0 +1,1703 @@
+{
+  "updatedAt": "2025-06-13T01:22:39.303Z",
+  "createdAt": "2025-02-17T01:41:03.656Z",
+  "id": "zMqcnBLC7vrFcfLW",
+  "name": "同步SN信息到京东自营",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1060,
+        1020
+      ],
+      "id": "68cb4500-6357-4bf0-aa14-1a4e8ebf70fd",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  item.json.channel = 10931;\n\n  // 获取当前 UTC 时间（与数据库时间格式一致）\n  const now = new Date();\n  \n  // 计算 UTC 时间的 6 天前 00:00:00.000\n  const utcStart = new Date(now);\n  utcStart.setDate(utcStart.getDate()-1);\n  utcStart.setUTCHours(0, 0, 0, 0); // 明确使用 UTC 方法\n\n  // 计算 UTC 时间的 5 天前 23:59:59.999\n  const utcEnd = new Date(now);\n  utcEnd.setDate(utcEnd.getDate()-1);\n  utcEnd.setUTCHours(23, 59, 59, 999); // 明确使用 UTC 方法\n\n  // 转换为 ISO 字符串（与数据库格式匹配）\n  item.json.todayStart = utcStart.toISOString();\n  item.json.todayEnd = utcEnd.toISOString();\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -840,
+        1020
+      ],
+      "id": "537915ad-57d0-4e48-b6af-616b8960b1f8",
+      "name": "拼接请求参数，渠道号和日期"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id,retroid, uuid, order_number, express_no, create_time, delivery_status, \" uuid_unique\", channel, sku_code,box_id\n\tFROM public.mes_delivery_order_details WHERE channel='{{ $json.channel }}' AND create_time BETWEEN '{{ $json.todayStart }}' AND '{{ $json.todayEnd }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -600,
+        1020
+      ],
+      "id": "83fd7244-d6fc-4bc3-97fd-88e75779a3b2",
+      "name": "根据渠道号查询SN信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6e6a1746-a0fd-41a0-95e3-c97ae509d1d1",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -200,
+        880
+      ],
+      "id": "0a091e62-9a89-4e2c-88bd-dc2be94cd99c",
+      "name": "判断查询结果是否为空"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        1100
+      ],
+      "id": "bcfe5d35-4c3d-4fcc-950d-c7f0fd3b302e",
+      "name": "返回错误信息"
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "eca03f55-1590-4d97-945e-ae72b1d39b21",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        8960,
+        1860
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n message] -  同步SN到京东仓库",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "id": "ad743317-0ecf-4f97-a700-6583bfa27ca4",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        9280,
+        1940
+      ],
+      "retryOnFail": false,
+      "webhookId": "a350a08f-a7fc-407e-8fdd-47880088da57",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.jd.com/routerjson",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $vars.jd_access_token }}"
+            },
+            {
+              "name": "app_key",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "jingdong.edi.ediws.vendor.serialno.save"
+            },
+            {
+              "name": "v",
+              "value": "2.0"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            },
+            {
+              "name": "=360buy_param_json",
+              "value": "={{ $json.paramJsonString }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6400,
+        560
+      ],
+      "id": "07a15ea0-639c-42b3-9ee0-d5ab82c96f26",
+      "name": "同步SN信息到京东平台",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "578005b0-36c2-4b52-8cc3-6b6f3a82b75a",
+              "name": "code",
+              "value": "201",
+              "type": "string"
+            },
+            {
+              "id": "7c3a3b37-69c6-4099-9a8e-55adf67e298c",
+              "name": "message",
+              "value": "同步接口错误",
+              "type": "string"
+            },
+            {
+              "id": "d0251666-c5a8-4ce6-b850-fd25b4d97d7c",
+              "name": "result",
+              "value": "={{ $json.data.jingdong_edi_ediws_vendor_serialno_save_responce.result }}",
+              "type": "object"
+            },
+            {
+              "id": "44d66cba-5756-48e2-b2ce-dc5890cb9a8f",
+              "name": "timeStamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "70f957dd-4791-45cd-b5ff-ea68afc9df96",
+              "name": "inputStr",
+              "value": "={{ $json.params }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7340,
+        480
+      ],
+      "id": "7df21da3-06ca-4ef3-9f70-ef5e1b37b670",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_caches",
+          "mode": "list",
+          "cachedResultName": "delivery_order_caches"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "express_no",
+              "value": "={{ $json.express_no }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1840,
+        700
+      ],
+      "id": "37c1e2cf-dcb4-4fa8-99a1-b6f132a0f7c2",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "express_no",
+        "options": {
+          "removeOtherFields": true
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        700
+      ],
+      "id": "abcfdb49-bc66-43f8-9637-467f04f2ad44",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b786df2a-1cda-40aa-b9a1-949a9df44b00",
+              "name": "code",
+              "value": "=201",
+              "type": "string"
+            },
+            {
+              "id": "987e8305-f78d-45b0-8403-e4f7f274fcde",
+              "name": "message",
+              "value": "sku或box ID为空！",
+              "type": "string"
+            },
+            {
+              "id": "e1edb2d1-795e-406e-8328-92dd1797e09f",
+              "name": "timeStamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6080,
+        940
+      ],
+      "id": "49e224df-dd75-4837-841b-19f3b24e5cbf",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7babb26e-fcd9-40c2-80ca-210b1fd04bf4",
+              "leftValue": "={{ $json.sku_code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        600
+      ],
+      "id": "e1078c39-19dd-4796-be30-2abae0a3a0a6",
+      "name": "判断skuCode是否为空"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d552f531-6a1a-4985-80b2-e7c19278b759",
+              "name": "serialNo",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "2eb04510-6e7e-48c4-bdfa-c7bf9b80620a",
+              "name": "sku",
+              "value": "={{ $json.sku_code }}",
+              "type": "string"
+            },
+            {
+              "id": "e1e38093-3993-4f4f-bd8a-e98ca9e29222",
+              "name": "boxId",
+              "value": "={{ $json.box_id }}",
+              "type": "string"
+            },
+            {
+              "id": "fc3be552-9b3e-4bfe-a2b7-1b0785e9932d",
+              "name": "order_number",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        480
+      ],
+      "id": "b2bb52ce-ef8f-4cd7-b49b-5cc6a963a0a5",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfunction addOrIncrement(map, key) {\n  if (map.has(key)) {\n    // 如果键存在,将对应的值加一\n    const value = map.get(key);\n    map.set(key, value + 1);\n  } else {\n    // 如果键不存在,添加键并将值设为1\n    map.set(key, 1);\n  }\n}\nconst colorCodes = new Map([\n  ['M18P', '深蓝'],\n  ['M18B', '白'],\n  ['M18E', '深蓝'],\n  ['M18J', '钢青'],\n  ['M18L', '浅灰'],\n  ['B20A', '灰'],\n  ['B20B', '黑'],\n  ['B20C', '绿'],\n  ['B20D', '霞慕尼'],\n  ['B20E', 'K天王深蓝'],\n  ['B20F', 'K天王锖白'],\n  ['B20G', '戈壁款'],\n  ['B20H', '藕粉'],\n  ['B21A', '黑'],\n  ['B21B', '灰'],\n  ['B21C', '咖啡'],\n  ['B21D', '珊瑚金'],\n  ['B21E', '白'],\n  ['B21F', '灰'],\n  ['B21G', '黑'],\n  ['B21H', '珊瑚金'],\n  ['B21I', '藕粉'],\n  ['F05A', '灰'],\n  ['P05A', '灰'],\n  ['V19A', '岩黑'],\n  ['V19B', '闪电'],\n  ['W31A', '黑'],\n  ['W31B', '白'],\n  ['W31C', '红'],\n  ['W31D', 'EK'],\n  ['W31E', '无锡马拉松'],\n  ['W31F', '碧水绿'],\n  ['W31G', '柠檬黄'],\n  ['W31H', '流光紫'],\n  ['W31J', '红'],\n  ['H31A', '灰'],\n  ['W32A', '黑灰'],\n  ['W32B', '灰白'],\n  ['V09A', '月球银'],\n  ['V09B', '地球蓝'],\n  ['V09C', '星空黑'],\n  ['C01A','DURA'],\n  ['W32A','蓝'],\n  ['W32B','灰'],\n  ['W32C','黑'],\n  ['W32D','锡马'],\n  ['W32E','大迫杰'],\n]);\nconst result=[];\n//未找到价格的SN\nlet noFindPriceSN=[];\n//数量错误的SN\nlet errQuantityWtype=[];\n// 将所有的order_details汇总\nlet orderDetails=[];\nconst watchTypeMap=new Map();\nlet watchInfo=$(\"将机型挂载到出库数据\").all();\nfor (const item of $input.all()) {\n let temp=JSON.parse(item.json.data);\n  let orderDetail=temp.delivery.details.map(el=>{\n    return {\n      sku_code:el.sku_code,\n      sku_name:el.sku_name,\n    }\n  })\n  orderDetails=[...orderDetails,...orderDetail];\n \n}\n //给每个SN绑定sku\n  let watchInfoList=watchInfo.map(el=>{\n \n  let color=colorCodes.get(el.json.retroid.slice(0,4));\n  orderDetails.forEach(e=>{\n    if(e.sku_code.includes(el.json.watchType)&&e.sku_code.slice(0,2)=='GS'&&e.sku_name.includes(color)){\n      el.json.sku_name=e.sku_name;\n      el.json.sku_code=e.sku_code;\n    }\n  })\n  el.json.color=color;\n  return el.json;\n  })\n\n\n //  判断当前的SN是否符合订单的机型\n // watchInfoList.forEach(el=>{\n //   if(!el.price){\n //     noFindPriceSN.push(el.retroid);\n //   }\n // })\n  //判断当前输入的sn数量是否等于订单上的sn数量\n//  orderDetails.forEach(el=>{\n//   if(watchTypeMap.get(el.sku_code)>el.quantity){\n//     errQuantityWtype.push(el.sku_code);\n//   }\n// })\n//   result.push({\n//     watch_info:watchInfoList,\n//     orderDetails:orderDetails,\n//     noFindPriceSN:noFindPriceSN,\n//     errQuantityWtype:errQuantityWtype,\n//   })\n\nreturn {\n  watchInfoList:watchInfoList,\n};"
+      },
+      "id": "a5921a8c-00b5-4ca5-9cb3-2e2cf3d32699",
+      "name": "给出库的sn绑定sku",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2120,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "retroid",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        480,
+        700
+      ],
+      "id": "799556d8-781a-44ea-8d38-a1fad67bf59f",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ordernumber,retroid FROM YFConsumer.dbo.consm_barcodebindinfo WHERE retroid ='{{ $json.retroid }}';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        700
+      ],
+      "id": "9b1028f5-a67a-468a-aab2-13d4dab420ce",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "177260b5-17e2-4a0c-8a9c-c7f1d5b42aed",
+              "name": "watchType",
+              "value": "={{ $json.ordernumber.slice(0, -6)===\"HR\"?\"HR\":$json.ordernumber.slice(0, -4) }}",
+              "type": "string"
+            },
+            {
+              "id": "86cc5334-2f63-4b07-8bf8-33ea508a480a",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1080,
+        700
+      ],
+      "id": "0fa2287e-e414-4d22-b4ed-570ca10baa24",
+      "name": "机型"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "73034235-b244-4398-b68d-9e19474b2b53",
+              "name": "code",
+              "value": 200,
+              "type": "number"
+            },
+            {
+              "id": "39009747-7fa6-4768-a091-83c1a4490332",
+              "name": "message",
+              "value": "无京东自营仓库出货！无需同步",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3080,
+        1000
+      ],
+      "id": "a2ac3c8d-dd6c-4782-b8dd-450b9933e8d6",
+      "name": "返回空信息"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2960,
+        500
+      ],
+      "id": "67f0fd53-2f3d-47bf-8650-2e48b78a321e",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d552f531-6a1a-4985-80b2-e7c19278b759",
+              "name": "serialNo",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "2eb04510-6e7e-48c4-bdfa-c7bf9b80620a",
+              "name": "sku",
+              "value": "={{ $json.sku_code }}",
+              "type": "string"
+            },
+            {
+              "id": "9010fb6d-ca28-405a-922b-0c9a70ac18fc",
+              "name": "boxId",
+              "value": "={{ $json.box_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c6a5d471-ed00-4972-8726-264d13f33962",
+              "name": "order_number",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2640,
+        700
+      ],
+      "id": "07eb5103-8cfd-4f56-8f00-89d893154d24",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b45fba38-ae08-40f4-aec6-e6e29cd9870e",
+              "leftValue": "={{ $json.sku }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "bb34c278-7294-4fc6-9bf1-3c61b68d95fc",
+              "leftValue": "={{ $json.boxId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3400,
+        320
+      ],
+      "id": "0f9a9739-fe54-4e06-8eb3-a2d0ef24d00a",
+      "name": "判断sku是否为null"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "watchInfoList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        700
+      ],
+      "id": "000774df-c959-45f6-8ce1-696f34adddd1",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.finalString }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "b16f33fa-d266-49d1-bbc3-037b2b266792",
+      "name": "Crypto",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        5940,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = [];\nlet token = $vars.jd_access_token;\nconst now = $now;\nconst timestamp = formatDate(now);\n // 输出当前时间，格式为 yyyy-MM-dd HH:mm:ss\nlet json = {\n  \"access_token\": token,\n  \"app_key\": \"B9218A6D3A374CF1FD73BD9918F9F816\",\n  \"method\": \"jingdong.edi.ediws.vendor.serialno.save\",\n  \"timestamp\": timestamp,\n  \"v\": \"2.0\"\n};\n\nlet appSecret = "REDACTED";\n\n// 商品数据\nconst products = [\n  { sku: \"100051277654\", model: \"APEX 2 Pro\", color: \"黑色\", materialCode: \"GSB200000017\" },\n  { sku: \"100051277678\", model: \"APEX 2 Pro\", color: \"灰色\", materialCode: \"GSB200000019\" },\n  { sku: \"100051277694\", model: \"APEX 2\", color: \"黑色\", materialCode: \"GSB210000009\" },\n  { sku: \"100051277696\", model: \"APEX 2\", color: \"灰色\", materialCode: \"GSB210000011\" },\n  { sku: \"100051277652\", model: \"APEX 2\", color: \"珊瑚金\", materialCode: \"GSB210000013\" },\n  { sku: \"100108930464\", model: \"VERTIX 2S\", color: \"地球蓝\", materialCode: \"GSB19S000003\" },\n  { sku: \"100096394601\", model: \"VERTIX 2S\", color: \"月球银\", materialCode: \"GSB19S000001\" },\n  { sku: \"100108930506\", model: \"VERTIX 2S\", color: \"太空黑\", materialCode: \"GSB19S000005\" },\n  { sku: \"100064728888\", model: \"PACE 3\", color: \"白色硅胶\", materialCode: \"GSW331000041\" },\n  { sku: \"100064726776\", model: \"PACE 3\", color: \"黑色硅胶\", materialCode: \"GSW331000043\" },\n  { sku: \"100064726806\", model: \"PACE 3\", color: \"白色织物-快拆\", materialCode: \"GSW331000037\" },\n  { sku: \"100066941569\", model: \"PACE 3\", color: \"黑灰织物-快拆\", materialCode: \"GSW331000039\" },\n  { sku: \"100148975060\", model: \"PACE Pro\", color: \"黑色\", materialCode: \"GSW332000014\" },\n  { sku: \"100125319715\", model: \"PACE Pro\", color: \"灰色\", materialCode: \"GSW332000013\" },\n  { sku: \"100153977954\", model: \"PACE Pro\", color: \"蓝色\", materialCode: \"GSW332000012\" },\n  { sku: \"100179018414\", model: \"PACE Pro\", color: \"大迫杰联名款\", materialCode: \"GSW332000022\" },\n  { sku: \"100073406670\", model: \"心率臂带\", color: \"灰色\", materialCode: \"GSHR01000001\" },\n  { sku: \"100090636063\", model: \"心率带\", color: \"绿色\", materialCode: \"GSHR01000003\" },\n  { sku: \"100090636037\", model: \"心率带\", color: \"橙色\", materialCode: \"GSHR01000004\" },\n  { sku: \"100059026028\", model: \"POD 2\", color: \"灰色\", materialCode: \"GSFD05000005\" }\n];\n\n// 创建一个 Map 来存储料号和 SKU 的关系\nconst materialToSkuMap = new Map();\nproducts.forEach(product => {\n  materialToSkuMap.set(product.materialCode, product.sku);\n});\n\n// 处理订单号（正则提取数字）\nfunction getOrder(str) {\n  const number = str.match(/\\d+/g);\n  return number ? number.join('') : '';\n}\n\n// 拆分数组\nfunction groupBy(array, key) {\n  const map = new Map();\n  array.forEach(item => {\n    const keyValue = item[key];\n    if (!map.has(keyValue)) {\n      map.set(keyValue, []);\n    }\n    map.get(keyValue).push(item);\n  });\n  return Array.from(map.values());\n}\n\n// 转换时间戳\nfunction formatDate(date) {\n  const year = date.year;\n  const month = String(date.month).padStart(2, '0');\n  const day = String(date.day).padStart(2, '0');\n  const hours = String(date.hour).padStart(2, '0');\n  const minutes = String(date.minute).padStart(2, '0');\n  const seconds = String(date.second).padStart(2, '0');\n  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;\n}\n\n// 分割数组为指定大小的子数组\nfunction chunkArray(array, size) {\n  const chunks = [];\n  for (let i = 0; i < array.length; i += size) {\n    chunks.push(array.slice(i, i + size));\n  }\n  return chunks;\n}\n\n// 获取并处理 serialNoDetailList\nlet serialNoDetailList = $input.all()[0].json.serialNoDetailList.map(e => {\n  e.sku = e.sku;\n  e.order_number = getOrder(e.order_number);\n  return e;\n});\n\n// 将 serialNoDetailList 按每 1000 条分割\n// const chunks = chunkArray(serialNoDetailList, 1000);\n\n// 遍历每个子数组并处理\n  const orderList = groupBy(serialNoDetailList, 'order_number');\n  orderList.forEach(item => {\n    let paramJson = {\n      \"vendorSerialNoDTO\": {\n        serialNoDetailList: item.map(e => ({ serialNo: e.serialNo, sku: e.sku, boxId: e.boxId })),\n        batchNo: $now.toMillis().toString(),\n        bizOrderId: item[0].order_number,\n        createMode: 2,\n        vendorCode: 'gdgcydkj'\n      }\n    };\n    let paramJsonString = JSON.stringify(paramJson);\n    const timestamp = formatDate(now);\n    let finalString = appSecret + '360buy_param_json' + paramJsonString +\n                      'access_token' + token +\n                      'app_key' + json.app_key +\n                      'method' + json.method +\n                      'timestamp' + timestamp +\n                      'v' + json.v + appSecret;\n\n    let res = {\n      finalString: finalString,\n      paramJsonString: paramJsonString,\n      timestamp: timestamp,\n      now: $now\n    };\n    result.push(res);\n  });\n\n\nreturn result;"
+      },
+      "id": "a876b052-ac79-45fc-92a8-55244e18ddc6",
+      "name": "生成京东签名",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//获取sku为空的出库数据\nlet watchInfo=$('判断skuCode是否为空').all();\nconst typeMap=new Map();\nconst watchTypeList=$input.all().map(e=>{\n  typeMap.set(e.json.retroid,e.json.watchType);\n});\n\nwatchInfo.forEach(item=>{\n  let watchType=typeMap.get(item.json.retroid);\n  item.json.watchType=watchType;\n})\nreturn watchInfo;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        700
+      ],
+      "id": "07f015e4-7918-4720-8677-cfcad7041933",
+      "name": "将机型挂载到出库数据"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aa3306da-f1f3-4103-be09-1c91260025d0",
+              "leftValue": "={{ $json.data.jingdong_edi_ediws_vendor_serialno_save_responce.code }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "09ff432a-6b4a-4217-897e-0ca7d7073a2a",
+              "leftValue": "={{ $json.data.jingdong_edi_ediws_vendor_serialno_save_responce.result.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7000,
+        380
+      ],
+      "id": "39846cb1-b292-41c8-ac8a-12e914d87820",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cb2c0fd6-f8b2-4dc2-90ea-42ccfef152a2",
+              "name": "data",
+              "value": "={{ JSON.parse($json.data) }}",
+              "type": "object"
+            },
+            {
+              "id": "9f78ae3c-8a71-486d-8e59-9fdcad8d3412",
+              "name": "params",
+              "value": "={{ $json.paramJsonString }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6840,
+        480
+      ],
+      "id": "ad8822ee-6a6a-4ba4-8030-5fc0b51e4b38",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "578005b0-36c2-4b52-8cc3-6b6f3a82b75a",
+              "name": "code",
+              "value": "200",
+              "type": "string"
+            },
+            {
+              "id": "7c3a3b37-69c6-4099-9a8e-55adf67e298c",
+              "name": "message",
+              "value": "同步成功！",
+              "type": "string"
+            },
+            {
+              "id": "24c60eb5-5c2a-44ae-8950-bce0e086d771",
+              "name": "timeStamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7300,
+        220
+      ],
+      "id": "c399ea52-9d50-440e-885c-c40f69edd542",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        6280,
+        -180
+      ],
+      "id": "07cc1542-6d5e-4471-8b60-463896e26f28",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "82932583-b764-4845-9f14-5566f0bfa277",
+              "name": "serialNo",
+              "value": "={{ $json.serialNo }}",
+              "type": "string"
+            },
+            {
+              "id": "bee115cc-f995-4a95-9e9e-e65ca209a39e",
+              "name": "sku",
+              "value": "={{ $json.sku }}",
+              "type": "string"
+            },
+            {
+              "id": "fea5e388-b99d-40c5-ab37-538abdefdf45",
+              "name": "boxId",
+              "value": "={{($json.order_number.match(/^\\d+/) || [null])[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "69b6bfdb-0017-4514-b1f1-7336c48f9cf7",
+              "name": "order_number",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3620,
+        420
+      ],
+      "id": "752116a6-792d-44bd-9984-ba0bde59b97a",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "630e808e-a826-4ee3-aed2-0be2097190a2",
+              "leftValue": "={{ $json.boxId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3840,
+        420
+      ],
+      "id": "410045fa-96d5-4f16-998d-28b8412ac8d7",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst products = [\n  { sku: \"100051277654\", model: \"APEX 2 Pro\", color: \"黑色\", materialCode: \"GSB200000017\" },\n  { sku: \"100051277654\", model: \"APEX 2 Pro\", color: \"黑色\", materialCode: \"GSWL20B20001\" },\n  { sku: \"100051277678\", model: \"APEX 2 Pro\", color: \"灰色\", materialCode: \"GSB200000019\" },\n  { sku: \"100051277694\", model: \"APEX 2\", color: \"黑色\", materialCode: \"GSB210000009\" },\n  { sku: \"100051277696\", model: \"APEX 2\", color: \"灰色\", materialCode: \"GSB210000011\" },\n  { sku: \"100051277652\", model: \"APEX 2\", color: \"珊瑚金\", materialCode: \"GSB210000013\" },\n  { sku: \"100108930464\", model: \"VERTIX 2S\", color: \"地球蓝\", materialCode: \"GSB19S000003\" },\n  { sku: \"100096394601\", model: \"VERTIX 2S\", color: \"月球银\", materialCode: \"GSB19S000001\" },\n  { sku: \"100108930506\", model: \"VERTIX 2S\", color: \"太空黑\", materialCode: \"GSB19S000005\" },\n  { sku: \"100064728888\", model: \"PACE 3\", color: \"白色硅胶\", materialCode: \"GSW331000041\" },\n  { sku: \"100064726776\", model: \"PACE 3\", color: \"黑色硅胶\", materialCode: \"GSW331000043\" },\n  { sku: \"100064726806\", model: \"PACE 3\", color: \"白色织物-快拆\", materialCode: \"GSW331000037\" },\n  { sku: \"100066941569\", model: \"PACE 3\", color: \"黑灰织物-快拆\", materialCode: \"GSW331000039\" },\n  { sku: \"100066941569\", model: \"PACE 3\", color: \"黑灰织物-快拆\", materialCode: \"GSW331000032\" },\n  { sku: \"100148975060\", model: \"PACE Pro\", color: \"黑色\", materialCode: \"GSW332000014\" },\n  { sku: \"100125319715\", model: \"PACE Pro\", color: \"灰色\", materialCode: \"GSW332000013\" },\n  { sku: \"100153977954\", model: \"PACE Pro\", color: \"蓝色\", materialCode: \"GSW332000012\" },\n  { sku: \"100179018414\", model: \"PACE Pro\", color: \"大迫杰联名款\", materialCode: \"GSW332000022\" },\n  { sku: \"100073406670\", model: \"心率臂带\", color: \"灰色\", materialCode: \"GSHR01000001\" },\n  { sku: \"100090636063\", model: \"心率带\", color: \"绿色\", materialCode: \"GSHR01000003\" },\n  { sku: \"100090636037\", model: \"心率带\", color: \"橙色\", materialCode: \"GSHR01000004\" },\n  { sku: \"100059026028\", model: \"POD 2\", color: \"灰色\", materialCode: \"GSFD05000005\" },\n  { sku: \"100064726776\", model: \"PACE 3\", color: \"灰色\", materialCode: \"GSW331000013\" },\n  { sku: \"100064728888\", model: \"PACE 3\", color: \"灰色\", materialCode: \"GSW331000015\" },\n  { sku: \"100117568211\", model: \"码表\", color: \"灰色\", materialCode: \"GSBY01000004\" },\n  { sku: \"100064726806\", model: \"PACE 3\", color: \"灰色\", materialCode: \"GSW331000030\" }\n];\n\n// 创建一个 Map 来存储料号和 SKU 的关系\nconst materialToSkuMap = new Map();\nproducts.forEach(product => {\n  materialToSkuMap.set(product.materialCode, product.sku);\n});\nfor (const item of $input.all()) {\n  item.json.material=item.json.sku;\n  item.json.sku = materialToSkuMap.get(item.json.sku);\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4660,
+        240
+      ],
+      "id": "875335b1-eada-47eb-981b-e1913cc624e0",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        4460,
+        240
+      ],
+      "id": "3602bf00-5e2a-4699-a616-0a928c81b7ea",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "serialNoDetailList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        5440,
+        80
+      ],
+      "id": "920848c1-1768-4aba-bed0-344f537e6dbe",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e24792db-cca9-4265-a377-6dd9f5893df4",
+              "leftValue": "={{ $json.sku }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4980,
+        240
+      ],
+      "id": "e0cf6cd4-e4f7-474f-8bff-3d3f78a3c8c5",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8a791b6-99b2-4d29-91dd-9331b08a6143",
+              "name": "serialNo",
+              "value": "={{ $json.serialNo }}",
+              "type": "string"
+            },
+            {
+              "id": "11c6e52d-9ff0-4c6d-9212-22d3f0400db1",
+              "name": "sku",
+              "value": "={{ $json.sku }}",
+              "type": "string"
+            },
+            {
+              "id": "e833d8cc-c1a5-4be3-8e1d-1b38fb7f8a9f",
+              "name": "boxId",
+              "value": "={{ $json.boxId }}",
+              "type": "string"
+            },
+            {
+              "id": "40e0eb51-3ae0-46c5-bafc-fa81c0c30b14",
+              "name": "order_number",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5220,
+        80
+      ],
+      "id": "c8fc463a-9f3d-4ab6-84db-43f2a48ba7ad",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "retroid",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        7300,
+        740
+      ],
+      "id": "2c1158a2-6c21-4e33-bd63-55956bf39e35",
+      "name": "Remove Duplicates2"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "retroid",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        720
+      ],
+      "id": "c117f2dd-17e6-4005-a840-e49cfd11eb5f",
+      "name": "Remove Duplicates3"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "snList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        5460,
+        600
+      ],
+      "id": "a0e10698-7d7a-4bef-b89c-fa45ac5ea08a",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "operation": "xls",
+        "options": {
+          "fileName": "同步失败SN.xls"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        4740,
+        820
+      ],
+      "id": "161dcf78-f082-4436-97b2-3d4eb28cf63f",
+      "name": "将数据转换成表格"
+    },
+    {
+      "parameters": {
+        "formTitle": "京东自营国补SN",
+        "formDescription": "仅限公司内部使用",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "国补SN",
+              "fieldType": "file",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "customCss": ":root {\n\t--font-family: 'Open Sans', sans-serif;\n\t--font-weight-normal: 400;\n\t--font-weight-bold: 600;\n\t--font-size-body: 12px;\n\t--font-size-label: 14px;\n\t--font-size-test-notice: 12px;\n\t--font-size-input: 14px;\n\t--font-size-header: 20px;\n\t--font-size-paragraph: 14px;\n\t--font-size-link: 12px;\n\t--font-size-error: 12px;\n\t--font-size-html-h1: 28px;\n\t--font-size-html-h2: 20px;\n\t--font-size-html-h3: 16px;\n\t--font-size-html-h4: 14px;\n\t--font-size-html-h5: 12px;\n\t--font-size-html-h6: 10px;\n\t--font-size-subheader: 14px;\n\n\t/* Colors */\n\t--color-background: #fbfcfe;\n\t--color-test-notice-text: #e6a23d;\n\t--color-test-notice-bg: #fefaf6;\n\t--color-test-notice-border: #f6dcb7;\n\t--color-card-bg: #ffffff;\n\t--color-card-border: #dbdfe7;\n\t--color-card-shadow: rgba(99, 77, 255, 0.06);\n\t--color-link: #7e8186;\n\t--color-header: #525356;\n\t--color-label: #555555;\n\t--color-input-border: #dbdfe7;\n\t--color-input-text: #71747A;\n\t--color-focus-border: rgb(90, 76, 194);\n\t--color-submit-btn-bg: #ff6d5a;\n\t--color-submit-btn-text: #ffffff;\n\t--color-error: #ea1f30;\n\t--color-required: #ff6d5a;\n\t--color-clear-button-bg: #7e8186;\n\t--color-html-text: #555;\n\t--color-html-link: #ff6d5a;\n\t--color-header-subtext: #7e8186;\n\n\t/* Border Radii */\n\t--border-radius-card: 8px;\n\t--border-radius-input: 6px;\n\t--border-radius-clear-btn: 50%;\n\t--card-border-radius: 8px;\n\n\t/* Spacing */\n\t--padding-container-top: 24px;\n\t--padding-card: 24px;\n\t--padding-test-notice-vertical: 12px;\n\t--padding-test-notice-horizontal: 24px;\n\t--margin-bottom-card: 16px;\n\t--padding-form-input: 12px;\n\t--card-padding: 24px;\n\t--card-margin-bottom: 16px;\n\n\t/* Dimensions */\n\t--container-width: 448px;\n\t--submit-btn-height: 48px;\n\t--checkbox-size: 18px;\n\n\t/* Others */\n\t--box-shadow-card: 0px 4px 16px 0px var(--color-card-shadow);\n\t--opacity-placeholder: 0.5;\n}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        4140,
+        -80
+      ],
+      "id": "5d2327c1-5536-4124-9297-518be6200a97",
+      "name": "On form submission",
+      "webhookId": "84c8a2d2-f681-4ad9-af51-19a4a61299af",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "xls",
+        "binaryPropertyName": "__SN",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        -80
+      ],
+      "id": "676ac349-aa0e-4d33-9cb9-60f59562811b",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6160,
+        440
+      ],
+      "id": "ee00ae90-4202-41b6-8d0a-d1214ff27661",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        6580,
+        440
+      ],
+      "id": "f846bc6d-21f5-4d53-8b3b-bd13bffd8447",
+      "name": "Merge3"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "拼接请求参数，渠道号和日期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拼接请求参数，渠道号和日期": {
+      "main": [
+        [
+          {
+            "node": "根据渠道号查询SN信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据渠道号查询SN信息": {
+      "main": [
+        [
+          {
+            "node": "判断查询结果是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回错误信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询结果是否为空": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回空信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回错误信息": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "同步SN信息到京东平台": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "给出库的sn绑定sku",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断skuCode是否为空": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "机型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "机型": {
+      "main": [
+        [
+          {
+            "node": "将机型挂载到出库数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回空信息": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "给出库的sn绑定sku": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "判断sku是否为null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sku是否为null": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成京东签名": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将机型挂载到出库数据": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "将数据转换成表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "生成京东签名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates3": {
+      "main": [
+        [
+          {
+            "node": "判断skuCode是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将数据转换成表格": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "同步SN信息到京东平台",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-05-30T00:00:17.019+08:00",
+          "Readable date": "May 30th 2025, 12:00:17 am",
+          "Readable time": "12:00:17 am",
+          "Day of week": "Friday",
+          "Year": "2025",
+          "Month": "May",
+          "Day of month": "30",
+          "Hour": "00",
+          "Minute": "00",
+          "Second": "17",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ]
+  },
+  "versionId": "2324f229-c307-4d0d-adab-15b0719bf6e0",
+  "activeVersionId": "2324f229-c307-4d0d-adab-15b0719bf6e0",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-02-25T09:18:30.724Z",
+      "createdAt": "2025-02-25T09:18:30.724Z",
+      "role": "workflow:owner",
+      "workflowId": "zMqcnBLC7vrFcfLW",
+      "projectId": "3aQnrVmrPM3uNcK5",
+      "project": {
+        "updatedAt": "2025-09-08T04:25:23.564Z",
+        "createdAt": "2025-02-18T02:58:48.619Z",
+        "id": "3aQnrVmrPM3uNcK5",
+        "name": "2.国补接口",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "toolbox"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

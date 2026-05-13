@@ -1,0 +1,1667 @@
+{
+  "updatedAt": "2025-06-19T06:57:10.826Z",
+  "createdAt": "2024-07-01T06:32:10.819Z",
+  "id": "cBlQqRe8dtZ43CRW",
+  "name": "ResouceLogin",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "638577f9-abf6-4fb2-8cda-560dde8ac7d8",
+      "name": "Respond:login success or regishter success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5020,
+        -280
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e4cd1fb3-6128-49bf-99fa-5b4ce578b3f3",
+      "name": "Respond:database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "edbdeb48-163d-47c6-b3ad-29ecb3699893",
+              "leftValue": "={{ $json.resource_type }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ee23cad4-73f0-4b4a-a9de-03c2b9b093dd",
+      "name": "determine this device is temerial Device",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3b5cf013-dfdc-43e9-b0bd-90ce198d59b3",
+      "name": "Respond: The parameter is experiencing an error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1620,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "563b4714-7f00-492c-9817-eb5a0589db81",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2789d068-5fb8-4828-b47a-24db5f267275",
+      "name": "check result",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "useJson": true,
+        "claimsJson": "={\n  \"ip\": \"{{ $json.ip }}\",\n  \"mac\": \"{{ $json.mac }}\"\n}\n",
+        "options": {}
+      },
+      "id": "84b34523-dfc6-407c-a746-f7f586827da8",
+      "name": "JWT",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        220
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "Dtc2pVVBtgFiFKvP",
+          "name": "JWT Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst result={};\nfor (const item of $input.all()){ \nconst ip=item.json.body.ip;\nconst mac=item.json.body.mac;\nconst deviceDetails=item.json.body.deviceDetails;\n  if(isValidIP(ip)&&isValidMAC(mac)){\n    result.ip=ip;\n    result.mac=mac;\n  }else if (isValidIP(ip)) {\n    result.code='201';\n    result.msg=`MAC:${mac}地址错误！`\n  }else if (isValidIP(mac)){\n     result.code='201';\n    result.msg=`IP:${ip}地址错误！`\n  }\n  if(deviceDetails.length!==0){\n    result.deviceDetails=deviceDetails;\n  }\n}\n//校验IP地址是否合法\nfunction isValidIP(ip) {\n  const ipv4Pattern = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;\n  return ipv4Pattern.test(ip);\n}\n//校验mac地址是否合法\nfunction isValidMAC(mac) {\n  const macPattern = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;\n  return macPattern.test(mac);\n}\n\nreturn result;"
+      },
+      "id": "f0610c77-d3f3-4d7b-af95-20cde64fa2a3",
+      "name": "check parameter format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resource_login_info",
+          "mode": "list",
+          "cachedResultName": "resource_login_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "resource_id": "={{ $json.id }}",
+            "token": "REDACTED",
+            "login_time": "={{ $now }}",
+            "ip_address": "={{ $('check result').all()[0].json.ip }}",
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_id",
+              "displayName": "resource_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "login_time",
+              "displayName": "login_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ip_address",
+              "displayName": "ip_address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9fedce4e-67d4-4141-a1d4-d434ad998301",
+      "name": "insert records into resourceLogin",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4640,
+        -280
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "269b10fb-2427-403e-a063-5f869315ded5",
+              "leftValue": "={{ $json.resource_type }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fd9b6469-d6c9-41ab-8fff-358436fcfde6",
+      "name": "Determine weather it is a  new temrial Device",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "62c3adc8-e643-41e0-9c16-973c0214c013",
+              "leftValue": "={{ $json.data[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ad7c8c64-54ee-4ad7-94e5-dee40000d8be",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2620,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $('generated database records').all();"
+      },
+      "id": "9b21851f-e5d0-4b83-9833-9a5c927c6e05",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "3a10c5bd-a8d2-4938-a6d2-d09471d2f5f7",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst noExistData=[];\nconst deviceList=$('generated database records').all().map(e=>{\n  return e.json;\n});\nlet res=[];\nlet newDevice=true;\nfor (const item of $input.all()) {\n  //数据库中存在的数据\n  const existData=item.json.data;\n  let items=deviceList.filter(e=>{\n    //返回不在sql查询出来的设备记录，即是新设备，需要生成新设备记录\n     return !existData.some(pair => pair.resource_info.pid === e.pid && pair.resource_info.vid === e.vid)\n  })\n  existData.forEach(e=>{\n    if(e.resource_type==1){\n      noExistData.push(e);\n      newDevice=false;\n    }\n  })\n  res=[...noExistData,...items]\n}\n\nreturn {\n  newDeviceList:res,\n  newDevice:newDevice\n};"
+      },
+      "id": "cbcb3f4f-8018-4334-a10d-6eb11209850b",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "newDeviceList",
+        "options": {}
+      },
+      "id": "15f8a50e-69e6-4e77-a19f-eb55d0af6d14",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst record={};\nlet deviceDetails=null;\nfor (const item of $input.all()) {\n  record.resource_mac=$('check result').all()[0].json.mac;\n  record.resource_type=1;\n  record.ip=$('check result').all()[0].json.ip;\n  deviceDetails=$('check result').all()[0].json.deviceDetails;\n}\nif(deviceDetails&&deviceDetails.length!==0){\n\n let records=deviceDetails.map(e=>{\n   const pid=e.idProduct.slice(2);\n   const vid=e.idVendor.slice(2);\n   const deviceName=e.productDescription;\n    return {\n      pid:pid,\n      vid:vid,\n      deviceName:deviceName,\n      resource_type:2\n    }\n  });\n  records.push(record);\n  return records;\n}else{\n  return record;\n}"
+      },
+      "id": "29ecaf97-a70b-405c-90ad-16fd90993e81",
+      "name": "generated database records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM mes.resources r\nWHERE ($1=1 and r.resource_mac='{{ $json.resource_mac??'' }}') or ($1=2 and EXISTS (\n    SELECT 1\n    FROM mes.resources r_sub\n    WHERE r_sub.resource_info @> jsonb_build_object('pid', '{{ $json.pid }}', 'vid', '{{ $json.vid }}')::jsonb\n    AND r_sub.id = r.id\n))\n",
+        "options": {
+          "queryReplacement": "={{ $json.resource_type }}"
+        }
+      },
+      "id": "d44b3d69-28c1-40d3-bda7-eeb54dc100d2",
+      "name": "check this device is new device",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2180,
+        220
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "resource_mac": "={{ $json.resource_mac }}",
+            "resource_info": "={{ $json.ip_info }}",
+            "resource_type": "={{ $json.resource_type }}",
+            "create_time": "={{ $now }}",
+            "resource_status": 2
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_name",
+              "displayName": "resource_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_type",
+              "displayName": "resource_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resource_info",
+              "displayName": "resource_info",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resource_mac",
+              "displayName": "resource_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resource_status",
+              "displayName": "resource_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "procdure_id",
+              "displayName": "procdure_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "purchase_time",
+              "displayName": "purchase_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image",
+              "displayName": "image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ce4685fd-578d-467b-8a20-397c35920776",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4160,
+        380
+      ],
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "resource_type": 2,
+            "create_time": "={{ $now }}",
+            "resource_info": "={{ $json.device_info }}",
+            "resource_status": 1
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_name",
+              "displayName": "resource_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_type",
+              "displayName": "resource_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resource_info",
+              "displayName": "resource_info",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resource_mac",
+              "displayName": "resource_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_status",
+              "displayName": "resource_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "procdure_id",
+              "displayName": "procdure_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "purchase_time",
+              "displayName": "purchase_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image",
+              "displayName": "image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a4d91ac6-575a-4051-9660-61df77e9ccab",
+      "name": "Postgres2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4180,
+        220
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n  const deviceList=$('generated database records').all().filter(e=>e.json.resource_type==2).map(el=>el.json);\nreturn {\n  device:deviceList\n};"
+      },
+      "id": "f4e7edd0-c37d-4ca2-a2f9-b1918dfc1564",
+      "name": "get device records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "device",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "355c0bbb-189b-4e70-adca-eb218fe37312",
+      "name": "Split Out1",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        4840,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "cfabd055-c540-4cbe-b3b5-da521e2709f0",
+      "name": "Respond:database error2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5580,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "设备注册失败删除数据失败",
+        "emailFormat": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "d270c619-7556-438d-9e88-6ed5562ce5db",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        5580,
+        680
+      ],
+      "webhookId": "506407a9-824d-4355-9d6f-af6ef3891495",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM mes.resources\nWHERE resource_info @> jsonb_build_object('pid', $1, 'vid', $2)::jsonb;\n",
+        "options": {
+          "queryReplacement": "={{ $json.device.pid }},{{ $json.device.vid }}"
+        }
+      },
+      "id": "c8b8e7c3-10d3-42e8-8586-b4a4c8089b44",
+      "name": "delete deivce when resource register fail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        5060,
+        660
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM mes.resources\nWHERE resource_info @> jsonb_build_object('pid', $1, 'vid', $2)::jsonb;\n",
+        "options": {
+          "queryReplacement": "={{ $json.device.pid }},{{ $json.device.vid }}"
+        }
+      },
+      "id": "1a40228c-506c-4747-809a-17b35ac9a62d",
+      "name": "delete deivce when resource register fail1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4620,
+        240
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n  const deviceList=$('generated database records').all().filter(e=>e.json.resource_type==1).map(el=>el.json);\nreturn {\n  device:deviceList\n};"
+      },
+      "id": "790dc403-3d3a-4827-a9a9-8a8bcd535f3c",
+      "name": "get resource records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4420,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "4ccf93c5-84c4-45e8-a70c-83520c70e2fd",
+              "leftValue": "={{$('Code1').all()[0].json.newDevice}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "48a4739e-5f59-4cef-a0e7-b6b25de1631a",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3780,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_online": 0,
+            "id": "={{ $json.id }}",
+            "resource_info": "={{ $json.resource_info }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resource_name",
+              "displayName": "resource_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_type",
+              "displayName": "resource_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_info",
+              "displayName": "resource_info",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resource_mac",
+              "displayName": "resource_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resource_status",
+              "displayName": "resource_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procdure_id",
+              "displayName": "procdure_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "purchase_time",
+              "displayName": "purchase_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "image",
+              "displayName": "image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_online",
+              "displayName": "is_online",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "update_status",
+              "displayName": "update_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ec80c0a4-a647-4f1b-be96-bf9dd6085087",
+      "name": "update resource status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4920,
+        -80
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resource/login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f132b60b-653b-4780-ad01-87afe90dbc52",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        960,
+        320
+      ],
+      "webhookId": "0319ee92-aa92-44d5-a205-1f4f61732ad9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a3fa069-880d-493c-863e-908836a88c44",
+              "name": "resource_type",
+              "value": "={{ $json.resource_type }}",
+              "type": "number"
+            },
+            {
+              "id": "358038c5-3150-49c3-91e3-ea5c8eb8e3c7",
+              "name": "device_info",
+              "value": "={'pid':'{{ $json.pid }}','vid':'{{ $json.vid }}','deviceName':'{{ $json.deviceName }}'} ",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3640,
+        160
+      ],
+      "id": "008b5610-86c6-40ad-839c-fca1b129aaaf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b9fb47f9-28ee-4d66-a7fb-660691b8b756",
+              "name": "resource_mac",
+              "value": "={{ $json.resource_mac }}",
+              "type": "string"
+            },
+            {
+              "id": "5a0c4149-a2fb-4ce9-83ce-140416d99943",
+              "name": "resource_type",
+              "value": "={{ $json.resource_type }}",
+              "type": "number"
+            },
+            {
+              "id": "17f98195-b989-4d92-affc-8d033055a5ea",
+              "name": "ip_info",
+              "value": "={\"ip\":\"{{ $json.ip }}\" }",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3980,
+        40
+      ],
+      "id": "7e2a26e0-d269-42fe-a137-527edbdfb8e4",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5e7c7cc-9398-4423-b038-6c6c6cb67a1f",
+              "name": "resource_info",
+              "value": "={'ip':'{{ $('generated database records').all().filter(item => item.json.resource_type==1)[0].json.ip }}'}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4600,
+        -80
+      ],
+      "id": "d184048d-71af-42a4-a2d2-cab13f528367",
+      "name": "Edit Fields2"
+    }
+  ],
+  "connections": {
+    "check parameter format": {
+      "main": [
+        [
+          {
+            "node": "check result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check result": {
+      "main": [
+        [
+          {
+            "node": "JWT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: The parameter is experiencing an error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JWT": {
+      "main": [
+        [
+          {
+            "node": "generated database records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "determine this device is temerial Device": {
+      "main": [
+        [
+          {
+            "node": "Postgres2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine weather it is a  new temrial Device": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "determine this device is temerial Device",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Determine weather it is a  new temrial Device",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generated database records": {
+      "main": [
+        [
+          {
+            "node": "check this device is new device",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check this device is new device": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond:database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "insert records into resourceLogin",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get device records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "get resource records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get device records": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "delete deivce when resource register fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete deivce when resource register fail": {
+      "main": [
+        [
+          {
+            "node": "Respond:database error2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get resource records": {
+      "main": [
+        [
+          {
+            "node": "delete deivce when resource register fail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete deivce when resource register fail1": {
+      "main": [
+        [
+          {
+            "node": "Respond:database error2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insert records into resourceLogin": {
+      "main": [
+        [
+          {
+            "node": "Respond:login success or regishter success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "insert records into resourceLogin",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check parameter format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Postgres2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "update resource status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update resource status": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Respond:database error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.53",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "637",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "ip": "192.168.53.53",
+            "mac": "76:a3:9f:55:38:d3",
+            "deviceDetails": [
+              {
+                "idVendor": "0x05e3",
+                "idProduct": "0x0626",
+                "productDescription": "2 USB3.1 Hub"
+              },
+              {
+                "idVendor": "0x05e3",
+                "idProduct": "0x0626",
+                "productDescription": "2 USB3.1 Hub"
+              },
+              {
+                "idVendor": "0x0c2e",
+                "idProduct": "0x090a",
+                "productDescription": "2 1900"
+              },
+              {
+                "idVendor": "0x05e3",
+                "idProduct": "0x0610",
+                "productDescription": "2 USB2.1 Hub"
+              },
+              {
+                "idVendor": "0x0a5f",
+                "idProduct": "0x00ec",
+                "productDescription": "2 ZTC 105SLPlus-300dpi ZPL"
+              },
+              {
+                "idVendor": "0x05e3",
+                "idProduct": "0x0610",
+                "productDescription": "2 USB2.1 Hub"
+              },
+              {
+                "idVendor": "0x0403",
+                "idProduct": "0x6001",
+                "productDescription": "2 USB Serial Converter"
+              }
+            ]
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/login",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "27bb2a14-0857-4778-99d4-a6028ae2a9bd",
+  "activeVersionId": "27bb2a14-0857-4778-99d4-a6028ae2a9bd",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:55:34.769Z",
+      "createdAt": "2025-04-24T05:55:34.769Z",
+      "role": "workflow:owner",
+      "workflowId": "cBlQqRe8dtZ43CRW",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

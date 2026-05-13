@@ -1,0 +1,236 @@
+{
+  "updatedAt": "2025-04-24T06:25:19.422Z",
+  "createdAt": "2024-08-12T07:45:59.497Z",
+  "id": "5Mu3lqsR3T2FOHom",
+  "name": "getDeviceIds",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "f185e69b-ce86-40b9-9873-4d10345eeb8e",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "resource_type",
+              "value": "2"
+            },
+            {
+              "column": "is_delete",
+              "value": "0"
+            },
+            {
+              "column": "resource_name",
+              "condition": "IS NOT NULL"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "resource_name"
+          ]
+        }
+      },
+      "id": "af613fb9-0c39-4bb9-a4a4-29f693e32854",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        220
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "deviceList",
+        "options": {}
+      },
+      "id": "d6dcb772-7710-440a-b8de-4da5d4809bd6",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        900,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "path": "/resource/getDeviceIds",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f696969e-5f97-4ddc-a974-13f9b5fac198",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        480,
+        220
+      ],
+      "webhookId": "66155fa2-1af8-47ab-a267-9231511e5a38"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{{ JSON.stringify($json.deviceList) }}\n} ",
+        "options": {}
+      },
+      "id": "f9223de6-5261-4c7a-b3e7-d0d5334a60c2",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/getDeviceIds",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "17d85969-3c4e-46d2-9681-8bf259c82319",
+  "activeVersionId": "17d85969-3c4e-46d2-9681-8bf259c82319",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:46:05.381Z",
+      "createdAt": "2025-04-24T05:46:05.381Z",
+      "role": "workflow:owner",
+      "workflowId": "5Mu3lqsR3T2FOHom",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

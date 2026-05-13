@@ -1,0 +1,266 @@
+{
+  "updatedAt": "2024-09-20T02:37:36.475Z",
+  "createdAt": "2024-04-02T09:15:55.916Z",
+  "id": "5aOGhWQxjTvMVPH5",
+  "name": "doucSign定时刷新token",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "360e20dd-fa39-4e85-9bc7-91523db12ad4",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "collection": "authtokens",
+        "options": {},
+        "query": "{\n  \"clientId\":\"38e2435d-095f-43cb-814c-4efa51519a85\"\n}"
+      },
+      "id": "9aa93285-6d45-4a6f-ba1f-e07913915570",
+      "name": "MongoDB",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        380
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "lnbKf0XWXgFOg570",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "findOneAndReplace",
+        "collection": "authtokens",
+        "updateKey": "=clientId",
+        "fields": "=refreshToken,accessToken,expires,refreshTokenExpires,accountId",
+        "options": {}
+      },
+      "id": "4e79d0fb-224b-43a0-a7c8-72bc24daaf12",
+      "name": "MongoDB1",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        360
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "lnbKf0XWXgFOg570",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  const twentyFiveDaysInSeconds = 25 * 24 * 60 * 60;\n  item.json.clientId = \"38e2435d-095f-43cb-814c-4efa51519a85\";\n  item.json.expires=parseInt(28800) + Math.floor(Date.now() / 1000);\n  item.json.accountId=\"2b87174d-bf1c-4250-8240-a77cf65e1020\";\n  item.json.refreshToken=item.json.refresh_token;\n  item.json.accessToken=item.json.access_token;\n  item.json.refreshTokenExpires=twentyFiveDaysInSeconds + Math.floor(Date.now() / 1000)\n}\n\nreturn $input.all();"
+      },
+      "id": "0b5ee3d4-8bec-4746-b3f2-bd22a2292a0b",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "047594b7-ce79-4836-bba9-99ca23dafe09",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  docuSign Token获取失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "a0836258-4889-4c79-9c10-2f19f6dd5f4e",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1580,
+        660
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://account.docusign.com/oauth/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Basic MzhlMjQzNWQtMDk1Zi00M2NiLTgxNGMtNGVmYTUxNTE5YTg1OmMwZGExNjIzLTVlNjktNGEyOC1hNzllLWY1MjIxNGFkZjc0MQ=="
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $json.refreshToken }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ad974841-03c9-4672-a24e-b86921aceb2f",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1340,
+        380
+      ],
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "MongoDB1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrencyRules": [],
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d71f5bd6-53fa-4428-be20-5441f4fdc815",
+  "activeVersionId": "d71f5bd6-53fa-4428-be20-5441f4fdc815",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-04-02T09:15:55.916Z",
+      "createdAt": "2024-04-02T09:15:55.916Z",
+      "role": "workflow:owner",
+      "workflowId": "5aOGhWQxjTvMVPH5",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

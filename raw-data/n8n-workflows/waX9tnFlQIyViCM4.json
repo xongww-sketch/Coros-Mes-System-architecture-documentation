@@ -1,0 +1,526 @@
+{
+  "updatedAt": "2025-04-24T06:20:19.226Z",
+  "createdAt": "2024-08-05T08:59:43.148Z",
+  "id": "waX9tnFlQIyViCM4",
+  "name": "updateApplication",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "3a194dbe-56d6-454a-8586-d015a878a336",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f9b5c922-e6df-4ebe-b88e-eaa87bc14c6a",
+      "name": "parametet error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1020,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "57a9bf6c-d4a0-4fd5-8c41-efb01745b517",
+      "name": "database error1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -780,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e8689ccb-2028-490b-aba2-8408049459d1",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 201,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bd565f0b-993f-4e0f-9c50-a4980dee874c",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1240,
+        1020
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d811dc5f-f51d-4b09-bfbe-972b3c0f012c",
+              "leftValue": "={{ $input.all()[0].json.application_id.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d82684d8-2e31-40a2-94ae-565b7b829333",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "application_id"
+            },
+            {
+              "fieldToAggregate": "device_ids"
+            },
+            {
+              "fieldToAggregate": "installation_package_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "339bb6b9-5070-4de8-a650-beca2baba673",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//检查参数是否为空\nlet result=null;\nfor (const item of $input.all()) {\n  const applicationId=item.json.body.applicationId;\n  const applicationName=item.json.body.applicationName;\n  const appVersion=item.json.body.applicationVersion;\n  const packageId=item.json.body.packageId;\n  const deviceIds=item.json.body.deviceIds;\n  if((applicationName||appVersion||packageId||deviceIds)&&applicationId){\n    result=$input.all();\n  }else{\n    result={\n      code:201,\n      message:\"请求参数不能为空！\"\n    }\n  }\n}\n\nreturn result;"
+      },
+      "id": "7eb80c52-9641-4533-bcce-24043c34924b",
+      "name": "CheckParam",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1460,
+        1020
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"更新成功！\"\n}",
+        "options": {}
+      },
+      "id": "43805256-9208-4da3-8fa0-b6ee47cf3708",
+      "name": "update success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 203,\n  \"message\":\"存在相同版本的软件包！\"\n}",
+        "options": {}
+      },
+      "id": "efa9247c-d8c6-4ee1-ab1f-d3e3be777a90",
+      "name": "exist the same application",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    *\nFROM \n    mes.application \nWHERE \n    application_name = '{{ $json.body.applicationName }}' \n    AND application_version = '{{ $json.body.applicationVersion }}' \n    AND installation_package_id = {{ $json.body.packageId }} \n    AND device_ids @> ARRAY[{{ $json.body.deviceIds }}]\n    AND ARRAY[{{ $json.body.deviceIds }}] @> device_ids;",
+        "options": {}
+      },
+      "id": "e9255b5e-ad4e-4d96-a0e7-0b96f08e483e",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1020,
+        900
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/application/updateApplication",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "efc894e6-7e5c-49df-9680-b7dc685d73c3",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1660,
+        1020
+      ],
+      "webhookId": "9f22dd7e-d6c3-4012-8059-2c68a172b100"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "application",
+          "mode": "list",
+          "cachedResultName": "application"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "application_id": "={{ $('Webhook').all()[0].json.body.applicationId }}",
+            "package_id": "={{ $('Webhook').all()[0].json.body.packageId }}",
+            "application_name": "={{ $('Webhook').all()[0].json.body.applicationName }}",
+            "application_version": "={{ $('Webhook').all()[0].json.body.applicationVersion }}",
+            "device_ids": "={{ $('Webhook').all()[0].json.body.deviceIds }}"
+          },
+          "matchingColumns": [
+            "application_id"
+          ],
+          "schema": [
+            {
+              "id": "application_id",
+              "displayName": "application_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "application_name",
+              "displayName": "application_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_version",
+              "displayName": "application_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "package_id",
+              "displayName": "package_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "device_ids",
+              "displayName": "device_ids",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8e891f65-54e3-4879-9abb-90a04cd2c73a",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -220,
+        700
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "parametet error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "exist the same application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckParam": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CheckParam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "update success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "106",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "applicationVersion": "1.0.4",
+            "deviceIds": [
+              51,
+              52
+            ],
+            "packageId": 19,
+            "applicationId": 6,
+            "applicationName": "cs"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/application/updateApplication",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "df8e2ca9-4cd1-470e-93c3-e1ab73a4934f",
+  "activeVersionId": "df8e2ca9-4cd1-470e-93c3-e1ab73a4934f",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:46:14.716Z",
+      "createdAt": "2025-04-24T05:46:14.716Z",
+      "role": "workflow:owner",
+      "workflowId": "waX9tnFlQIyViCM4",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

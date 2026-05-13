@@ -1,0 +1,671 @@
+{
+  "updatedAt": "2025-04-24T06:29:23.653Z",
+  "createdAt": "2024-07-26T08:27:32.617Z",
+  "id": "EG8vKzmGK171JURK",
+  "name": "createPackage",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "cefba60c-8268-4cd1-bf89-79916011ca42",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2480,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6f64754c-c43b-472b-9413-ab7e4cd35ef9",
+      "name": "parametet error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "package_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "af1f3eab-b22c-4e61-8363-984c493857ce",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "12ec8772-55d6-42fb-855a-4eab9fac3db7",
+      "name": "database error1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1660,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "installation_package",
+          "mode": "list",
+          "cachedResultName": "installation_package"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "package_name",
+              "value": "={{ $json.query.packageName }}"
+            },
+            {
+              "column": "package_version",
+              "value": "={{ $json.query.packageVersion }}"
+            },
+            {
+              "column": "is_delete",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4621f21c-bca9-4c52-93d3-43547d5030e1",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1440,
+        300
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 203,\n  \"message\":\"存在相同的软件包！\"\n}",
+        "options": {}
+      },
+      "id": "35a72e97-900b-4b24-9d06-ee40b9facbc1",
+      "name": "exist the same package",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d811dc5f-f51d-4b09-bfbe-972b3c0f012c",
+              "leftValue": "={{ $input.all()[0].json.package_id.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6f71f3db-def6-4cbb-97dd-51076d9e4e34",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e8689ccb-2028-490b-aba2-8408049459d1",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 201,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2786b0d1-e993-4f36-8aa8-7fdc3f70afc9",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//检查参数是否为空\nlet result=null;\nfor (const item of $input.all()) {\n  const packageName=item.json.query.packageName;\n  const packageVersion=item.json.query.packageVersion;\n  const packagePath=item.json.query.packagePath;\n  if(packageName&&packagePath&&packageVersion){\n    result=$input.all();\n  }else{\n    result={\n      code:201,\n      message:\"请求参数不能为空！\"\n    }\n  }\n}\n\nreturn result;"
+      },
+      "id": "d020dbb8-97a1-4d64-8341-bdf812a6f6cd",
+      "name": "CheckParam",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\n\nreturn $('If').all();"
+      },
+      "id": "41130c6a-d815-4fde-8a57-27971ba29cac",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "installation_package",
+          "mode": "list",
+          "cachedResultName": "installation_package"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "package_id",
+              "value": "={{ $('insert row to installation_package').all()[0].json.package_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "21a96a9c-e221-475e-9e2c-a82b973b5fdc",
+      "name": "delete insert row",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        3020,
+        80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "installation_package",
+          "mode": "list",
+          "cachedResultName": "installation_package"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "package_name": "={{ $('CheckParam').all()[0].json.query.packageName }}",
+            "package_version": "={{ $('CheckParam').all()[0].json.query.packageVersion }}",
+            "package_path": "={{ $('CheckParam').all()[0].json.query.packagePath }}/{{ $('CheckParam').all()[0].json.query.packageVersion }}/{{ $('CheckParam').all()[0].binary.data.fileName }}",
+            "package_remarks": "={{ $('CheckParam').all()[0].json.query.remark }}",
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "package_id",
+              "displayName": "package_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "package_name",
+              "displayName": "package_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "package_version",
+              "displayName": "package_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "package_remarks",
+              "displayName": "package_remarks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "package_path",
+              "displayName": "package_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_delete",
+              "displayName": "is_delete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c58ecb0d-c97b-4a10-b73a-d40b2fcf9353",
+      "name": "insert row to installation_package",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2240,
+        40
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 205,\n  \"message\":\"文件插入失败！\"\n}",
+        "options": {}
+      },
+      "id": "deab650d-3338-426d-88bb-53cebfa45c01",
+      "name": "upload file error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "uploadPackage",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "fe42c267-68b6-4b46-9307-ba5b7209e088",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        820,
+        400
+      ],
+      "webhookId": "fc4d56ec-27c7-417b-aa05-903c4f3b7310"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"文件上传成功！\"\n}",
+        "options": {}
+      },
+      "id": "dbec92b7-d6d6-4ee9-b7ac-68062edc33c3",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3020,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "path": "=/mes/package{{ $input.item.json.query.packagePath }}/{{ $input.item.json.query.packageVersion }}/{{ $input.item.binary.data.fileName }}"
+      },
+      "id": "be2208bc-67c5-4000-b1b6-3b78b3508aab",
+      "name": "FTP",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        2720,
+        -60
+      ],
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "insert row to installation_package",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "exist the same package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "parametet error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckParam": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "FTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insert row to installation_package": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete insert row": {
+      "main": [
+        [
+          {
+            "node": "upload file error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CheckParam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FTP": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "delete insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "63952",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "multipart/form-data;boundary=VRrchix_iRpx7P4hIBLmWrJaffv3UEAoGD8lzrw"
+          },
+          "params": {},
+          "query": {
+            "packageName": "包装称重",
+            "packageVersion": "1.0.1",
+            "packagePath": "/weight",
+            "remark": "包装称重程序"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/uploadPackage",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "f5648eca-3278-4bca-bc11-ab9a5c684d4c",
+  "activeVersionId": "f5648eca-3278-4bca-bc11-ab9a5c684d4c",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:49:45.730Z",
+      "createdAt": "2025-04-24T05:49:45.730Z",
+      "role": "workflow:owner",
+      "workflowId": "EG8vKzmGK171JURK",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

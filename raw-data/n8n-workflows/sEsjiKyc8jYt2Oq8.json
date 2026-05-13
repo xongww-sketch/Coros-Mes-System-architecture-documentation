@@ -1,0 +1,440 @@
+{
+  "updatedAt": "2025-04-24T06:04:43.726Z",
+  "createdAt": "2024-07-24T05:43:34.194Z",
+  "id": "sEsjiKyc8jYt2Oq8",
+  "name": "deleteproduct_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"改模板已冻结\"\n}",
+        "options": {}
+      },
+      "id": "27ab0349-3fbb-40af-a067-4a64f89dcd9d",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1660,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "da73261a-282c-438c-9179-4b0c5973ebd9",
+              "leftValue": "={{ $json.body.product_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5ff47851-3bcb-4ada-96ea-5440503a5391",
+              "leftValue": "={{ $json.body.user }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "184dc417-66f5-4dc4-8b81-c2ebb6a59f5a",
+      "name": "检查必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        700,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "feed5812-e9d1-43cb-b898-91d4861213c4",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f6cdf581-26c1-4617-9f56-38986cf154ca",
+      "name": "判断是否存在重复",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "product_info",
+          "mode": "list",
+          "cachedResultName": "product_info"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "product_id",
+              "value": "={{ $json.body.product_id }}"
+            },
+            {
+              "column": "status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "75b95653-c5a3-4180-8ff2-99311a8e0a5a",
+      "name": "查询重复项",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        880,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"无法找到对应物料\"\n}",
+        "options": {}
+      },
+      "id": "aeff2b4d-76e9-4ffd-945b-38c3e9d7b76f",
+      "name": "报错信息：无法找到对应物料",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1180,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"数据库报错，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "899af4d8-95d9-4c21-a0c4-3d1b58c77059",
+      "name": "报错信息：数据库报错",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1500,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DO $$\nBEGIN\n    -- 查询 status 值\n    IF EXISTS (SELECT 1 FROM mes.product_info WHERE product_id = {{ $json.product_id }} AND status = 1) THEN\n        -- 如果满足条件，则更新 status 为 2\n        UPDATE mes.product_info\n        SET status = 2 \n        WHERE product_id = {{ $json.product_id }};\n    END IF;\nEND $$;\n-- 再查询更新后的状态\nSELECT product_id, status\nFROM mes.product_info\nWHERE product_id = {{ $json.product_id }};",
+        "options": {}
+      },
+      "id": "c682d25e-4d7e-4ce2-bcd6-e4d79f9039c5",
+      "name": "修改物料状态",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1260,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d352b050-485d-4edd-be00-04df84983b70",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "91a30acd-742c-49a2-b238-7d03bcd2f2d9",
+      "name": "判断物料状态是否修改成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"修改状态失败\"\n}",
+        "options": {}
+      },
+      "id": "00e4ade0-0f7d-4132-8659-27f66c705406",
+      "name": "报错信息：修改状态失败",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deleteproduct_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "14126f99-d552-4090-b9fc-ae78d80eeace",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        540,
+        280
+      ],
+      "webhookId": "1cf96b74-e754-4ff9-b398-ef99208d92a5"
+    }
+  ],
+  "connections": {
+    "检查必填项": {
+      "main": [
+        [
+          {
+            "node": "查询重复项",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：无法找到对应物料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在重复": {
+      "main": [
+        [
+          {
+            "node": "修改物料状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：无法找到对应物料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询重复项": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在重复",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "修改物料状态": {
+      "main": [
+        [
+          {
+            "node": "判断物料状态是否修改成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断物料状态是否修改成功": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：修改状态失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "检查必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "30",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "product_id": "23",
+            "user": "1"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/deleteproduct_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "47574085-74c4-4793-87a0-34f5ad050c64",
+  "activeVersionId": "47574085-74c4-4793-87a0-34f5ad050c64",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:47:12.533Z",
+      "createdAt": "2025-04-24T05:47:12.533Z",
+      "role": "workflow:owner",
+      "workflowId": "sEsjiKyc8jYt2Oq8",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

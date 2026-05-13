@@ -1,0 +1,939 @@
+{
+  "updatedAt": "2026-03-11T07:33:56.817Z",
+  "createdAt": "2025-05-28T12:02:29.283Z",
+  "id": "TrKGqsfjFN77lvu3",
+  "name": "get_materialcode",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n\t\"CODE\": \"E\",\n\t\"MSG\": \"参数错误 # {{$json.msg}}\"\n}  ",
+        "options": {}
+      },
+      "id": "fdc21791-4c69-47ed-a101-39b6ac7cd473",
+      "name": "参数错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -2928,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.err }}",
+              "value2": "ok"
+            }
+          ]
+        }
+      },
+      "id": "88974e52-d082-452c-b48b-d777f2742cd2",
+      "name": "判断参数是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -3264,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "//必选字符串\nlet str = function (v, l) {\n    if ((!v && typeof (v) != \"string\") || (l && v.length > l)) {\n        return true;\n    }\n}\n//可选字符串\nlet strOpt = function (v, l) {\n    if (v != undefined && (typeof (v) != \"string\" || (l && v.length > l))) {\n        return true;\n    }\n}\n//必选数字\nlet num = function (v, l) {\n    if (typeof (v) != \"number\" || (l && String(v).length > l)) {\n        return true;\n    }\n}\n//可选数字\nlet numOpt = function (v, l) {\n    if (v && (typeof (v) != \"number\" || (l && String(v).length > l))) {\n        return true;\n    }\n}\n//是否空值\nlet isEmpty = function (v) {\n    return v === undefined || v === null;\n}\nlet func = function (body, data) {\n    //---校验列表\n    if (!body.snList || !Array.isArray(body.snList) || body.snList.length < 1) {\n        return { \"err\": \"error\", \"msg\": \"snList error\", \"data\": body.snList };\n    }\n    let snObj = {};\n    for (let i = 0; i < body.snList.length; i++) {\n        let sn = body.snList[i].replace(/\\r\\n/g, \"\").replace(/\\n/g, \"\").replace(/\\r/g, \"\");\n        if (str(sn) || sn.length < 1) { // 合并空字符串校验\n            return { \"err\": \"error\", \"msg\": \"sn error\" };\n        }\n        if (!snObj[sn]) {\n            snObj[sn] = true;\n            data.snList = data.snList ? `${data.snList},'${sn}'` : `'${sn}'`; // 优化字符串拼接\n        }\n    }\n}\nlet data = {snList:\"\"}\nlet err = func($input.all()[0].json.body, data);\nreturn err ? err : { \"err\": \"ok\", \"snList\": data.snList };\n"
+      },
+      "id": "c54b5de9-18ab-4326-93ca-33e9eee7bedf",
+      "name": "入参判断和提取",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3456,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM consm_barcodeinfo WHERE uuid IN ({{ $json.snList }});"
+      },
+      "id": "479c159a-f91f-4be2-a854-b06142cdddce",
+      "name": "根据SN查询工单数据（旧MES）",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -2944,
+        128
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH RecentMachineData AS (\n    SELECT\n        md.machine_data_id,\n        md.retroid_id,\n        md.procedure_detail_id,\n        md.data,\n        ROW_NUMBER() OVER (PARTITION BY md.retroid_id ORDER BY md.createtime DESC) as rn\n    FROM\n        mes.machine_data md\n    WHERE\n        md.procedure_detail_id = '79'\n)\n\nSELECT DISTINCT\n    j.joborder_number,\n    r.retroid\nFROM\n    mes.retroid r\nJOIN\n    RecentMachineData rmd ON r.retroid_id = rmd.retroid_id AND rmd.rn = 1\nJOIN \n    mes.joborder j \n    ON COALESCE(rmd.data->>'ticketNo', rmd.data->>'jobNumber') = j.joborder_number\nWHERE\n    r.retroid IN ({{ $json.snList }})\n  AND\n    j.status = '1'\n  AND \n    r.status IN ('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2928,
+        464
+      ],
+      "id": "b3e01b7c-c1c8-4b0a-bbda-3dc3edb8d105",
+      "name": "根据SN查询工单信息(新mes)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f3c295e5-f498-40ed-aa10-de8f5006fff7",
+              "name": "retroid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "86ba6f31-e55c-41d5-9b65-ea84833553aa",
+              "name": "jobnumber",
+              "value": "={{ $json.jobnumber2 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2656,
+        112
+      ],
+      "id": "23c6e57f-39c6-4672-a325-9a8015020115",
+      "name": "组装SN与工单信息（旧MES）"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f3c295e5-f498-40ed-aa10-de8f5006fff7",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "86ba6f31-e55c-41d5-9b65-ea84833553aa",
+              "name": "jobnumber",
+              "value": "={{ $json.joborder_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2640,
+        480
+      ],
+      "id": "e5f7e14e-b73f-4fe3-bc4b-5086f2ccc993",
+      "name": "组装SN与工单信息（新MES）"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -2240,
+        272
+      ],
+      "id": "cf18b071-686d-45b9-89a9-6b58edfe6b9e",
+      "name": "合并两个数据库查询到的工单数据信息"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1e89a301-5e23-47e1-9d1c-cb218d191bd4",
+              "leftValue": "={{ $json.retroid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -2064,
+        288
+      ],
+      "id": "604b1480-d0cd-4430-b7c9-ad3df87e5d07",
+      "name": "移除空对象"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n\t\"CODE\": \"E\",\n\t\"MSG\": \"数据库错误：{{JSON.stringify($json)}}\"\n}  ",
+        "options": {}
+      },
+      "id": "acfb9c13-26de-48a7-a789-99af5b590cc2",
+      "name": "数据库错误1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -2640,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = {};\n// 将 snList 字符串转为数组，并去掉每个元素的单引号\nconst snList = $('入参判断和提取').first().json.snList.split(',').map(sn => sn.replace(/'/g, ''));\n\n// 收集所有输入的 retroid\nconst tempSnList = [];\nfor (const item of $input.all()) {\n  const retroid = item.json.retroid;\n  tempSnList.push(retroid);\n}\n\n// 使用 Set 获取到不存在工单信息的 snList\nconst snSet = new Set(tempSnList);\nconst noFindWoSnList = snList.filter(e => !snSet.has(e)); // 找不到对应工单的 sn 数组\n\nif (noFindWoSnList.length > 0) {\n  res.code = 1; // 表示异常，有 sn 找不到工单信息\n  res.snList = noFindWoSnList;\n} else {\n  res.code = 2; // 所有 sn 都存在工单信息\n  res.snList = $input.all().map(e => e.json);\n}\n\nreturn res;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1888,
+        288
+      ],
+      "id": "17f7f32a-eca2-4fe4-8d88-df7c9b3f68fe",
+      "name": "返回查不到工单的SN"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "sap_job_info_cache",
+          "mode": "list",
+          "cachedResultName": "sap_job_info_cache"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "job_number",
+              "value": "={{ $json.jobnumber }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "job_number",
+            "material_code"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -544,
+        272
+      ],
+      "id": "4ef2e14f-9b6c-4146-a1b1-a41c70b9720d",
+      "name": "从工单缓存信息中获取料号",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "snList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        288
+      ],
+      "id": "6c2bb9ef-e26f-4264-bb2a-919103441a46",
+      "name": "拆分snList进行料号查询"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d535ca37-eef7-4325-9e28-093586f8c4c9",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1696,
+        288
+      ],
+      "id": "321e743a-e8ba-4e21-91e1-200d22a78bb2",
+      "name": "判断是否有找不到工单的sn"
+    },
+    {
+      "parameters": {
+        "jsCode": "const snList = $(\"判断是否有找不到工单的sn1\").all()[0].json.snList;\nlet resSnList = []; // 用于存储有对应工单信息的 snList\n\nfor (const item of $input.all()) {\n  snList.forEach(e => {\n    if (e.jobnumber === item.json.job_number) {\n      e.material_code = item.json.material_code;\n      resSnList.push(e); // 只收集有对应工单信息的项\n    }\n  });\n}\n\n// 确保 resSnList 只包含独特的项，防止重复\nresSnList = Array.from(new Set(resSnList.map(JSON.stringify))).map(JSON.parse);\n\nreturn resSnList;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        272
+      ],
+      "id": "2319b0e6-4d94-4b93-adb4-e963cbce10ff",
+      "name": "将料号和sn进行组合"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "job_number",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        272
+      ],
+      "id": "36360a3f-82a5-4559-aa00-2540d162fb6a",
+      "name": "去除相同的工单"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n\t\"CODE\": \"S\",\n\t\"SN_MATNR\": {{JSON.stringify($json.snList.reduce((obj,item)=>{obj[item.retroid]=item.material_code; return obj},{}))}}\n}",
+        "options": {}
+      },
+      "id": "fe7ae32a-364d-4877-a625-04371add5875",
+      "name": "正确返回1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        768,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -3664,
+        288
+      ],
+      "id": "5e18d72d-3dae-4ec4-938b-92488b51eaf6",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "sn没有工单号",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "71149897-615e-4c66-8c3a-fa14ae40f736",
+      "name": "sn没有工单号",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -1536,
+        128
+      ],
+      "webhookId": "e39017a5-2522-470c-90a7-7ec94f2cf71c",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = {\n  code: null,\n  snList: [],\n};\n\n// 将 snList 字符串转为数组，并去掉每个元素的单引号\nconst snList = $('入参判断和提取').first().json.snList.split(',').map(sn => sn.replace(/'/g, ''));\n\n// 收集所有输入的 retroid 及其对应的工单号\nconst inputData = {};\nfor (const item of $input.all()) {\n  const retroid = item.json.retroid;\n  const jobnumber = item.json.jobnumber; \n  inputData[retroid] = jobnumber;\n}\n\n// 收集有工单信息的 SN 及其工单号\nconst findWoSnList = snList.filter(retroid => inputData.hasOwnProperty(retroid)).map(retroid => ({\n  retroid,\n  jobnumber: inputData[retroid]\n}));\n\nif (findWoSnList.length > 0) {\n  res.code = 2; // 表示找到有工单信息的 SN 列表\n  res.snList = findWoSnList; // 返回包含 SN 和对应工单号的对象列表\n} else {\n  res.code = 1; // 表示异常，所有 SN 都没有找到工单信息\n  res.snList = [];\n}\n\nreturn [res]; // 返回一个数组，其中包含结果对象\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        320
+      ],
+      "id": "fd1fbc0d-cadd-49d1-8001-00b24532ec19",
+      "name": "返回查不到工单的SN1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d535ca37-eef7-4325-9e28-093586f8c4c9",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -976,
+        304
+      ],
+      "id": "b85e2e29-3f59-4692-abe4-b40d22803bba",
+      "name": "判断是否有找不到工单的sn1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn $('移除空对象').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        304
+      ],
+      "id": "03d8c4c3-3b4b-499f-8b40-11e08645d163",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取“将料号和sn进行组合”节点的数据\nconst combinedData = $(\"将料号和sn进行组合\").all()\n\n// 获取 input 数据\nconst inputData = $input.all()\n\n// 创建一个集合以保存 inputData 中的所有有效组合\nconst validSet = new Set(inputData.map(item => item.json.job_number + ',' + item.json.material_code));\n\n// 过滤出符合条件的数据项\nconst filteredData = combinedData.filter(item => {\n  const key = item.json.jobnumber + ',' + item.json.material_code;\n  return validSet.has(key);\n});\n\nreturn filteredData;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        272
+      ],
+      "id": "1118e7b7-23d0-4189-926b-539217457812",
+      "name": "筛选出国内的物料号",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "snList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        592,
+        272
+      ],
+      "id": "01fe6e1a-a6f4-4d86-8819-a2a1a312c011",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "sync",
+          "mode": "list",
+          "cachedResultName": "sync"
+        },
+        "table": {
+          "__rl": true,
+          "value": "sap_job_info_cache",
+          "mode": "list",
+          "cachedResultName": "sap_job_info_cache"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "material_code",
+              "value": "={{ $json.material_code }}"
+            },
+            {
+              "column": "job_number",
+              "value": "={{ $json.jobnumber }}"
+            },
+            {
+              "column": "sale_location",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        192,
+        272
+      ],
+      "id": "823b4594-c679-4ca7-9d44-7b7da0b62a90",
+      "name": "Select rows from a table",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "jobnumber",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        32,
+        272
+      ],
+      "id": "4411fc30-f132-4453-814c-6e44b397230a",
+      "name": "去除相同的工单号"
+    }
+  ],
+  "connections": {
+    "判断参数是否正确": {
+      "main": [
+        [
+          {
+            "node": "根据SN查询工单数据（旧MES）",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "根据SN查询工单信息(新mes)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "参数错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "入参判断和提取": {
+      "main": [
+        [
+          {
+            "node": "判断参数是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据SN查询工单数据（旧MES）": {
+      "main": [
+        [
+          {
+            "node": "组装SN与工单信息（旧MES）",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据SN查询工单信息(新mes)": {
+      "main": [
+        [
+          {
+            "node": "组装SN与工单信息（新MES）",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装SN与工单信息（旧MES）": {
+      "main": [
+        [
+          {
+            "node": "合并两个数据库查询到的工单数据信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装SN与工单信息（新MES）": {
+      "main": [
+        [
+          {
+            "node": "合并两个数据库查询到的工单数据信息",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "合并两个数据库查询到的工单数据信息": {
+      "main": [
+        [
+          {
+            "node": "移除空对象",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "移除空对象": {
+      "main": [
+        [
+          {
+            "node": "返回查不到工单的SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回查不到工单的SN": {
+      "main": [
+        [
+          {
+            "node": "判断是否有找不到工单的sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从工单缓存信息中获取料号": {
+      "main": [
+        [
+          {
+            "node": "去除相同的工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分snList进行料号查询": {
+      "main": [
+        [
+          {
+            "node": "从工单缓存信息中获取料号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有找不到工单的sn": {
+      "main": [
+        [
+          {
+            "node": "sn没有工单号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将料号和sn进行组合": {
+      "main": [
+        [
+          {
+            "node": "去除相同的工单号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "去除相同的工单": {
+      "main": [
+        [
+          {
+            "node": "将料号和sn进行组合",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "入参判断和提取",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回查不到工单的SN1": {
+      "main": [
+        [
+          {
+            "node": "判断是否有找不到工单的sn1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有找不到工单的sn1": {
+      "main": [
+        [
+          {
+            "node": "拆分snList进行料号查询",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "正确返回1": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "返回查不到工单的SN1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sn没有工单号": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "筛选出国内的物料号": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "正确返回1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "筛选出国内的物料号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "去除相同的工单号": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "body": {
+            "snList": [
+              "W32AA11983"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "296b2b9e-db15-484e-9337-92aa33206759",
+  "activeVersionId": "296b2b9e-db15-484e-9337-92aa33206759",
+  "versionCounter": 22,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-28T12:02:29.283Z",
+      "createdAt": "2025-05-28T12:02:29.283Z",
+      "role": "workflow:owner",
+      "workflowId": "TrKGqsfjFN77lvu3",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    },
+    {
+      "updatedAt": "2026-02-03T13:07:12.046Z",
+      "createdAt": "2026-02-03T13:07:12.046Z",
+      "role": "workflow:editor",
+      "workflowId": "TrKGqsfjFN77lvu3",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    },
+    {
+      "updatedAt": "2026-02-03T13:07:22.826Z",
+      "createdAt": "2026-02-03T13:07:22.826Z",
+      "role": "workflow:editor",
+      "workflowId": "TrKGqsfjFN77lvu3",
+      "projectId": "hoQDqvLEbD64BkIQ",
+      "project": {
+        "updatedAt": "2026-01-19T07:56:25.309Z",
+        "createdAt": "2026-01-19T07:50:23.327Z",
+        "id": "hoQDqvLEbD64BkIQ",
+        "name": "xiong Jackson <xiongwang@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "7433da26-6bef-4588-9d55-58679e0fbf0d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

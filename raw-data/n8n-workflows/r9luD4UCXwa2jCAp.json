@@ -1,0 +1,1948 @@
+{
+  "updatedAt": "2026-03-04T12:29:11.659Z",
+  "createdAt": "2025-07-02T06:22:30.168Z",
+  "id": "r9luD4UCXwa2jCAp",
+  "name": "前置工序校验通用接口",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "let webhookData = [];\ntry {\n  // 尝试获取 When Executed by Another Workflow 节点的数据\n  webhookData = $(\"When Executed by Another Workflow\").all();\n} catch(e) {\n  // 如果没这个节点，报错则用 Webhook 节点数据\n  webhookData = [];\n}\n\nif (!webhookData || webhookData.length === 0) {\n  try {\n    webhookData = $(\"Webhook\").all();\n  } catch(e) {\n    webhookData = [];\n  }\n}\n\nconst procedureNameFromWebhook = webhookData?.[0]?.json?.body?.procedure_name;\n\n// 从 input 获取所有过程数据\nconst inputData = $input.all();\n\n// 从 Edit Fields 节点获取 retroid_id 数据\nlet editFieldsData = [];\ntry {\n  editFieldsData = $(\"Edit Fields\").all();\n} catch (e) {\n  editFieldsData = [];\n}\nconst retroidId = editFieldsData.length > 0 ? editFieldsData[0].json.retroid_id : null;\n\n// 查找当前工序的数据\nconst currentProcedureIndex = inputData.findIndex(item => item.json.procedure_name === procedureNameFromWebhook);\n\nif (currentProcedureIndex !== -1) {\n  const currentProcedure = inputData[currentProcedureIndex].json;\n  const previousProcedure = currentProcedureIndex > 0 ? inputData[currentProcedureIndex - 1].json : null;\n\n  return [\n    {\n      json: {\n        currentProcedure: {\n          procedure_name: currentProcedure.procedure_name,\n          history_procedure_id: currentProcedure.history_procedure_id,\n          procedure_detail_id: currentProcedure.procedure_detail_id,\n          checkrule:currentProcedure.checkrule,\n        },\n        previousProcedure: previousProcedure ? {\n          procedure_name: previousProcedure.procedure_name,\n          history_procedure_id: previousProcedure.history_procedure_id,\n          procedure_detail_id: previousProcedure.procedure_detail_id,\n        } : null,\n        retroidId: retroidId\n      }\n    }\n  ];\n} else {\n  // 没找到匹配时也要 return array，避免 n8n 报错\n  return [];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        320
+      ],
+      "id": "d29662d3-5d55-4a49-ba2b-ad80109061e9",
+      "name": "整合数据",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id = {{ $json.previousProcedure.procedure_detail_id }}\nand md.retroid_id ='{{ $json.retroidId }}'\norder by md.createtime DESC \nlimit 1\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1024,
+        480
+      ],
+      "id": "fc57843f-9c1d-426b-9996-f86555feb2d8",
+      "name": "查询上一道工序是否完成",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_history AS (\n    SELECT json_array_elements_text((history_procedure_detail_id->>'history_procedure_detail_id')::json) AS detail_id\n    FROM mes.history_procedure_list\n    WHERE history_procedure_list_id = '{{ $json.history_procedure_list_id }}'\n),\nhistory_ids AS (\n    SELECT ARRAY_AGG(detail_id::int) AS ids\n    FROM latest_history\n),\nresult_data AS (\n    SELECT DISTINCT ON (hpd.procedure_detail_id)\n        hpd.*,\n        (SELECT array_position(ids, hpd.history_procedure_id) FROM history_ids) AS sort_order\n    FROM \n        mes.history_procedure_detail hpd\n    WHERE \n        hpd.history_procedure_id IN (\n            SELECT detail_id::int FROM latest_history\n        )\n    AND \n        hpd.procedure_dataupload = 2\n)\nSELECT *\nFROM result_data\nORDER BY sort_order;\n",
+        "options": {}
+      },
+      "id": "18105f45-1d34-47b1-92e8-b9462e955539",
+      "name": "查询对应工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -688,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n       r.retroid_id,\n       jo.joborder_number,\n       jo.joborder_type,\n       jo.joborder_id,\n       pm.product_model_name,\n       pi.product_code,\n       jo.procedure_list_id,\n       jo.history_procedure_list_id\nFROM mes.retroid r\nJOIN mes.retroid_generate rg ON r.retroid_generate_id = rg.retroid_generate_id\nJOIN mes.joborder jo ON r.joborder_id = jo.joborder_id\nJOIN mes.product_info pi ON jo.product_id = pi.product_id\nJOIN mes.product_model pm ON pi.product_model_id = pm.product_model_id\nWHERE r.retroid = '{{ $json.body.sn }}'\n  and r.status in('1','2') ;    -- 替换成你要查询的 retroid\n",
+        "options": {}
+      },
+      "id": "4366b969-50ef-4356-a048-e541657368e3",
+      "name": "查询相关信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1088,
+        336
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f806de03-fd7c-417f-9aac-9cd347480d91",
+              "name": "retroid_id",
+              "value": "={{ $json.retroid_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d27f55e9-4ca2-47d2-a5b6-f9b483ef8794",
+              "name": "joborder_number",
+              "value": "={{ $json.joborder_number }}",
+              "type": "string"
+            },
+            {
+              "id": "cfc3ade2-1f46-47ec-83c2-01ddb40f2ca3",
+              "name": "product_model_name",
+              "value": "={{ $json.product_model_name }}",
+              "type": "string"
+            },
+            {
+              "id": "2e203abf-2133-4544-bc82-fdc5ebe4df99",
+              "name": "product_code",
+              "value": "={{ $json.product_code }}",
+              "type": "string"
+            },
+            {
+              "id": "e4d13f1a-cc38-42fb-af77-8664b49fe084",
+              "name": "procedure_list_id",
+              "value": "={{ $json.procedure_list_id }}",
+              "type": "number"
+            },
+            {
+              "id": "1bb465b6-34e7-4e73-ab0f-187221a4c9db",
+              "name": "history_procedure_list_id",
+              "value": "={{ $json.history_procedure_list_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d4d8111e-25df-49e7-81a2-aadeba5cab15",
+              "name": "joborder_type",
+              "value": "={{ $json.joborder_type }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -944,
+        320
+      ],
+      "id": "71fe1b7f-eb41-432c-a2fc-3506464991a5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93701f5d-2a48-4867-9de5-9d6c9a3d4a21",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 62,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        448
+      ],
+      "id": "c682b580-2bc0-4338-80e0-0ec4117775c4",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id in({{ $json.procedure_detail_id }},62)\nand md.retroid_id ='{{ $json.retroid_id }}'\nand ( md.data ->>'machine_data_id_old'='{{ $json.machine_data_id }}')\norder by md.createtime desc\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1584,
+        448
+      ],
+      "id": "785467e2-0e79-4d1e-a394-0c9d7d3a36c6",
+      "name": "确认当前数据是绑定",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "407d2f50-aa0c-448f-9070-bd217dccfa0b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        480
+      ],
+      "id": "a87bf2be-246b-4614-a0c6-89182bba38c5",
+      "name": "If20"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1392,
+        144
+      ],
+      "id": "2f3c1c63-2a26-427f-aa79-9712f5611d08",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:0\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3744,
+        -400
+      ],
+      "id": "4459914a-6941-457f-a410-64338d6101f2",
+      "name": "前置工序已完成，返回0"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\nprocedure_name:$input.first().json.previous_procedure_name\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3712,
+        128
+      ],
+      "id": "94506938-2b7c-461e-8718-b44a4a9c4855",
+      "name": "前置工序未完成返回1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "00441b90-b46f-43c7-a677-4da5e3087112",
+              "leftValue": "={{ $json.previousProcedure }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        304
+      ],
+      "id": "bbe51f28-947c-45ae-8e89-923682c387c9",
+      "name": "校验是否有前置工序"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "27f0a336-135c-4393-abf8-ef962f627ce1",
+              "leftValue": "={{ $json.previousProcedure.procedure_name }}",
+              "rightValue": "FPC ID与MIC ID绑定",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "79714af0-9f98-4d3f-b9a7-f8b0b7fd1eec",
+              "leftValue": "={{ $json.previousProcedure.procedure_name }}",
+              "rightValue": "LCD与TP绑定",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "4a552ec5-c50b-4c78-a9ad-ac9e7ed1d127",
+              "leftValue": "={{ $json.previousProcedure.procedure_name }}",
+              "rightValue": "PPG点胶-保压起始",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        432
+      ],
+      "id": "087a76ef-cee9-4a8c-828c-3f16be0b1d7f",
+      "name": "判断前置工序是否属于前加工"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 【修改点1】获取所有入参中的 skip_procedure_id 并存为数组\nconst inputItems = $input.all();\n\n// 使用 map 提取所有项的 skip_procedure_id，并确保转换为字符串。同时过滤掉空值。\n// 结果类似: [\"95\", \"149\", \"148\"]\nconst skipProcedureIdsToDelete = inputItems\n    .map(item => (item.json.skip_procedure_id ? String(item.json.skip_procedure_id) : null))\n    .filter(id => id !== null); // 过滤掉没有该字段的项造成的null\n\n// 2. 获取其他节点的数据 (保持不变)\nconst datas = $(\"查询对应工序表\").all();\n\n// 判空保护：如果工序表没查到数据\nif (!datas || datas.length === 0) {\n  return [];\n}\n\n// 获取上下文节点 (保持不变)\nconst contextNode = $('校验当前工序是否需要校验所有前置工序').first();\n\n// 判空保护：如果上游节点没数据\nif (!contextNode || !contextNode.json) {\n  return [];\n}\n\nconst retroidId = contextNode.json.retroidId;\nconst currentProcedure = contextNode.json.currentProcedure;\n\nif (!currentProcedure) {\n  return [];\n}\n\n// 3. 找到当前工序对象 (保持不变)\nconst currentItem = datas.find(\n  item => \n    item.json.procedure_name === currentProcedure.procedure_name && \n    item.json.procedure_detail_id === currentProcedure.procedure_detail_id\n);\n\nif (!currentItem) {\n  return [];\n}\n\nconst currentSortOrder = currentItem.json.sort_order;\n\n// 4. 过滤逻辑\nconst result = datas.filter(item => {\n  // a. 必须是前置工序 (sort_order 小于当前) (保持不变)\n  if (item.json.sort_order >= currentSortOrder) return false;\n\n  // b. 排除特定名称的工序 (保持不变)\n  const excludedNames = [\n    \"FPC ID与MIC ID绑定\",\n    \"LCD与TP绑定\",\n    \"PPG点胶-保压起始\"\n  ];\n  if (excludedNames.includes(item.json.procedure_name)) return false;\n\n  // c. 【修改点2】剔除 在 skipProcedureIdsToDelete 数组中的工序\n  // 使用数组的 .includes 方法来判断当前工序ID是否在要删除的列表中\n  if (skipProcedureIdsToDelete.length > 0) {\n      const currentDetailIdStr = String(item.json.procedure_detail_id);\n      if (skipProcedureIdsToDelete.includes(currentDetailIdStr)) {\n         return false; \n      }\n  }\n  \n  return true;\n});\n\n// 结果处理 (保持不变)\nconst procedure_detail_ids = result\n  .map(item => item.json.procedure_detail_id)\n  .join(',');\n\nreturn [\n  {\n    json: {\n      procedure_detail_ids,\n      retroidId\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -16
+      ],
+      "id": "dd13659a-ebf2-4345-82e2-c73341140628",
+      "name": "整合查询数据",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "407d2f50-aa0c-448f-9070-bd217dccfa0b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        -48
+      ],
+      "id": "f84dea05-70ff-4eaf-a89a-647849f47d87",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY md.procedure_detail_id ORDER BY md.createtime DESC) AS rn\n  FROM mes.machine_data md\n  WHERE md.retroid_id = '{{ $json.retroidId }}'\n\n    AND md.procedure_detail_id IN ({{ $json.procedure_detail_ids ? $json.procedure_detail_ids : -1 }})\n) t\nWHERE t.rn = 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1456,
+        -112
+      ],
+      "id": "9e60d2ca-98c8-40d3-9d48-030820fe02f9",
+      "name": "查询所有前置工序是否完成",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const arr = $input.all().map(item => ({\n  procedure_detail_id: item.json.procedure_detail_id,\n  machine_data_id: item.json.machine_data_id,\n  retroid_id: item.json.retroid_id\n}));\nreturn [{ json: { items: arr } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        0
+      ],
+      "id": "7f1f5a47-5646-4fc3-b82e-d7ae76a01e34",
+      "name": "整合查询解绑数据"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  md.*,\n  t.machine_data_id AS input_machine_data_id,\n  t.retroid_id AS input_retroid_id\nFROM\n  jsonb_to_recordset('{{ JSON.stringify($json.items) }}'::jsonb)\n      AS t(procedure_detail_id int, machine_data_id int, retroid_id int)\nJOIN LATERAL (\n  SELECT *\n  FROM mes.machine_data md\n  WHERE \n     md.retroid_id = t.retroid_id\n    AND md.data ->> 'machine_data_id_old' = t.machine_data_id::text\n  ORDER BY md.createtime DESC\n  LIMIT 1\n) md ON TRUE",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2272,
+        0
+      ],
+      "id": "0e37700a-fc6a-4f2e-a01c-b94e8530b8a4",
+      "name": "确认所有数据没有解绑",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取所有工序节点数据\nconst allProcedureNodes = $('查询对应工序表').all();\n\n// 2. 要排除的工序名称\nconst excludeNames = [\n  'FPC ID与MIC ID绑定',\n  'LCD与TP绑定',\n  'PPG点胶-保压起始'\n];\n\n// 3. 找到要排除的procedure_detail_id们\nconst excludeIdsSet = new Set(\n  allProcedureNodes\n    .filter(node => excludeNames.includes(node.json.procedure_name))\n    .map(node => Number(node.json.procedure_detail_id))\n);\n\n// 4. 获取并过滤needIds\nconst needIdsStr = $('整合查询数据').first().json.procedure_detail_ids || '';\nconst needIds = needIdsStr\n  .split(',')\n  .map(id => Number(id))\n  .filter(id => !isNaN(id) && !excludeIdsSet.has(id));\n\n// ====== 核心修改区域 Start ======\n\n// A. 获取“物理上做过”的记录 (历史记录)\nconst finishedItems = $('查询所有前置工序是否完成').all();\nconst finishedIds = new Set(finishedItems.map(item => Number(item.json.procedure_detail_id)));\n\n// B. 获取“发生过解绑”的记录 (作废记录)\nconst unbindItems = $('确认所有数据没有解绑').all();\nconst unboundIds = new Set(unbindItems.map(item => {\n    const json = item.json;\n    \n    // 【修复点】：根据你的JSON结构，old_id在data对象下，与data_old平级\n    // 路径尝试1：如果字段在根目录（SQL直接查出）\n    if (json.procedure_detail_id_old) {\n        return Number(json.procedure_detail_id_old);\n    }\n    \n    // 路径尝试2：字段在 data 对象里\n    if (json.data && json.data.procedure_detail_id_old) {\n        return Number(json.data.procedure_detail_id_old);\n    }\n    \n    return 0; // 没找到则返回0，不影响逻辑\n}));\n\n// ====== 核心修改区域 End ======\n\nconst lackIds = [];\n\nfor (const id of needIds) {\n  // 判定逻辑：\n  // 1. 历史记录里有 (finishedIds) \n  // 2. 且不能在解绑名单里 (unboundIds)\n  \n  const hasHistory = finishedIds.has(id);\n  const isUnbound = unboundIds.has(id); \n\n  // 如果没做过，或者做过但被解绑了，都算未完成\n  if (!hasHistory || isUnbound) {\n    lackIds.push(id);\n  }\n}\n\nif (lackIds.length === 0) {\n  return [{\n    status: '0'\n  }];\n} else {\n  return [{\n    status: '1',\n    lack_procedure_detail_ids: lackIds\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        0
+      ],
+      "id": "dfa8b47c-1cb1-430c-b3f3-9620bcd4f0b4",
+      "name": "判断数据是否缺失"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93701f5d-2a48-4867-9de5-9d6c9a3d4a21",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=0",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2576,
+        0
+      ],
+      "id": "c5344a04-ece6-46dd-a87c-0bf647f8d378",
+      "name": "If11"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "79147db6-bbeb-4b42-a471-be9690b5d479",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        320
+      ],
+      "id": "97d28aab-1568-495a-8df6-302e7cc0e2b9",
+      "name": "校验工序是否存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3974d30e-e820-4946-8b46-a4c5db0d2d89",
+              "leftValue": "={{ $json.currentProcedure.checkrule }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        272
+      ],
+      "id": "f62b477c-8b5a-406f-9851-c64e60218d1a",
+      "name": "校验当前工序是否需要校验所有前置工序"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "check_data",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1888,
+        384
+      ],
+      "id": "9e89f0c9-7b0c-42f9-b4ce-733d624d114a",
+      "name": "Webhook",
+      "webhookId": "98df22fa-e8ed-4698-96a5-64cd350ab706"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "65f5057b-b78c-4d52-be79-a744aa7461b9",
+              "leftValue": "={{ $json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a04b5c4c-e113-499d-a812-8aa605e91581",
+              "leftValue": "={{ $json.body.sn.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1728,
+        400
+      ],
+      "id": "a8469543-5043-4f45-9975-9c12b63e5a45",
+      "name": "判断是否存在sn"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zIsWkclkRfztC4WQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zIsWkclkRfztC4WQ",
+          "cachedResultName": "1.Mes重构 — uuidGetSn"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -1552,
+        480
+      ],
+      "id": "516678d8-39e2-4fed-8c7b-9bde22649b6e",
+      "name": "通过uuid查询sn"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"uuid不存在或sn不存在\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        688
+      ],
+      "id": "f9c3f885-258d-4f0c-84cf-ba2006da5d3f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2aeaca5c-b9e9-43ae-a275-5b1928e6b0c5",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1376,
+        496
+      ],
+      "id": "50037ab1-273e-4cf0-93cd-2a2587275017",
+      "name": "判断是否存在uuid"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst procedure_name = $('Webhook').first()?.json.body?.procedure_name || \"\";\n\nconst data = input[0]?.json?.data?.[0]?.json?.data ?? {};\n\nreturn [\n  {\n    body: {\n      sn: data.sn || \"\",\n      uuid: data.uuid || \"\",\n      procedure_name: procedure_name,\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        464
+      ],
+      "id": "3ddce628-7dd4-4346-8dc6-577e45c04abe",
+      "name": "整理数据"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"OK\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3744,
+        -48
+      ],
+      "id": "06c349c8-2ee6-42d1-b824-aea368d6be7b",
+      "name": "前置工序已完成"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"400\",  \n  \"msg\":\n\"{{ $json.previous_procedure_name }}\"} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3728,
+        368
+      ],
+      "id": "7de11b80-f82d-493b-a34f-99ba5f0e7924",
+      "name": "前置工序已完成1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let hasAnotherWorkflow = false;\nlet hasWebhook = false;\n\n// 假设集成数据节点名为“整合数据”，请替换成你的实际节点名\nconst integrationData = $(\"整合数据\").first();\nconst previousProcedureName = integrationData?.json?.previousProcedure?.procedure_name || \"\";\n\n// 检查 When Executed by Another Workflow 节点\ntry {\n  const anotherWorkflowData = $(\"When Executed by Another Workflow\").all();\n  if (anotherWorkflowData && anotherWorkflowData.length > 0) {\n    hasAnotherWorkflow = true;\n  }\n} catch (e) {}\n\n// 检查 Webhook 节点\nif (!hasAnotherWorkflow) {\n  try {\n    const webhookData = $(\"Webhook\").all();\n    if (webhookData && webhookData.length > 0) {\n      hasWebhook = true;\n    }\n  } catch (e) {}\n}\n\nif (hasAnotherWorkflow) {\n  return [{ json: { value: 0, previous_procedure_name: previousProcedureName } }];\n} else if (hasWebhook) {\n  return [{ json: { value: 1, previous_procedure_name: previousProcedureName } }];\n} else {\n  return [];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3184,
+        -224
+      ],
+      "id": "50d152b3-bea5-4728-960c-4defe5a9b3cf",
+      "name": "判断类型"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6f8feb4-36dc-4407-b127-06e762f66af2",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3424,
+        -240
+      ],
+      "id": "67f5cc8c-69d1-4b2d-bbba-81dce77bbcab",
+      "name": "判断输入类型"
+    },
+    {
+      "parameters": {
+        "jsCode": "let hasAnotherWorkflow = false;\nlet hasWebhook = false;\n\n// 假设集成数据节点名为“整合数据”，请替换成你的实际节点名\nconst integrationData = $(\"整合数据\").first();\nconst previousProcedureName = integrationData?.json?.previousProcedure?.procedure_name || \"\";\n\n// 检查 When Executed by Another Workflow 节点\ntry {\n  const anotherWorkflowData = $(\"When Executed by Another Workflow\").all();\n  if (anotherWorkflowData && anotherWorkflowData.length > 0) {\n    hasAnotherWorkflow = true;\n  }\n} catch (e) {}\n\n// 检查 Webhook 节点\nif (!hasAnotherWorkflow) {\n  try {\n    const webhookData = $(\"Webhook\").all();\n    if (webhookData && webhookData.length > 0) {\n      hasWebhook = true;\n    }\n  } catch (e) {}\n}\n\nif (hasAnotherWorkflow) {\n  return [{ json: { value: 0, previous_procedure_name: previousProcedureName } }];\n} else if (hasWebhook) {\n  return [{ json: { value: 1, previous_procedure_name: previousProcedureName } }];\n} else {\n  return [];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3168,
+        368
+      ],
+      "id": "591e8719-e859-4f0b-b292-d8c6dc9d0820",
+      "name": "判断类型1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6f8feb4-36dc-4407-b127-06e762f66af2",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3456,
+        304
+      ],
+      "id": "61a31d2f-a255-43b9-8e98-80e2401d7185",
+      "name": "判断输入类型1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "245787e9-320b-4df2-8ba9-f9ebc69510dc",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -480,
+        320
+      ],
+      "id": "eec8a269-2060-41f1-bb5e-1bc82d23eaf3",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ====== 判断入口类型部分(和你之前保持一致) ======\nlet hasAnotherWorkflow = false;\nlet hasWebhook = false;\n\ntry {\n  const anotherWorkflowData = $(\"When Executed by Another Workflow\").all();\n  if (anotherWorkflowData && anotherWorkflowData.length > 0) {\n    hasAnotherWorkflow = true;\n  }\n} catch (e) {}\n\nif (!hasAnotherWorkflow) {\n  try {\n    const webhookData = $(\"Webhook\").all();\n    if (webhookData && webhookData.length > 0) {\n      hasWebhook = true;\n    }\n  } catch (e) {}\n}\n\n// === 根据 lack_procedure_detail_ids 查询工序名称 ===\nconst lackIds = $input.item.json.lack_procedure_detail_ids || [];\n\nconst procedures = $(\"查询对应工序表\").all()\n  .filter(x => typeof x.json === 'object')\n  .map(x => x.json);\n\nconst lackNames = procedures\n  .filter(proc => lackIds.includes(Number(proc.procedure_detail_id)))\n  .map(proc => proc.procedure_name);\n\nconst previousProcedureName = lackNames.join(', ');\n\n// ======= 输出逻辑 =======\nif (hasAnotherWorkflow) {\n  return [{\n    json: {\n      value: 0,\n      previous_procedure_name: previousProcedureName\n    }\n  }];\n} else if (hasWebhook) {\n  return [{\n    json: {\n      value: 1,\n      previous_procedure_name: previousProcedureName\n    }\n  }];\n} else {\n  return [];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3136,
+        48
+      ],
+      "id": "d6af84df-b93d-457f-bfdf-8ef7647c57ae",
+      "name": "判断类型2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:2,\nprocedure_name:\"工序不存在\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        608
+      ],
+      "id": "8b483887-4947-413d-aee9-5ab488e864c1",
+      "name": "工序不存在（判断类型）"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6f8feb4-36dc-4407-b127-06e762f66af2",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        608
+      ],
+      "id": "d726f054-525d-4f5f-b9a1-2ccd6cec4250",
+      "name": "判断输入类型2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",  \n  \"msg\":\"工艺流程不存在工序\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        512,
+        736
+      ],
+      "id": "6a0ea4f1-5f09-4524-bc89-a9e5d79d0f84",
+      "name": "工艺流程不存在工序"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\nprocedure_name:\"工艺流程中没有此工序\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        560
+      ],
+      "id": "b0c22f21-eccd-40d0-8c83-46770b14abb5",
+      "name": "工艺流程不存在工序1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e532f5a1-13d8-4ae2-a878-0b011eabf164",
+              "leftValue": "={{ $json.procedure_detail_ids }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        -16
+      ],
+      "id": "30751f85-32f2-4aa1-ad0d-88e84c39f06d",
+      "name": "判断是否有需要校验的前置工序"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "41a2cc9c-dc42-457c-a97b-9417cc4658e5",
+              "leftValue": "={{ $json.bind_value }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        400
+      ],
+      "id": "72d47009-d642-4a79-ac79-54170914eef5",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================================\n// 1. 获取 If20 (查询上一道工序是否完成) 数据\n// ==========================================\nlet historyIds = [];\ntry {\n    // 强制转字符串，确保比对准确\n    historyIds = $(\"查询上一道工序是否完成\").all().map(item => String(item.json.machine_data_id));\n} catch (e) {\n    // 如果读不到，保持为空数组\n    historyIds = [];\n}\n\n// ==========================================\n// 2. 获取 Input (当前输入) 数据\n// ==========================================\nconst idsToRemove = new Set();\nitems.forEach(item => {\n    const data = item.json.data || {};\n    if (data.machine_data_id_old) {\n        idsToRemove.add(String(data.machine_data_id_old));\n    }\n});\n\n// ==========================================\n// 3. 核心比对计算逻辑\n// (从 If20 中剔除掉 Input 里要解绑的 ID)\n// ==========================================\nlet activeCount = 0;\nlet debugProcess = []; // 调试日志\n\nhistoryIds.forEach(id => {\n    // 如果当前ID不在移除名单里，说明可以保留（有效）\n    if (!idsToRemove.has(id)) {\n        activeCount++;\n        debugProcess.push(`ID ${id}: 有效 (依然绑定)`);\n    } else {\n        debugProcess.push(`ID ${id}: 被解绑`);\n    }\n});\n\n// ==========================================\n// 4. 计算最终值\n// ==========================================\n// 逻辑保留原代码设置：\n// 如果剩余绑定数 > 1，value 为 0；否则为 1\nconst finalValue = activeCount > 0 ? 1 : 0;\n\n// ==========================================\n// 5. 返回结果\n// ==========================================\nreturn [{\n    json: {\n        bind_value: finalValue,\n        debug: debugProcess\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        464
+      ],
+      "id": "06e39b3c-3fbc-408e-98af-4ef25cae9f6f",
+      "name": "判断绑定数据是否全部解绑"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    data ->> 'operationName' AS operation_name,\n    data ->> 'procedure_id' AS skip_procedure_id\nFROM \n    mes.machine_data\nWHERE \n    procedure_detail_id = 153\n    AND retroid_id = '{{ $json.retroidId }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        752,
+        0
+      ],
+      "id": "43813ec0-e752-429a-874b-4aba1df9e7cb",
+      "name": "查询该sn是否存在跳站工序",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    data ->> 'operationName' AS operation_name,\n    data ->> 'procedure_id' AS skip_procedure_id\nFROM \n    mes.machine_data\nWHERE \n    procedure_detail_id = 153\n    AND retroid_id = '{{ $('判断前置工序是否属于前加工').item.json.retroidId }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2096,
+        672
+      ],
+      "id": "bce9b3e3-15a3-4ba3-ae75-3fcb794cee3a",
+      "name": "判断sn是否存在跳站工序",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91733cf3-2450-4e20-b3c2-a570a9afcb7f",
+              "leftValue": "={{ $json.skip_procedure_id }}",
+              "rightValue": "={{ $('判断前置工序是否属于前加工').item.json.previousProcedure.procedure_detail_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2320,
+        672
+      ],
+      "id": "abc17096-47fb-4287-a838-e6698e23589d",
+      "name": "判断前置工序是否属于跳站工序"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "574b6d9f-a097-40ea-bc54-a7e598e2ffff",
+              "leftValue": "={{ $json.joborder_type }}",
+              "rightValue": "=Return",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        64
+      ],
+      "id": "481c656d-e495-46da-8586-4935658dc1b5",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:0\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -128
+      ],
+      "id": "b5c2feeb-c0b9-4d00-b532-fec512379b43",
+      "name": "前置工序已完成，返回"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"OK\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -48,
+        32
+      ],
+      "id": "c2fe9261-2101-4951-90e0-b3f4ce0672ce",
+      "name": "前置工序已完成2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a80dfc7c-661b-46bc-84bd-d0f5965962a6",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        -32
+      ],
+      "id": "b16b0a65-f312-4c98-81a5-2049d9158e4a",
+      "name": "判断是webhook节点还是工作流节点"
+    },
+    {
+      "parameters": {
+        "jsCode": "let hasAnotherWorkflow = false;\nlet hasWebhook = false;\n\n// 假设集成数据节点名为“整合数据”，请替换成你的实际节点名\n\n\n// 检查 When Executed by Another Workflow 节点\ntry {\n  const anotherWorkflowData = $(\"When Executed by Another Workflow\").all();\n  if (anotherWorkflowData && anotherWorkflowData.length > 0) {\n    hasAnotherWorkflow = true;\n  }\n} catch (e) {}\n\n// 检查 Webhook 节点\nif (!hasAnotherWorkflow) {\n  try {\n    const webhookData = $(\"Webhook\").all();\n    if (webhookData && webhookData.length > 0) {\n      hasWebhook = true;\n    }\n  } catch (e) {}\n}\n\nif (hasAnotherWorkflow) {\n  return [{ json: { value: 0, previous_procedure_name: '' } }];\n} else if (hasWebhook) {\n  return [{ json: { value: 1, previous_procedure_name: '' } }];\n} else {\n  return [];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        -240
+      ],
+      "id": "6920d991-ac70-4d1f-8e1a-ca3beadf59ce",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "整合数据": {
+      "main": [
+        [
+          {
+            "node": "校验工序是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询上一道工序是否完成": {
+      "main": [
+        [
+          {
+            "node": "If20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应工序表": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询相关信息": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "判断类型",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断sn是否存在跳站工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "确认当前数据是绑定": {
+      "main": [
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If20": {
+      "main": [
+        [
+          {
+            "node": "确认当前数据是绑定",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断sn是否存在跳站工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验是否有前置工序": {
+      "main": [
+        [
+          {
+            "node": "校验当前工序是否需要校验所有前置工序",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断前置工序是否属于前加工": {
+      "main": [
+        [
+          {
+            "node": "判断类型",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询上一道工序是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合查询数据": {
+      "main": [
+        [
+          {
+            "node": "判断是否有需要校验的前置工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "整合查询解绑数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断类型1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询所有前置工序是否完成": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "整合查询解绑数据": {
+      "main": [
+        [
+          {
+            "node": "确认所有数据没有解绑",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "确认所有数据没有解绑": {
+      "main": [
+        [
+          {
+            "node": "判断数据是否缺失",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据是否缺失": {
+      "main": [
+        [
+          {
+            "node": "If11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If11": {
+      "main": [
+        [
+          {
+            "node": "判断类型",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断类型2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验工序是否存在": {
+      "main": [
+        [
+          {
+            "node": "校验是否有前置工序",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工序不存在（判断类型）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验当前工序是否需要校验所有前置工序": {
+      "main": [
+        [
+          {
+            "node": "查询该sn是否存在跳站工序",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断前置工序是否属于前加工",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在sn": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "通过uuid查询sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "通过uuid查询sn": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在uuid": {
+      "main": [
+        [
+          {
+            "node": "整理数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "前置工序未完成返回1": {
+      "main": [
+        []
+      ]
+    },
+    "判断类型": {
+      "main": [
+        [
+          {
+            "node": "判断输入类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断输入类型": {
+      "main": [
+        [
+          {
+            "node": "前置工序已完成，返回0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "前置工序已完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断类型1": {
+      "main": [
+        [
+          {
+            "node": "判断输入类型1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断输入类型1": {
+      "main": [
+        [
+          {
+            "node": "前置工序未完成返回1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "前置工序已完成1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "整合数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断类型2": {
+      "main": [
+        [
+          {
+            "node": "判断输入类型1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "工序不存在（判断类型）": {
+      "main": [
+        [
+          {
+            "node": "判断输入类型2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断输入类型2": {
+      "main": [
+        [
+          {
+            "node": "工艺流程不存在工序1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工艺流程不存在工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有需要校验的前置工序": {
+      "main": [
+        [
+          {
+            "node": "查询所有前置工序是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "判断类型",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断类型1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断绑定数据是否全部解绑": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询该sn是否存在跳站工序": {
+      "main": [
+        [
+          {
+            "node": "整合查询数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否存在跳站工序": {
+      "main": [
+        [
+          {
+            "node": "判断前置工序是否属于跳站工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断前置工序是否属于跳站工序": {
+      "main": [
+        [
+          {
+            "node": "判断类型",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断类型1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询对应工序表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是webhook节点还是工作流节点": {
+      "main": [
+        [
+          {
+            "node": "前置工序已完成，返回",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "前置工序已完成2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "判断是webhook节点还是工作流节点",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.180",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "90",
+            "accept": "application/json, text/json, text/x-json, text/javascript, application/xml, text/xml",
+            "user-agent": "RestSharp/106.15.0.0",
+            "content-type": "application/x-www-form-urlencoded",
+            "accept-encoding": "gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W35C002923",
+            "uuid": "",
+            "procedure_name": "SN与中框ID绑定",
+            "type": "1"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/check_data",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "body": {
+            "sn": "W35C002923",
+            "uuid": "",
+            "procedure_name": "SN与中框ID绑定"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "179d3b06-de90-4c6d-9dae-2cfe1e2bb36e",
+  "activeVersionId": "179d3b06-de90-4c6d-9dae-2cfe1e2bb36e",
+  "versionCounter": 201,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-07-02T06:22:30.168Z",
+      "createdAt": "2025-07-02T06:22:30.168Z",
+      "role": "workflow:owner",
+      "workflowId": "r9luD4UCXwa2jCAp",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

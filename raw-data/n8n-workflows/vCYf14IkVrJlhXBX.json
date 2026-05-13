@@ -1,0 +1,2203 @@
+{
+  "updatedAt": "2025-09-15T07:50:14.803Z",
+  "createdAt": "2025-09-15T07:39:38.498Z",
+  "id": "vCYf14IkVrJlhXBX",
+  "name": "battery_blind_api copy",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ac65b213-ed9b-47ac-b463-cb09bb9e08cf",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        -32
+      ],
+      "id": "29611973-b74a-4d6d-862e-8f3b8f5d795e",
+      "name": "Webhook",
+      "webhookId": "ac65b213-ed9b-47ac-b463-cb09bb9e08cf"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n    \"code\":\"200\",\n    \"msg\":\"OK\",\n    \"sn\":\"{{ $json.data.sn }}\",\n    \"battery_id\":\"{{ $json.data.bind_id }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        6624,
+        -688
+      ],
+      "id": "cc9f585c-f69a-444d-a4c4-75d0c780601c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9570666a-8a50-4b47-b28a-53111060a652",
+              "leftValue": "={{ $json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "413e8ad0-e4ec-4f28-aefb-1463bfa3f9e4",
+              "leftValue": "={{ $json.body.battery_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c78c1afc-e9f4-40f0-93c5-ada36699d445",
+              "leftValue": "={{ $json.body.procedure_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        -32
+      ],
+      "id": "3c6934be-6e82-4df7-8bf2-224120eaae56",
+      "name": "判断传参是否缺失"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"数据库报错\",\n  \"sn\":\" \",\n  \"battery_id\":\" \"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        7136,
+        432
+      ],
+      "id": "0bc868e5-4e7c-42dc-a00b-f70d7a953924",
+      "name": "数据库报错"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cb23427e-03f6-4195-a1e7-e11348fc35f0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3088,
+        -288
+      ],
+      "id": "84d0af77-7f21-4852-b0c9-1b4813357837",
+      "name": "判断电池序列号是否误录入sn"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * FROM mes.machine_data md\nWHERE md.data ->>'bind_id'='{{ $json.battery_id }}' and md.data ->>'sn' = '{{ $json.sn }}'\nand md.procedure_detail_id = {{ $json.procedureDetailId }}\nand md.retroid_id = {{ $json.retroid_id }}\norder by createtime DESC\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3488,
+        -352
+      ],
+      "id": "f0ac6de5-c13a-4a5c-9db1-5e5ef987bff7",
+      "name": "查询电池序列号是否和sn重复绑定",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * FROM mes.machine_data\nWHERE data ->>'battery_id'!='{{ $json.battery_id }}' and data ->>'sn' = '{{ $json.sn }}' and\nprocedure_detail_id ='{{ $json.procedureDetailId }}'\nand retroid_id='{{ $('查询相关信息').first().json.retroid_id }}'\norder by createtime DESC\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        5184,
+        -576
+      ],
+      "id": "f3ef5103-f851-4fab-b36b-04af90e3d89c",
+      "name": "查询sn是否已经匹配",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"sn号已匹配其他电池序列号\",\n  \"sn\":\" \",\n  \"battery_id\":\" \"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        6416,
+        48
+      ],
+      "id": "ee66e402-ffb0-4ff8-b6a8-00ac6852c2f6",
+      "name": "sn重复匹配电池序列号"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8d37843e-9268-4678-a7a2-d2af7622a921",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5360,
+        -592
+      ],
+      "id": "883686a8-a341-431d-837f-ac2dde563c97",
+      "name": "判断sn是否已经匹配"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r\nwhere r.retroid='{{ $json.battery_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2928,
+        -256
+      ],
+      "id": "2db60c33-0ed2-41d4-9968-42cbf26f757d",
+      "name": "Postgres1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"电池序列号录入异常\",\n  \"sn\":\" \",\n  \"battery_id\":\" \"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4496,
+        1264
+      ],
+      "id": "b66d0bac-0770-4f61-9756-2076a5b08ca1",
+      "name": "电池序列号录入成sn号"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取“查找retroid_id并校验sn是否正确”节点的retroid_id\nconst retroidIdData = $('查找retroid_id并校验sn是否正确').all();\nconst retroidId = retroidIdData[0].json.retroid_id;\n\n// 获取“查询工序id”节点的数据\nconst procedureData = $('查询工序id').all();\nconst procedureDetailId = procedureData[0].json.data[0].procedure_detail_id;\nconst historyProcedureId = procedureData[0].json.data[0].history_procedure_id;\n\n// 获取“Webhook”节点中query的数据，并将\"bind_id\"加入\nconst webhookData = $('Webhook').all();\nconst queryData = webhookData[0].json.body;\nqueryData.bind_id = $('将结果内空格、换行去除').all()[0].json.body.battery_id;\n\n// 组织数据为一个对象\nconst result = {\n  retroid_id: retroidId,\n  procedure_detail_id: procedureDetailId,\n  history_procedure_id: historyProcedureId,\n  ...queryData\n};\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6128,
+        -656
+      ],
+      "id": "a59367c2-d52f-4a64-82d9-fd5bfa9bad73",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7d6d3915-9de6-4830-9d12-4aad79e439f6",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6448,
+        -656
+      ],
+      "id": "86c399c1-011c-4071-8562-0be4e52b1829",
+      "name": "判断插入是否成功"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "data": "={{ {...$('Webhook').all()[0].json.body, bind_id:$json.bind_id} }}",
+            "createtime": "={{ $now }}",
+            "retroid_id": "={{ $json.retroid_id }}",
+            "user_id": "=1",
+            "machine_id": "=0",
+            "history_procedure_id": "={{ $json.history_procedure_id }}",
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        6320,
+        -656
+      ],
+      "id": "9818d712-e1c0-4cee-be50-d43abb7e7d11",
+      "name": "插入machine_data表数据",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"401\",\n  \"msg\":\"sn和电池序列号重复绑定\",\n  \"sn\":\" \",\n  \"battery_id\":\" \"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5984,
+        224
+      ],
+      "id": "827c1e2a-8e2d-40e4-9901-5050a7302a35",
+      "name": "重复绑定"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8dd4fdcb-ff26-468b-bb0a-564984984932",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3728,
+        -384
+      ],
+      "id": "fb808bfa-8cea-4c6f-baed-eca66f904a13",
+      "name": "判断电池序列号是否和sn重复绑定"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"请输入正确的sn和电池批次号\",\n  \"sn\":\" \",\n  \"battery_id\":\" \"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        96
+      ],
+      "id": "ddab4a9d-5843-4b42-b46f-60d876a44f6c",
+      "name": "传参缺失"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "68089da9-621c-48ee-be19-284f3cb5148e",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -96
+      ],
+      "id": "be581a4b-50f5-49c3-9151-669c5c3d2636",
+      "name": "判断是否成功查找retroid_id"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r\nwhere r.retroid = '{{ $('Webhook').item.json.body.sn }}' and r.status in('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        160,
+        -80
+      ],
+      "id": "51fad145-b5c0-46d2-a210-e4be8ca8c463",
+      "name": "查找retroid_id并校验sn是否正确",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select md.procedure_detail_id  from mes.machine_data md \nwhere md.procedure_detail_id in (select pd.procedure_detail_id \nfrom mes.procedure_detail pd where pd.procedure_name in('SN与电池二维码绑定','物料解除绑定'))\nand md.retroid_id = '{{ $json.retroid_id }}'\norder by md.createtime desc \nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5520,
+        -496
+      ],
+      "id": "249f48b6-4b8a-4885-afe3-20eeda094e94",
+      "name": "Postgres3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "48354f05-afcc-4d49-981c-b4018db5f512",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5680,
+        -496
+      ],
+      "id": "0105e2d3-c0af-4fb4-a7c3-81b22af06ea9",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select pd.procedure_detail_id from mes.procedure_detail pd  \nwhere pd.procedure_name ='SN与电池二维码绑定';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5824,
+        -480
+      ],
+      "id": "b4120931-50a6-4609-8d58-a56fa920634e",
+      "name": "Postgres4",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e68be48a-1fe0-42ca-8045-04934fe026e5",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": "={{ $('If3').item.json.procedure_detail_id }}",
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5984,
+        -464
+      ],
+      "id": "01aade85-621f-475d-81f1-8db59daf0172",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT md.procedure_detail_id\nFROM mes.machine_data md\nJOIN mes.retroid r ON md.retroid_id::text = r.retroid_id::text\nWHERE md.procedure_detail_id IN (\n  SELECT pd.procedure_detail_id\n  FROM mes.procedure_detail pd\n  WHERE pd.procedure_name IN ('SN与电池二维码绑定', '物料解除绑定')\n)\nAND md.retroid_id::text = '{{ $json.retroid_id }}'\nORDER BY md.createtime DESC\nLIMIT 1\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4112,
+        -304
+      ],
+      "id": "7e3b1b02-f4f1-4a23-bf1a-31aae46251e0",
+      "name": "Postgres5",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "48354f05-afcc-4d49-981c-b4018db5f512",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4272,
+        -272
+      ],
+      "id": "619ec7b7-4d86-4b0f-a7af-952db1dc903f",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e68be48a-1fe0-42ca-8045-04934fe026e5",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": "={{ $('If5').item.json.procedure_detail_id }}",
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4608,
+        -272
+      ],
+      "id": "33d0571f-2b83-411d-8cd8-d68cd066c106",
+      "name": "判断是否解绑，判断条件相等(false)为绑定"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select md.retroid_id, md.data -->'battery_id' as battery_id \nfrom mes.machine_data md \nwhere md.retroid_id ='{{ $json.retroid_id }}' and md.procedure_detail_id ='{{ $json.procedure_detail_id }}'\norder by md.createtime desc \nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5184,
+        -144
+      ],
+      "id": "1a9313f9-5340-4a6e-ae8e-0e82a33fa07d",
+      "name": "Postgres7",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select pd.procedure_detail_id from mes.procedure_detail pd  \nwhere pd.procedure_name ='SN与电池二维码绑定';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4448,
+        -272
+      ],
+      "id": "39269cbb-342c-4f93-9390-3b6537a235d1",
+      "name": "查SN与电池二维码绑定的序列id",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a5debd4-0ec1-4ff3-88a7-ed81bc86a0bb",
+              "leftValue": "={{ $json.retroid_id }}",
+              "rightValue": "={{ $('查询电池序列号是否和sn重复绑定').item.json.retroid_id }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5328,
+        -112
+      ],
+      "id": "31222b27-2ecf-4301-9a94-3e3fbca692b9",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "49e4579b-4e4a-4576-9c5e-59a2464e1a09",
+              "leftValue": "={{ $('Postgres7').item.json.data.battery_id }}",
+              "rightValue": "={{ $json.battery_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5696,
+        -176
+      ],
+      "id": "8bc7ef2c-4c9c-4132-8b0c-f1b86c316dba",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — 工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        -48
+      ],
+      "id": "346b9782-c8d7-4bec-a07d-acfa5628fd48",
+      "name": "查询工序id"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sn = $('Webhook').first().json.body.sn;\nconst battery_id = $('Webhook').first().json.body.battery_id;\nconst procedure_name = \n$('Webhook').first().json.body.procedure_name\n// 使用正则替换所有换行符（\\n、\\r）为空字符串\nconst cleanSn = sn.replace(/\\s|\\/n/g, '');\nconst cleanBid = battery_id.replace(/\\s|\\/n/g, '');\nconst cleanProcedure_name = procedure_name.replace(/\\s|\\/n/g, '');\n\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n            sn: cleanSn,\n      battery_id: cleanBid,\n      procedure_name: cleanProcedure_name\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -32
+      ],
+      "id": "79ac92ca-e460-4713-b6a8-e5e49c5cde64",
+      "name": "将结果内空格、换行去除"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"sn号异常\",\n  \"sn\":\" \",\n  \"battery_id\":\" \"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        64
+      ],
+      "id": "6628a63b-d874-41df-bed6-e13d2c0cf93a",
+      "name": "sn不正确"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1901e065-a2d7-483f-985b-b7c8b40e29f4",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        -48
+      ],
+      "id": "be5a9843-1d38-4d4c-8df9-aaf3ad1a2c63",
+      "name": "判断工序是否存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"查询不到对应工序，请联系it部门\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        144,
+        96
+      ],
+      "id": "f40c7ffc-8458-436a-8ecb-bc8308be36f5",
+      "name": "报错信息：查询不到对应工序"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从 Webhook 获取 webhook 数据\nconst webhookData = $(\"Webhook\").all();\nconst procedureNameFromWebhook = webhookData[0].json.body.procedure_name;\n\n// 从 input 获取所有过程数据\nconst inputData = $input.all();\n\n// 从 Edit Fields 节点获取 retroid_id 数据\nconst editFieldsData = $(\"Edit Fields\").all();\nconst retroidId = editFieldsData.length > 0 ? editFieldsData[0].json.retroid_id : null;\n\n// 查找当前工序的数据\nconst currentProcedureIndex = inputData.findIndex(item => item.json.procedure_name === procedureNameFromWebhook);\n\n// 确保找到了匹配的当前工序\nif (currentProcedureIndex !== -1) {\n  const currentProcedure = inputData[currentProcedureIndex].json;\n\n  // 检查是否存在上一道工序\n  const previousProcedure = currentProcedureIndex > 0 ? inputData[currentProcedureIndex - 1].json : null;\n\n  // 返回结果\n  return [\n    {\n      json: {\n        currentProcedure: {\n          procedure_name: currentProcedure.procedure_name,\n          history_procedure_id: currentProcedure.history_procedure_id,\n          procedure_detail_id: currentProcedure.procedure_detail_id,\n        },\n        previousProcedure: previousProcedure ? {\n          procedure_name: previousProcedure.procedure_name,\n          history_procedure_id: previousProcedure.history_procedure_id,\n          procedure_detail_id: previousProcedure.procedure_detail_id,\n        } : null,\n        retroidId: retroidId\n      }\n    }\n  ];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        -144
+      ],
+      "id": "400b899a-58a5-4169-9f82-acafff19dc10",
+      "name": "整合数据"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id = {{ $json.previousProcedure.procedure_detail_id }}\nand md.retroid_id ='{{ $json.retroidId }}'\norder by md.createtime DESC\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1504,
+        -304
+      ],
+      "id": "b001e706-d010-4171-929f-168f4ac2818f",
+      "name": "查询上一道工序是否完成",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93701f5d-2a48-4867-9de5-9d6c9a3d4a21",
+              "leftValue": "={{ $json }}",
+              "rightValue": 62,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        -128
+      ],
+      "id": "dbacf597-5ea0-485f-a2c3-47e4afdab4d2",
+      "name": "If8"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"403\",\n  \"msg\":\"该SN未完成上一道工序\"\n}",
+        "options": {}
+      },
+      "id": "a6c2665a-3684-45ba-8147-3d9408d704b2",
+      "name": "报错信息：该SN未完成上一道工序",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_history AS (\n    -- 已选择最新的记录并展开数组\n    SELECT json_array_elements_text(procedure_detail_id->'procedure_detail_id')::int AS detail_id\n    FROM mes.history_procedure_list\n    WHERE history_procedure_list_id = (\n        -- 获取最新记录的 id\n        SELECT history_procedure_list_id\n        FROM mes.history_procedure_list\n        WHERE history_procedure_list_id = '{{ $json.history_procedure_list_id }}' \n        ORDER BY createtime DESC\n        LIMIT 1\n    )\n)\n-- 使用 DISTINCT ON 获取每个 detail_id 的最新记录\nSELECT DISTINCT ON (hpd.procedure_detail_id) hpd.*\nFROM mes.history_procedure_detail hpd\nWHERE hpd.procedure_detail_id IN (\n    SELECT detail_id FROM latest_history\n)\nAND hpd.procedure_dataupload = 2\nORDER BY hpd.procedure_detail_id, hpd.createtime DESC;",
+        "options": {}
+      },
+      "id": "2213709c-44fc-4c6e-b8cd-bac63afa3fd5",
+      "name": "查询对应工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        832,
+        -112
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f7a6fdaa-d3df-4af7-8a4c-991fe77a9fda",
+              "leftValue": "={{ $json }}",
+              "rightValue": 74,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "92621be6-acc1-4542-b34f-3b630127a259",
+      "name": "If9",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1008,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n       r.retroid_id,\n       jo.joborder_number,\n       jo.joborder_id,\n       pm.product_model_name,\n       pi.product_code,\n       jo.procedure_list_id,\n       jo.history_procedure_list_id\nFROM mes.retroid r\nJOIN mes.retroid_generate rg ON r.retroid_generate_id = rg.retroid_generate_id\nJOIN mes.joborder jo ON rg.joborder_id = jo.joborder_id\nJOIN mes.product_info pi ON jo.product_id = pi.product_id\nJOIN mes.product_model pm ON pi.product_model_id = pm.product_model_id\nWHERE r.retroid = '{{ $('Webhook').item.json.body.sn }}'\nand r.status in('1','2');  -- 替换成你要查询的 retroid\n",
+        "options": {}
+      },
+      "id": "e039f978-a793-4854-af5b-92dd8f64645e",
+      "name": "查询相关信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        512,
+        -96
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f806de03-fd7c-417f-9aac-9cd347480d91",
+              "name": "retroid_id",
+              "value": "={{ $json.retroid_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d27f55e9-4ca2-47d2-a5b6-f9b483ef8794",
+              "name": "joborder_number",
+              "value": "={{ $json.joborder_number }}",
+              "type": "string"
+            },
+            {
+              "id": "cfc3ade2-1f46-47ec-83c2-01ddb40f2ca3",
+              "name": "product_model_name",
+              "value": "={{ $json.product_model_name }}",
+              "type": "string"
+            },
+            {
+              "id": "2e203abf-2133-4544-bc82-fdc5ebe4df99",
+              "name": "product_code",
+              "value": "={{ $json.product_code }}",
+              "type": "string"
+            },
+            {
+              "id": "e4d13f1a-cc38-42fb-af77-8664b49fe084",
+              "name": "procedure_list_id",
+              "value": "={{ $json.procedure_list_id }}",
+              "type": "number"
+            },
+            {
+              "id": "6498248e-c048-4835-92a6-bb6db55dee73",
+              "name": "history_procedure_list_id",
+              "value": "={{ $json.history_procedure_list_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        -112
+      ],
+      "id": "5961d315-003d-4f64-91f2-52e934d4c91a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Webhook').first().json.body"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        -240
+      ],
+      "id": "695c0d90-029f-443d-b6b5-dd04a5c2420e",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从“将结果内空格、换行去除”节点中获取所有数据\nconst removeSpacesData = $(\"将结果内空格、换行去除\").all();\nconst queryData = removeSpacesData[0].json.body;\n\nconst batteryId = queryData.battery_id.trim();  // 去除可能存在的换行符\nconst sn = queryData.sn;\n\n// 从“查询工序id”节点中获取所有数据\nconst procedureData = $(\"查询工序id\").all();\nconst procedureDetailId = procedureData[0].json.data[0].procedure_detail_id;\nconst retroid_id = $(\"查询相关信息\").first().json.retroid_id;\n// 构建所需的对象数组格式\nconst result = [\n  {\n    procedureDetailId: procedureDetailId.toString(),  // 确保是字符串\n    battery_id: batteryId,\n    sn: sn,\n    retroid_id:retroid_id\n  }\n];\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3232,
+        -320
+      ],
+      "id": "37118a62-a582-4ebe-9e6c-5f7c241ebc1f",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从“将结果内空格、换行去除”节点中获取所有数据\nconst removeSpacesData = $(\"将结果内空格、换行去除\").all();\nconst queryData = removeSpacesData[0].json.body;\n\nconst batteryId = queryData.battery_id.trim();  // 去除可能存在的换行符\nconst sn = queryData.sn;\n\n// 从“查询工序id”节点中获取所有数据\nconst procedureData = $(\"查询工序id\").all();\nconst procedureDetailId = procedureData[0].json.data[0].procedure_detail_id;\n\n// 构建所需的对象数组格式\nconst result = [\n  {\n    procedureDetailId: procedureDetailId.toString(),  // 确保是字符串\n    battery_id: batteryId,\n    sn: sn\n  }\n];\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4240,
+        -480
+      ],
+      "id": "35a406f9-4a73-470e-bb1f-7e51129a5618",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('查询电池序列号是否和sn重复绑定').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3968,
+        -320
+      ],
+      "id": "71f26c2a-766c-4b51-aa93-5abe9875330e",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从“判断电池序列号是否和sn重复绑定”节点提取retroid_id\nconst retroidId = $('判断电池序列号是否和sn重复绑定').item.json.retroid_id;\n\n// 从“查SN与电池二维码绑定的序列id”节点提取procedure_detail_id\nconst procedureDetailId = $('查SN与电池二维码绑定的序列id').item.json.procedure_detail_id;\n\n// 构建返回的结果对象\nconst result = {\n  retroid_id: `${retroidId}`,\n  procedure_detail_id: `${procedureDetailId}`\n};\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5040,
+        -160
+      ],
+      "id": "ce547c0d-3dca-4096-9b05-a54a69d8c50d",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id in({{ $json.procedure_detail_id }},62)\nand md.retroid_id ='{{ $json.retroid_id }}'\nand (md.data ->>'bind_id'='{{ $json.data.bind_id }}' or md.data ->'data_old'->>'unbind_id'='{{ $json.data.bind_id }}' is not null)\norder by md.createtime desc\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2256,
+        -256
+      ],
+      "id": "c7e8625c-f70c-417d-80fc-1b512889a420",
+      "name": "确认当前数据是绑定",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cfd079ce-3360-46f2-b4b8-af4de9bd120d",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 39,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "d8423aa2-f6bd-4bdf-b104-dfe25f6eefac",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "1332c445-13ec-4fcb-93ec-9c9fe5fb724c",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 59,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1984,
+        -176
+      ],
+      "id": "350cb46f-f058-4984-950c-f4f90ece946a",
+      "name": "If13"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93701f5d-2a48-4867-9de5-9d6c9a3d4a21",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 62,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2560,
+        -304
+      ],
+      "id": "70b65622-66af-441b-be76-8f289c54d852",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3a7e8357-82c7-41cf-817b-44eb0458eaac",
+              "name": "battery_id",
+              "value": "={{ $('将结果内空格、换行去除').first().json.query.battery_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5536,
+        -176
+      ],
+      "id": "ca393848-949a-49f8-8f6c-ddd5f8bd01d6",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "38461f0c-ef14-402c-848e-b63eb2fb46f6",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        -320
+      ],
+      "id": "6b84e11c-a405-4788-93a0-9452e97449e7",
+      "name": "If11"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从“将结果内空格、换行去除”节点中获取所有数据\nconst removeSpacesData = $(\"将结果内空格、换行去除\").all();\nconst queryData = removeSpacesData[0].json.body;\n\nconst batteryId = queryData.battery_id.trim();  // 去除可能存在的换行符\nconst sn = queryData.sn;\n\n// 从“查询工序id”节点中获取所有数据\nconst procedureData = $(\"查询工序id\").all();\nconst procedureDetailId = procedureData[0].json.data[0].procedure_detail_id;\n\n// 构建所需的对象数组格式\nconst result = [\n  {\n    procedureDetailId: procedureDetailId.toString(),  // 确保是字符串\n    battery_id: batteryId,\n    sn: sn\n  }\n];\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4816,
+        -368
+      ],
+      "id": "4083e44b-8d0c-4ce9-82a6-7636ed660802",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aa4eb021-8164-45aa-a78e-a604e9f9e8ad",
+              "leftValue": "={{ $json.previousProcedure }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        -144
+      ],
+      "id": "81d356b5-1bbf-4f90-8cf8-ae3b22c750d7",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "将结果内空格、换行去除",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断传参是否缺失": {
+      "main": [
+        [
+          {
+            "node": "查询工序id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺失",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断电池序列号是否误录入sn": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "电池序列号录入成sn号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询电池序列号是否和sn重复绑定": {
+      "main": [
+        [
+          {
+            "node": "判断电池序列号是否和sn重复绑定",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "查询sn是否已经匹配": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否已经匹配",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "判断sn是否已经匹配": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "判断电池序列号是否误录入sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "插入machine_data表数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断插入是否成功": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入machine_data表数据": {
+      "main": [
+        [
+          {
+            "node": "判断插入是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断电池序列号是否和sn重复绑定": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否成功查找retroid_id": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn不正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查找retroid_id并校验sn是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断是否成功查找retroid_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Postgres3": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Postgres4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres4": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn重复匹配电池序列号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres5": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "查SN与电池二维码绑定的序列id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "判断是否解绑，判断条件相等(false)为绑定": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres7": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查SN与电池二维码绑定的序列id": {
+      "main": [
+        [
+          {
+            "node": "判断是否解绑，判断条件相等(false)为绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn重复匹配电池序列号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "重复绑定",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn重复匹配电池序列号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工序id": {
+      "main": [
+        [
+          {
+            "node": "判断工序是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "将结果内空格、换行去除": {
+      "main": [
+        [
+          {
+            "node": "判断传参是否缺失",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工序是否存在": {
+      "main": [
+        [
+          {
+            "node": "查找retroid_id并校验sn是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：查询不到对应工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询上一道工序是否完成": {
+      "main": [
+        [
+          {
+            "node": "If11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未完成上一道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应工序表": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "整合数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询相关信息": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "查询对应工序表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "查询电池序列号是否和sn重复绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否已经匹配",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Postgres5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Postgres7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "确认当前数据是绑定": {
+      "main": [
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If13": {
+      "main": [
+        [
+          {
+            "node": "确认当前数据是绑定",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未完成上一道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If11": {
+      "main": [
+        [
+          {
+            "node": "If13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：该SN未完成上一道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否已经匹配",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "查询上一道工序是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.160.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "101",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W92CC00009",
+            "battery_id": "A25071108934\n\n\n\n",
+            "procedure_name": "SN与电池二维码绑定"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/battery_blind_api",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "ae527523-6773-42fd-859f-ba12de5dd52d",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-09-15T07:39:38.498Z",
+      "createdAt": "2025-09-15T07:39:38.498Z",
+      "role": "workflow:owner",
+      "workflowId": "vCYf14IkVrJlhXBX",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

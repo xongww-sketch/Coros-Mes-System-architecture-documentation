@@ -1,0 +1,529 @@
+{
+  "updatedAt": "2025-02-17T06:58:18.680Z",
+  "createdAt": "2024-06-20T05:32:13.726Z",
+  "id": "EPLbEuOU1fW4Eztw",
+  "name": "Defectivedetails_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{  {\n  \"code\":\"200\",\n  \"searchList\":$json.result,\n  \"categoriesData\":$json.categoriesData\n}  \n}}",
+        "options": {}
+      },
+      "id": "bcf58b0f-9763-4a24-80f1-29569a48c69b",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        560,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写所有必填项\"\n}",
+        "options": {}
+      },
+      "id": "a4d67645-b840-4f93-a5ca-4056847d38ac",
+      "name": "请填写所有必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -840,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0443791c-4c2b-481a-bba6-54c1f625acc2",
+              "leftValue": "={{ $json.query.ActiveDate_End }}",
+              "rightValue": "1970-01-01",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "bca85e86-93d6-40d3-94c1-b795c012fa49",
+              "leftValue": "={{ $json.query.ActiveDate_Start }}",
+              "rightValue": "1970-01-01",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "42111964-bd45-4533-beb0-5cb99aac67e3",
+              "leftValue": "={{ $json.query.Country }}",
+              "rightValue": "[]",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e7d6d164-8760-4ca3-a291-71fea47cd507",
+      "name": "判断所有必填项是否已填",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1300,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f12927b7-c6e8-4e92-9a70-2e6d25f1b144",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6d0a7668-1b8d-4acb-9fcb-07d7b7eb98ca",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假定获取输入的query对象\nlet inputQuery = $input.all()[0].json.query;\n\n// 从输入对象中读取开始日期\nlet activeDate_Start = inputQuery.ActiveDate_Start;\nlet activeDate_End = inputQuery.ActiveDate_End;\n\n// 获取当前日期\nlet currentDate = new Date();\n\n// 将字符串日期转换为Date对象\nlet startDate = new Date(activeDate_Start);\nlet endDate = currentDate; // 使用当前日期作为截止日期\n\n// 将每月的时间段存储到categories和timeIntervals中\nlet categories = [];\nlet timeIntervals = [];\n\nwhile (startDate < endDate) {\n  // 当前处理的月份的年月\n  let year = startDate.getFullYear();\n  let month = (startDate.getMonth() + 1).toString().padStart(2, '0'); // 格式化月为两位数\n\n  // 计算本月的结束日期\n  let endOfMonth = new Date(year, startDate.getMonth() + 1, 0);\n\n  // 如果本月结束日期超过了endDate，则使用endDate\n  if (endOfMonth > endDate) {\n    endOfMonth = endDate;\n  }\n\n  // 添加到categories的显示月份,包含年份\n  let category = `${year}年${month}月`;\n  categories.push(category);\n\n  // 创建时间段,格式[开始时间, 结束时间]\n  timeIntervals.push([\n    startDate.toISOString().split('T')[0], // 当前月份的开始日期\n    endOfMonth.toISOString().split('T')[0] // 当前月份的结束日期\n  ]);\n\n  // 更新下一个区间的开始日期\n  startDate = new Date(year, startDate.getMonth() + 1, 1);\n}\n\n// 获取国家列表\nlet countries = JSON.parse(inputQuery.Country);\n\n// 存储最终的查询参数列表\nlet queryList = [];\n\n// 定义国家映射\nconst countryMapping = {\n  \"Overseas\": [\"US\", \"EU\"]\n};\n\n// 对每个国家生成一个查询参数对象\nfor (let country of countries) {\n  let mappedCountries = countryMapping[country] || [country]; // 如果为 \"Overseas\"，则转化为 [\"US\", \"EU\"]\n\n  for (let mappedCountry of mappedCountries) {\n    let query = {\n      ...inputQuery, // 原查询参数\n      \"categories\": categories,\n      \"timeIntervals\": timeIntervals,\n      \"Country\": mappedCountry\n    };\n    queryList.push(query);\n  }\n}\n\n// 输出结果\nreturn queryList;\n\n\n\n\n\n\n\n"
+      },
+      "id": "75f22fda-44b8-4371-929e-a01717fd3638",
+      "name": "划分时间区间",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取唯一的categories值\nconst categoriesSet = new Set($input.all().map(item => item.json.categories[0]));\nconst categoriesData = Array.from(categoriesSet).sort();\n\n// 构建包含国家和对应数据的对象\nconst countryMap = new Map();\n$input.all().forEach(item => {\n  const country = item.json.Country;\n  const category = item.json.categories[0];\n  const count = parseInt(item.json.count);\n\n  if (!countryMap.has(country)) {\n    countryMap.set(country, Array(categoriesData.length).fill(0));\n  }\n\n  const index = categoriesData.indexOf(category);\n  countryMap.get(country)[index] = count;\n});\n\n// 生成最终的数据结构\nlet result = Array.from(countryMap, ([name, data]) => ({ name, data }));\n\n// 整合EU和US为Overseas\nlet overseasData = Array(categoriesData.length).fill(0);\nlet totalActiveOverseas = 0;\n\nresult = result.filter(item => {\n  if (item.name === 'EU' || item.name === 'US') {\n    overseasData = overseasData.map((val, idx) => val + item.data[idx]);\n    totalActiveOverseas += item.TotalActive || 0; // take TotalActive from item\n    return false; // 过滤掉EU和US\n  }\n  return true;\n});\n\nresult.push({ name: 'Overseas', data: overseasData, TotalActive: totalActiveOverseas });\n\n// 将TotalActive放到result中\nconst totalActiveMap = new Map($('判断查询结果').all().map(item => [item.json.country_code, parseInt(item.json.count)]));\nresult.forEach(item => {\n  if (totalActiveMap.has(item.name)) {\n    item.TotalActive = totalActiveMap.get(item.name);\n  }\n});\n\n// 更新Overseas的TotalActive\nconst totalActiveOverseasFromMap = totalActiveMap.get('EU') + totalActiveMap.get('US');\nconst overseasItem = result.find(item => item.name === 'Overseas');\nif (overseasItem) {\n  overseasItem.TotalActive = totalActiveOverseasFromMap;\n}\n\nreturn {\n  result: result,\n  categoriesData: categoriesData\n};\n\n\n\n\n\n"
+      },
+      "id": "fafd6c64-117f-49b8-8244-d59c1b3282fe",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT country_code,COUNT (*) FROM public.activation_records WHERE to_timestamp(activatetime::bigint) >= '{{ $json.ActiveDate_Start }}'::timestamp AND to_timestamp(activatetime::bigint) <=  '{{ $json.ActiveDate_End}}'::timestamp + interval '1 day' - interval '1 second' AND country_code = '{{$json.Country}}' GROUP BY country_code;\n\n\n\n\n",
+        "options": {
+          "queryReplacement": "="
+        }
+      },
+      "id": "383795b2-751d-4600-9ad5-df8232aa2ca5",
+      "name": "查询该时间段的激活设备条数",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -940,
+        240
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT (*) FROM public.defective_records dr JOIN public.activation_records ar ON dr.active_id = ar.id WHERE to_timestamp(ar.activatetime::bigint) >= '{{ $json.ActiveDate_Start}}'::timestamp AND to_timestamp(ar.activatetime::bigint) <= '{{ $json.ActiveDate_End}}'::timestamp + interval '1 day' - interval '1 second' AND ar.country_code = '{{$json.Country}}' And dr.defective_date >= '{{ $json.timeIntervals[0][0] }}' and dr.defective_date <= '{{ $json.timeIntervals[0][1] }}';\n\n\n\n\n",
+        "options": {
+          "queryReplacement": ""
+        }
+      },
+      "id": "e288a967-6453-4964-b573-8d6d840bcb9c",
+      "name": "查询各地区各时段的不良设备数量",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -220,
+        240
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f12927b7-c6e8-4e92-9a70-2e6d25f1b144",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aeb8b202-db2b-4753-a21f-1743a074461c",
+      "name": "判断查询结果",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -780,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"402\",\n  \"msg\":\"该激活时段无激活设备\"\n}",
+        "options": {}
+      },
+      "id": "36e6b85a-e45f-49fd-889c-4dc3b08cd6c3",
+      "name": "该激活时段无激活设备",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -360,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"该时段激活的设备截止今天无不良记录\"\n}",
+        "options": {}
+      },
+      "id": "986506cf-a3f1-4fdb-8c89-82ba76ba22c5",
+      "name": "该时段激活的设备截止今天无不良记录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input=$input.all();\nconst output=$('划分时间区间').all();\nconst result = input.map((item, index) => {\n  return {\n    Country: output[index].json.Country,\n    categories: output[index].json.categories,\n    activecount: item.json.count\n  };\n});\nreturn result;\n"
+      },
+      "id": "0e6e275b-8491-47e9-a605-70e63e6d51c8",
+      "name": "整理查询结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -620,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input=$input.all();\nconst output=$('Code').all();\nconst result = input.map((item, index) => {\n  return {\n    Country: output[index].json.Country,\n    categories: output[index].json.categories,\n    count: item.json.count\n  };\n});\nreturn result;\n\n"
+      },
+      "id": "1f9bc83e-0dc1-447b-b87d-4a0f74368778",
+      "name": "整理查询结果1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "path": "=Defectivedetails_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "87eb59bd-0eec-403b-bf0a-016fe46dea9e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1480,
+        240
+      ],
+      "webhookId": "69906ee6-994b-4f06-b415-f41a551b4c09"
+    },
+    {
+      "parameters": {
+        "jsCode": "const countries = $('划分时间区间').all().map(item => item.json.Country);\nconst timeIntervals = $('划分时间区间').all()[0].json.timeIntervals;\nconst categories = $('划分时间区间').all()[0].json.categories;\nconst List = countries.flatMap((country, countryIndex) => {\n  return timeIntervals.map((interval, intervalIndex) => {\n    return {\n      Country: country,\n      ActiveDate_End: $('划分时间区间').all()[countryIndex].json.ActiveDate_End,\n      ActiveDate_Start: $('划分时间区间').all()[countryIndex].json.ActiveDate_Start,\n      categories: [categories[intervalIndex]],\n      timeIntervals: [interval]\n    };\n  });\n});\n\nreturn List;"
+      },
+      "id": "39dbd1f1-c5f1-4b25-a5f1-4c2ba6810cb5",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "判断所有必填项是否已填": {
+      "main": [
+        [
+          {
+            "node": "划分时间区间",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "整理查询结果1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该时段激活的设备截止今天无不良记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询该时间段的激活设备条数": {
+      "main": [
+        [
+          {
+            "node": "判断查询结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询各地区各时段的不良设备数量": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询结果": {
+      "main": [
+        [
+          {
+            "node": "整理查询结果",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该激活时段无激活设备",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "划分时间区间": {
+      "main": [
+        [
+          {
+            "node": "查询该时间段的激活设备条数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理查询结果": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理查询结果1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断所有必填项是否已填",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "查询各地区各时段的不良设备数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.18.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "ActiveDate_End": "2024-06-20",
+            "ActiveDate_Start": "2024-03-01",
+            "Country": "[\"CN\",\"Overseas\"]"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/Defectivedetails_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "3df0e6bf-21b3-4cd0-95ca-85f497254cc7",
+  "activeVersionId": "3df0e6bf-21b3-4cd0-95ca-85f497254cc7",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:56.804Z",
+      "createdAt": "2024-01-26T07:49:15.286Z",
+      "id": "nTeYqAfpKKoeAJjH",
+      "name": "品质部门应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-06-20T05:32:13.726Z",
+      "createdAt": "2024-06-20T05:32:13.726Z",
+      "role": "workflow:owner",
+      "workflowId": "EPLbEuOU1fW4Eztw",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

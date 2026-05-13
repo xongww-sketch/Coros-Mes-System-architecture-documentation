@@ -1,0 +1,1264 @@
+{
+  "updatedAt": "2026-03-12T11:19:09.463Z",
+  "createdAt": "2025-11-04T03:28:09.725Z",
+  "id": "j2sXQSOKzZabdgwB",
+  "name": "同步SN唯一码到管易",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst itemsWithoutSkuCode = [];\n\n// 格式化日期函数\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\n// 提取没有 sku_code 的项目\nfor (const itemSet of items) {\n  if (itemSet && itemSet.json && itemSet.json.snList) {\n    for (const item of itemSet.json.snList) {\n      const serialNumber = item.retroid;\n      const skuCode = item.material_code;\n\n      if (!skuCode || skuCode.trim() === '') {\n        // 如果没有 sku_code，添加到结果列表中\n        const createDate = formatDate(new Date().toISOString()); // 假设创建日期是当前时间\n        itemsWithoutSkuCode.push({\n          json: {\n            sn: serialNumber,\n            error: '没有对应的 sku_code',\n            createTime: createDate\n          }\n        });\n      }\n    }\n  }\n}\n\n// 返回只有没有 sku_code 的项目\nreturn itemsWithoutSkuCode;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        720
+      ],
+      "id": "b0f6fe80-4e7d-422a-901b-892e3ce41b7f",
+      "name": "筛选没有sku_code的产品"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "error_sku",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        672,
+        720
+      ],
+      "id": "d1dd846c-8312-4ac8-9a94-fb58dc66a511",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst itemsWithoutSkuCode = [];\nconst itemsWithSkuCode = [];\n\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\n\nfor (const itemSet of data) {\n  console.log(\"Processing itemSet:\", itemSet);\n  if (itemSet.json && itemSet.json.snList && itemSet.json.snList.length > 0) {  // 访问json.snList\n    for (const item of itemSet.json.snList) {  // 正确访问到snList\n      const serialNumber = item.retroid;\n      const skuCode = item.material_code;\n      const createDate = formatDate(new Date().toISOString());\n\n      if (!skuCode || skuCode.trim() === '') {\n        console.log(`No sku_code for retroid: ${serialNumber}`);\n        itemsWithoutSkuCode.push({\n          json: {\n            sn: serialNumber,\n            error: '没有对应的 sku_code',\n            createTime: createDate\n          }\n        });\n      } else {\n        console.log(`Serial Number with sku_code: ${serialNumber}, sku_code: ${skuCode}`);\n        itemsWithSkuCode.push({\n          json: {\n            retroid: serialNumber,\n            sku_code: skuCode,\n            createTime: createDate\n          }\n        });\n      }\n    }\n  } else {\n    console.log(\"No snList or snList is empty\");\n  }\n}\n\n\n\nreturn itemsWithSkuCode;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        464
+      ],
+      "id": "db5749b9-6f65-4fa2-8b7c-94565e5bfdf7",
+      "name": "剔除没有sku_code的数据"
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "18a7f748-9d35-4953-95e9-2ece5560979f",
+      "name": "Date & Time",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.000",
+              "type": "string"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.999",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b9f2595-d364-4ad2-98f4-2095b25970db",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -1648,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "de09a2d7-44da-4490-ab3d-61b20d924c78",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -2000,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "43300a1a-1812-4b4a-9cfc-10b27adc9815",
+      "name": "定时触发-中国",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2192,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6e19246-9cef-4c73-a20b-44ca08f38365",
+              "leftValue": "={{ $json.uuid.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1312,
+        384
+      ],
+      "id": "76e11aa7-25e3-4cc2-8b3b-3568169c719e",
+      "name": "Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "SN",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        384
+      ],
+      "id": "c4666677-8ff2-4d95-8de5-505d45266117",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取输入数据，第一个输入项的 SN 数组\nconst snArray = items[0].json.SN;\n\n// 将条码提取为一个简单的数组\nconst snList = snArray.map(item => item.uuid).filter(e=>e!=null);\n\n// 构建输出格式\nconst result = {\n    \"snList\": snList\n};\n\n// 返回结果，使其为 n8n 可识别的格式\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        384
+      ],
+      "id": "13dda56f-e2a5-4fb3-8a9e-ae1873d98d16",
+      "name": "拆分sn"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TrKGqsfjFN77lvu3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TrKGqsfjFN77lvu3",
+          "cachedResultName": "get_materialcode"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        464
+      ],
+      "id": "58624baf-ffd8-4c35-b380-27352277a669",
+      "name": "Execute Workflow1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3,
+              "triggerAtMinute": 40
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -896,
+        96
+      ],
+      "id": "4b1d21ab-e377-455f-9d18-18befa85619a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\n\tFROM public.mes_delivery_order_details WHERE  create_time BETWEEN '{{ $json.startdate}}' AND '{{ $json.enddate }}';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -240,
+        96
+      ],
+      "id": "10aac952-503e-4d3f-833d-fb12b4e56895",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "bd993f66-38f5-4d5d-82b1-5271feb880e1",
+      "name": "Date & Time1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.000",
+              "type": "string"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.999",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2def886-3531-4a10-a59c-6f141afd92b5",
+      "name": "日期格式转换-中国1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -416,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "3feb6d89-b614-4c34-8f30-056a7c4006c5",
+      "name": "日期调整1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst itemsWithoutSkuCode = [];\nconst itemsWithSkuCode = [];\n\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\nfor (const item of items) {\n  if (item && item.json) {\n    const serialNumber = item.json.retroid;\n    const skuCode = item.json.sku_code;\n    const createDate = formatDate(item.json.create_time);\n\n    // 记录每条数据的 sku_code\n    console.log(`Processing retroid: ${serialNumber}, sku_code: ${skuCode}`);\n\n    // 处理空值和未定义情况\n    if (!skuCode || skuCode.trim() === '') {\n      // 记录进入此判断的条件\n      console.log(`No sku_code for retroid: ${serialNumber}`);\n      itemsWithoutSkuCode.push({\n        json: {\n          sn: serialNumber,\n          error: '没有对应的 sku_code',\n          createTime: createDate\n        }\n      });\n    } else {\n      itemsWithSkuCode.push(item);\n    }\n  }\n}\n\nconsole.log('Items without SKU code:', itemsWithoutSkuCode);\nconsole.log('Items with SKU code:', itemsWithSkuCode);\n\nreturn itemsWithSkuCode;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6d0624f9-b05c-4b03-9b6d-d5c7f12c071b",
+      "name": "剔除没有sku_code的数据1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nconst materialToProductMap = {\n  'GSW331000015': { code: '6972991921821', name: 'PACE 3白色硅胶', price: '1699' },\n  'GSW331000041': { code: '6972991921821', name: 'PACE 3白色硅胶', price: '1699' },\n  'GSW331000013': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000001': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000043': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000037': { code: '6972991922293', name: 'PACE 3白色织物', price: '1699' },\n  'GSW331000030': { code: '6972991922293', name: 'PACE 3白色织物', price: '1699' },\n  'GSW331000032': { code: '6972991922286', name: 'PACE 3黑灰色织物', price: '1699' },\n  'GSW331000039': { code: '6972991922286', name: 'PACE 3黑灰色织物', price: '1699' },\n  'GSW332000014': { code: '6972991922491', name: 'PACE Pro黑色', price: '2499' },\n  'GSW332000013': { code: '6972991922507', name: 'PACE Pro灰色', price: '2499' },\n  'GSW332000012': { code: '6972991922514', name: 'PACE Pro蓝色', price: '2499' },\n  'GSW332000022': { code: '6972991922682', name: 'PACE Pro大迫杰联名款', price: '2599' },\n  'GSW332000021': { code: '6972991922644', name: 'PACE Pro锡马限定款', price: '2499' },\n  'GSB210000009': { code: '6972991921487', name: 'APEX 2黑色', price: '2499' },\n  'GSB210000011': { code: '6972991921494', name: 'APEX 2灰色', price: '2499' },\n  'GSB210000013': { code: '6972991921500', name: 'APEX 2珊瑚金', price: '2499' },\n  'GSB210000015': { code: '6972991921968', name: 'APEX 2藕粉色', price: '2499' },\n  'GSWL20B20001': { code: '6972991921449', name: 'APEX 2 Pro黑色', price: '3299' },\n  'GSB200000017': { code: '6972991922453', name: 'APEX 2 Pro黑色', price: '3299' },\n  'GSB200000019': { code: '6972991922460', name: 'APEX 2 Pro灰色', price: '3299' },\n  'GSWL20B20005': { code: '6972991922460', name: 'APEX 2 Pro灰色', price: '3299' },\n  'GSB19S000003': { code: '6972991922194', name: 'VERTIX 2S地球蓝', price: '5099' },\n  'GSB19S000001': { code: '6972991922200', name: 'VERTIX 2S月球银', price: '5099' },\n  'GSW942000013': { code: '6972991922774', name: 'NOMAD 绿色', price: '2499' },\n  'GSW942000014': { code: '6972991922767', name: 'NOMAD 黑色', price: '2499' },\n  'GSW942000015': { code: '6972991922781', name: 'NOMAD 棕色', price: '2499' },  \n  'GSBY01000004': { code: '6972991922255', name: '码表', price: '1799' },\n  'WQW541000004': { code: '6972991923115', name: 'APEX 4 46mm', price: '3100' },\n  'WQW541000006': { code: '6972991923139', name: 'APEX 4 46mm', price: '3100' },\n  'WQW542000004': { code: '6972991923146', name: 'APEX 4 42mm', price: '2700' },\n  'WQW542000006': { code: '6972991923122', name: 'APEX 4 42mm', price: '2700' },\n  'GSW541000010': { code: '6972991923078', name: 'APEX 4 黑色（46mm）', price: '3299' },\n  'GSW542000005': { code: '6972991923085', name: 'APEX 4 黑色（42mm）', price: '2999' },\n  'GSW541000011': { code: '6972991923092', name: 'APEX 4 白色（46mm）', price: '3299' },\n  'GSW542000006': { code: '6972991923108', name: 'APEX 4 白色（42mm）', price: '2999' },\n  'GSR400000006': { code: '6972991923214', name: 'PACE 4 白色硅胶', price: '1499' },\n  'GSR400000007': { code: '6972991923191', name: 'PACE 4 黑色硅胶', price: '1499' },\n  'GSR400000008': { code: '6972991923221', name: 'PACE 4 白色织物', price: '1499' },\n  'GSR400000009': { code: '6972991923207', name: 'PACE 4 黑色织物', price: '1499' }\n  \n};\n\nconst ex_sn = [\n  'M18L', 'W31K', 'W31J', 'W31C', 'B20G',\n  'W31F', 'V16B', 'H31A', 'V19A', 'W31H',\n  'M18J', 'F01A', 'M18E', 'V19B', 'W31G',\n  'M18B', 'B17A'\n];\n\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\nfunction resolveModelBasedOnSn(serialNumber) {\n  if (serialNumber.startsWith('W32')) {\n    return 'W332';\n  } else if (serialNumber.startsWith('W31')) {\n    return 'W331';\n  } else if (serialNumber.startsWith('B21')) {\n    return 'B21';\n  } else if (serialNumber.startsWith('V09')) {\n    return 'V09';\n  } else if (serialNumber.startsWith('B20')) {\n    return 'B20';\n  } else if (serialNumber.startsWith('W92')) {\n    return 'W942';\n  } else if (serialNumber.startsWith('C01')) {\n    return 'BY01'; // 定义C01开头的机型为BY01\n  } else if (serialNumber.startsWith('W51')) { // sn开头前3位\n    return 'W541'; // 内部代码？\n  } else if (serialNumber.startsWith('W52')) {\n    return 'W542';\n  } else if (serialNumber.startsWith('W35')) {\n    return 'W335';\n  }\n  return null;\n}\n\n\nfor (const item of items) {\n  if (item && item.json && typeof item.json.retroid === 'string') {\n    const serialNumber = item.json.retroid;\n    const skuCode = item.json.sku_code;\n    const model = resolveModelBasedOnSn(serialNumber);\n\n    if (ex_sn.includes(serialNumber.substr(0, 4))) {\n      // 如果前缀在排除列表中，继续下一个\n      continue;\n    }\n\n    const productInfo = materialToProductMap[skuCode];\n    if (!productInfo) {\n      // 如果skuCode不在materialToProductMap中，跳过当前项\n      continue;\n    }\n\n    if (model !== null && model !== 'FD05' && model !== 'HR01' && model !== 'FD03' && model !== 'FD02') {\n      const createTime = item.json.create_time;\n      const formattedCreateTime = formatDate(createTime);\n\n      const price = productInfo.price ? productInfo.price.toString() : '未定义';\n\n      results.push({\n        json: {\n          sn: serialNumber,\n          code: productInfo.code,\n          name: productInfo.name,\n          model: model,\n          retailPrice: price,\n          createTime: formattedCreateTime\n        }\n      });\n    }\n  } else {\n    results.push({ json: { error: '输入数据无效或缺少retroid属性' } });\n  }\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        0
+      ],
+      "id": "7dda53b5-6c9c-4274-904d-71c549635164",
+      "name": "根据sku_code找到对应的69码1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst itemsWithoutSkuCode = [];\n\n// 格式化日期函数\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\n// 提取没有 sku_code 的项目\nfor (const item of items) {\n  if (item && item.json) {\n    const serialNumber = item.json.retroid;\n    const skuCode = item.json.sku_code;\n\n    if (!skuCode) {\n      // 如果没有 sku_code，添加到结果列表中\n      const createDate = formatDate(item.json.create_time);\n      itemsWithoutSkuCode.push({\n        json: {\n          sn: serialNumber,\n          error: '没有对应的 sku_code',\n          createTime: createDate\n        }\n      });\n    }\n  }\n}\n\n// 返回只有没有 sku_code 的项目\nreturn itemsWithoutSkuCode;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        208
+      ],
+      "id": "19441dd9-d6bc-4e2c-8581-c2e98c2e8e1b",
+      "name": "查询没有sku_code的数据"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        496,
+        720
+      ],
+      "id": "f504268a-0e84-4fdc-b1b4-0115a0bb7098",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "80c333b7-2cf5-4b91-b318-d6a076af9fc7",
+      "name": "Crypto1",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        832,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.items.uniquecode.add"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "barcode",
+              "value": "={{ $json.data.code }}"
+            },
+            {
+              "name": "uniqueCode",
+              "value": "={{ $json.data.sn }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 100
+            }
+          },
+          "timeout": 700000
+        }
+      },
+      "id": "bff47700-9321-43d7-b126-1b6ba42826e6",
+      "name": "管易通过单据编号查询到对应订单信息1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        992,
+        192
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nfor (const item of $input.all() ) {\n   let res={};\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.items.uniquecode.add\",\n  \"barcode\": item.json.code,\n  \"uniqueCode\": item.json.sn,\n}\n  let secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nres.data=item.json\nresult.push(res);\n}\n\n\nreturn result;"
+      },
+      "id": "f6448b22-7fb8-4875-ba1a-4d4863ef7c27",
+      "name": "生成管易签名1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nconst materialToProductMap = {\n  'GSW331000015': { code: '6972991921821', name: 'PACE 3白色硅胶', price: '1699' },\n  'GSW331000041': { code: '6972991921821', name: 'PACE 3白色硅胶', price: '1699' },\n  'GSW331000013': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000001': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000043': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000037': { code: '6972991922293', name: 'PACE 3白色织物', price: '1699' },\n  'GSW331000030': { code: '6972991922293', name: 'PACE 3白色织物', price: '1699' },\n  'GSW331000032': { code: '6972991922286', name: 'PACE 3黑灰色织物', price: '1699' },\n  'GSW331000039': { code: '6972991922286', name: 'PACE 3黑灰色织物', price: '1699' },\n  'GSW332000014': { code: '6972991922491', name: 'PACE Pro黑色', price: '2499' },\n  'GSW332000013': { code: '6972991922507', name: 'PACE Pro灰色', price: '2499' },\n  'GSW332000012': { code: '6972991922514', name: 'PACE Pro蓝色', price: '2499' },\n  'GSW332000022': { code: '6972991922682', name: 'PACE Pro大迫杰联名款', price: '2599' },\n  'GSW332000021': { code: '6972991922644', name: 'PACE Pro锡马限定款', price: '2499' },\n  'GSB210000009': { code: '6972991921487', name: 'APEX 2黑色', price: '2499' },\n  'GSB210000011': { code: '6972991921494', name: 'APEX 2灰色', price: '2499' },\n  'GSB210000013': { code: '6972991921500', name: 'APEX 2珊瑚金', price: '2499' },\n  'GSB210000015': { code: '6972991921968', name: 'APEX 2藕粉色', price: '2499' },\n  'GSWL20B20001': { code: '6972991921449', name: 'APEX 2 Pro黑色', price: '3299' },\n  'GSB200000017': { code: '6972991922453', name: 'APEX 2 Pro黑色', price: '3299' },\n  'GSB200000019': { code: '6972991922460', name: 'APEX 2 Pro灰色', price: '3299' },\n  'GSWL20B20005': { code: '6972991922460', name: 'APEX 2 Pro灰色', price: '3299' },\n  'GSB19S000003': { code: '6972991922194', name: 'VERTIX 2S地球蓝', price: '5099' },\n  'GSB19S000001': { code: '6972991922200', name: 'VERTIX 2S月球银', price: '5099' },\n  'GSB19S000005': { code: '6972991922217', name: 'VERTIX 2S太空黑', price: '5099' },\n  'GSW942000013': { code: '6972991922774', name: 'NOMAD 绿色', price: '2499' },\n  'GSW942000014': { code: '6972991922767', name: 'NOMAD 黑色', price: '2499' },\n  'GSW942000015': { code: '6972991922781', name: 'NOMAD 棕色', price: '2499' },  \n  'GSBY01000004': { code: '6972991922255', name: '码表', price: '1799' },\n  'WQW541000004': { code: '6972991923115', name: 'APEX 4 46mm', price: '3100' },\n  'WQW541000006': { code: '6972991923139', name: 'APEX 4 46mm', price: '3100' },\n  'WQW542000004': { code: '6972991923146', name: 'APEX 4 42mm', price: '2700' },\n  'WQW542000006': { code: '6972991923122', name: 'APEX 4 42mm', price: '2700' },\n  'GSW541000010': { code: '6972991923078', name: 'APEX 4 黑色（46mm）', price: '3299' },\n  'GSW542000005': { code: '6972991923085', name: 'APEX 4 黑色（42mm）', price: '2999' },\n  'GSW541000011': { code: '6972991923092', name: 'APEX 4 白色（46mm）', price: '3299' },\n  'GSW542000006': { code: '6972991923108', name: 'APEX 4 白色（42mm）', price: '2999' },\n  'GSR400000006': { code: '6972991923214', name: 'PACE 4 白色硅胶', price: '1499' },\n  'GSR400000007': { code: '6972991923191', name: 'PACE 4 黑色硅胶', price: '1499' },\n  'GSR400000008': { code: '6972991923221', name: 'PACE 4 白色织物', price: '1499' },\n  'GSR400000009': { code: '6972991923207', name: 'PACE 4 黑色织物', price: '1499' },\n  'GSR400000016': { code: '6972991923542', name: 'PACE 4 锡马限定款', price: '1699' },\n  'GSHR01000004': { code: '6972991921937', name: 'HR31 橙色', price: '599' },\n  'GSFD05000005': { code: '6972991921432', name: 'POD 2', price: '599' },\n  'GSFD03000003': { code: '6972991922699', name: '踏频计', price: '199' },\n  'GSFD02000007': { code: '6972991922262', name: '速度计', price: '199' },\n  'GSHR01000003': { code: '6972991921944', name: 'HR31 绿色', price: '599' },\n  'GSHR01000001': { code: '6972991921777', name: 'HR31 灰色', price: '599' },\n};\n\n// 修改点：已经删除了 'H31A'\nconst ex_sn = [\n  'M18L', 'W31K', 'W31J', 'W31C', 'B20G',\n  'W31F', 'V16B', 'V19A', 'W31H', // 'H31A' 已从此处移除\n  'M18J', 'F01A', 'M18E', 'V19B', 'W31G',\n  'M18B', 'B17A'\n];\n\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\nfunction resolveModelBasedOnSn(serialNumber) {\n  if (serialNumber.startsWith('W32')) {\n    return 'W332';\n  } else if (serialNumber.startsWith('W31')) {\n    return 'W331';\n  } else if (serialNumber.startsWith('B21')) {\n    return 'B21';\n  } else if (serialNumber.startsWith('V09')) {\n    return 'V09';\n  } else if (serialNumber.startsWith('B20')) {\n    return 'B20';\n  } else if (serialNumber.startsWith('W92')) {\n    return 'W942';\n  } else if (serialNumber.startsWith('C01')) {\n    return 'BY01'; \n  } else if (serialNumber.startsWith('W51')) {\n    return 'W541';\n  } else if (serialNumber.startsWith('W52')) {\n    return 'W542';\n  } else if (serialNumber.startsWith('W35')) {\n    return 'W335';\n  } else if (serialNumber.startsWith('H31')) {\n    return 'H31';\n  }else if (serialNumber.startsWith('F05')) {\n    return 'F05';\n  }\n  return null;\n}\n\nfor (const item of items) {\n  if (item && item.json && typeof item.json.retroid === 'string') {\n    const serialNumber = item.json.retroid;\n    const skuCode = item.json.sku_code;\n    const model = resolveModelBasedOnSn(serialNumber);\n\n    // 检查排除列表\n    const snPrefix = serialNumber.substr(0, 4);\n    if (ex_sn.includes(snPrefix)) {\n      continue;\n    }\n\n    const productInfo = materialToProductMap[skuCode];\n    if (!productInfo) {\n      // 调试用：如果 H31 的 SKU 不在表中，也会导致不返回数据\n      continue;\n    }\n\n    if (model !== null && model !== 'FD05' && model !== 'HR01' && model !== 'FD03' && model !== 'FD02') {\n      const createTime = item.json.createTime;\n      const formattedCreateTime = formatDate(createTime);\n      const price = productInfo.price ? productInfo.price.toString() : '未定义';\n\n      results.push({\n        json: {\n          sn: serialNumber,\n          code: productInfo.code,\n          name: productInfo.name,\n          model: model,\n          retailPrice: price,\n          createTime: formattedCreateTime\n        }\n      });\n    }\n  } else {\n    results.push({ json: { error: '输入数据无效或缺少retroid属性' } });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        464
+      ],
+      "id": "4cd5a426-4b3a-444f-a684-b2d258e691ee",
+      "name": "根据sku_code找到对应的69码",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "tanhuan@coros.com",
+        "subject": "管易接口调用失败",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "5614790a-f7cd-433c-b151-3f56affaefc8",
+      "name": "管易接口调用失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1216,
+        288
+      ],
+      "webhookId": "53e19254-5825-4b9e-ba70-65fbeadb220c",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6e19246-9cef-4c73-a20b-44ca08f38365",
+              "leftValue": "={{ $json.retroid.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1312,
+        560
+      ],
+      "id": "466a919d-e758-4ae6-a36f-42380a8a37bc",
+      "name": "Filter1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "SN",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        560
+      ],
+      "id": "0487965d-1fbb-43a7-8906-9facfa4ae133",
+      "name": "Aggregate3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取输入数据，第一个输入项的 SN 数组\nconst snArray = items[0].json.SN;\n\n// 将条码提取为一个简单的数组\nconst snList = snArray.map(item => item.retroid).filter(e=>e!=null);\n\n// 构建输出格式\nconst result = {\n    \"snList\": snList\n};\n\n// 返回结果，使其为 n8n 可识别的格式\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        560
+      ],
+      "id": "1aeb76cf-2a49-4be7-8f90-3e576cf5d107",
+      "name": "拆分sn1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT uuid from YFConsumer.dbo.consm_barcodeinfo where createtime2 BETWEEN '{{ $json.startdate }}'and '{{ $json.enddate }}';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -1488,
+        384
+      ],
+      "id": "7498078c-3618-4702-8466-601476932568",
+      "name": "拉取老mes数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    r.retroid\nFROM \n    mes.machine_data md\nJOIN \n    mes.retroid r ON md.retroid_id = r.retroid_id\nWHERE \n    md.procedure_detail_id = 79\n    AND md.createtime BETWEEN '{{ $json.startdate }}' AND '{{ $json.enddate }}';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1488,
+        560
+      ],
+      "id": "5badc053-4680-472f-972d-aca0ba86d896",
+      "name": "拉取新mes数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "tanhuan@coros.com",
+        "subject": "国补接口调用-无物料号SN",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "071a1ac4-f7f3-49a9-8ae1-9caa0c17f815",
+      "name": "无物料号产品",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        720
+      ],
+      "webhookId": "53e19254-5825-4b9e-ba70-65fbeadb220c",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30387842-3a9c-4b1d-9515-d141f729f689",
+              "name": "newDate",
+              "value": "={{ $json[\"同步日期\"] }}T03:30:07.079+08:00",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2000,
+        368
+      ],
+      "id": "8e8de42e-75d7-4d1e-a5eb-4785e284de30",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "formTitle": "同步SN唯一码到管易",
+        "formDescription": "同步SN唯一码数据到管易",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "同步日期",
+              "fieldType": "date"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -2192,
+        368
+      ],
+      "id": "32866f91-7242-4402-ba9b-fc96be2322ab",
+      "name": "On form submission",
+      "webhookId": "c049c419-848e-4d90-82d2-eb722e2f1938"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "同步成功",
+        "completionMessage": "={{ $json.data.toJsonString() }}",
+        "limitWaitTime": true,
+        "options": {
+          "customCss": ":root {\n\t--font-family: 'Open Sans', sans-serif;\n\t--font-weight-normal: 400;\n\t--font-weight-bold: 600;\n\t--font-size-body: 12px;\n\t--font-size-label: 14px;\n\t--font-size-test-notice: 12px;\n\t--font-size-input: 14px;\n\t--font-size-header: 20px;\n\t--font-size-paragraph: 14px;\n\t--font-size-link: 12px;\n\t--font-size-error: 12px;\n\t--font-size-html-h1: 28px;\n\t--font-size-html-h2: 20px;\n\t--font-size-html-h3: 16px;\n\t--font-size-html-h4: 14px;\n\t--font-size-html-h5: 12px;\n\t--font-size-html-h6: 10px;\n\t--font-size-subheader: 14px;\n\n\t/* Colors */\n\t--color-background: #fbfcfe;\n\t--color-test-notice-text: #e6a23d;\n\t--color-test-notice-bg: #fefaf6;\n\t--color-test-notice-border: #f6dcb7;\n\t--color-card-bg: #ffffff;\n\t--color-card-border: #dbdfe7;\n\t--color-card-shadow: rgba(99, 77, 255, 0.06);\n\t--color-link: #7e8186;\n\t--color-header: #525356;\n\t--color-label: #555555;\n\t--color-input-border: #dbdfe7;\n\t--color-input-text: #71747A;\n\t--color-focus-border: rgb(90, 76, 194);\n\t--color-submit-btn-bg: #ff6d5a;\n\t--color-submit-btn-text: #ffffff;\n\t--color-error: #ea1f30;\n\t--color-required: #ff6d5a;\n\t--color-clear-button-bg: #7e8186;\n\t--color-html-text: #555;\n\t--color-html-link: #ff6d5a;\n\t--color-header-subtext: #7e8186;\n\n\t/* Border Radii */\n\t--border-radius-card: 8px;\n\t--border-radius-input: 6px;\n\t--border-radius-clear-btn: 50%;\n\t--card-border-radius: 8px;\n\n\t/* Spacing */\n\t--padding-container-top: 24px;\n\t--padding-card: 24px;\n\t--padding-test-notice-vertical: 12px;\n\t--padding-test-notice-horizontal: 24px;\n\t--margin-bottom-card: 16px;\n\t--padding-form-input: 12px;\n\t--card-padding: 24px;\n\t--card-margin-bottom: 16px;\n\n\t/* Dimensions */\n\t--container-width: 448px;\n\t--submit-btn-height: 48px;\n\t--checkbox-size: 18px;\n\n\t/* Others */\n\t--box-shadow-card: 0px 4px 16px 0px var(--color-card-shadow);\n\t--opacity-placeholder: 0.5;\n  width:100%;\n}"
+        }
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        1408,
+        96
+      ],
+      "id": "d018759d-e577-437f-9a45-569dbe1a9fe0",
+      "name": "Form",
+      "webhookId": "529a620e-c76e-48e3-ad98-198f5dbc0902"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        96
+      ],
+      "id": "93fd6959-f657-479c-a68d-9266150ae3a6",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2272,
+        208
+      ],
+      "id": "3d389952-474b-4ea1-988a-5f5cedb50315",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -624,
+        480
+      ],
+      "id": "a857fb85-23eb-4514-ae17-7541a247f6f2",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "body",
+        "include": "specifiedFields",
+        "fieldsToInclude": "snList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        304
+      ],
+      "id": "69979199-2395-4bb8-98f5-3e3b80e7e9f7",
+      "name": "Aggregate4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 使用 flatMap 快速提取并展平所有数组\n// item.json.snList || [] 表示如果 snList 不存在，就用空数组代替，防止报错\nconst allItems = $input.all().flatMap(item => item.json.snList || []);\n\n// 2. 使用 Set 进行去重，然后转回数组\nconst uniqueList = [...new Set(allItems)];\n\nreturn [\n  {\n    body: {\n      snList: uniqueList,\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        480
+      ],
+      "id": "f159e84e-0348-40f3-92f9-87fd04ebcf41",
+      "name": "合并SN"
+    }
+  ],
+  "connections": {
+    "筛选没有sku_code的产品": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "无物料号产品",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "剔除没有sku_code的数据": {
+      "main": [
+        [
+          {
+            "node": "根据sku_code找到对应的69码",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "拉取老mes数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "拉取新mes数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定时触发-中国": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "拆分sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分sn": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow1": {
+      "main": [
+        [
+          {
+            "node": "剔除没有sku_code的数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "筛选没有sku_code的产品",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "日期调整1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "剔除没有sku_code的数据1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询没有sku_code的数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国1": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期调整1": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "剔除没有sku_code的数据1": {
+      "main": [
+        [
+          {
+            "node": "根据sku_code找到对应的69码1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据sku_code找到对应的69码1": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询没有sku_code的数据": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto1": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "管易接口调用失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名1": {
+      "main": [
+        [
+          {
+            "node": "Crypto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据sku_code找到对应的69码": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate3": {
+      "main": [
+        [
+          {
+            "node": "拆分sn1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分sn1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "拉取老mes数据": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拉取新mes数据": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "合并SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并SN": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:定时触发-中国": {
+      "recurrenceRules": [
+        12
+      ]
+    },
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-01-05T03:40:25.014+08:00",
+          "Readable date": "January 5th 2026, 3:40:25 am",
+          "Readable time": "3:40:25 am",
+          "Day of week": "Monday",
+          "Year": "2026",
+          "Month": "January",
+          "Day of month": "05",
+          "Hour": "03",
+          "Minute": "40",
+          "Second": "25",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "body": {
+            "snList": [
+              "V09C009374"
+            ]
+          }
+        }
+      }
+    ],
+    "On form submission": [
+      {
+        "json": {
+          "同步日期": "2026-01-26",
+          "submittedAt": "2026-01-30T19:17:04.889+08:00",
+          "formMode": "production"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "newDate": "2026-01-26T03:30:07.079+08:00"
+        }
+      }
+    ]
+  },
+  "versionId": "ed606a90-96fc-4a92-9f4e-791c6569fb4c",
+  "activeVersionId": "ed606a90-96fc-4a92-9f4e-791c6569fb4c",
+  "versionCounter": 201,
+  "triggerCount": 3,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-04T03:28:09.725Z",
+      "createdAt": "2025-11-04T03:28:09.725Z",
+      "role": "workflow:owner",
+      "workflowId": "j2sXQSOKzZabdgwB",
+      "projectId": "tWCIm1YoFSonVJe1",
+      "project": {
+        "updatedAt": "2025-05-08T05:37:40.946Z",
+        "createdAt": "2025-05-08T05:37:31.597Z",
+        "id": "tWCIm1YoFSonVJe1",
+        "name": "仓库出入库",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "layer-group"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

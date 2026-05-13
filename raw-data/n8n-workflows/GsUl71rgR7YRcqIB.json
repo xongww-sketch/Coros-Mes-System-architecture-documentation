@@ -1,0 +1,641 @@
+{
+  "updatedAt": "2025-11-19T09:10:34.892Z",
+  "createdAt": "2025-09-17T09:36:33.326Z",
+  "id": "GsUl71rgR7YRcqIB",
+  "name": "bind_id_query_material",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bind_id_query_material",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1360,
+        64
+      ],
+      "id": "99696778-5181-4a1b-afd3-be594e716261",
+      "name": "Webhook",
+      "webhookId": "409a09df-e982-46ae-84bf-a70a89aabd50"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f04569e4-78c9-4b59-9bb4-17c60f719a8f",
+              "leftValue": "={{ $json.body.material }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f3c870a4-c3ab-4902-8aca-931d5011e267",
+              "leftValue": "={{ $json.body.bind_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1088,
+        64
+      ],
+      "id": "a3f72b50-4e0c-4ae7-98d4-9529e12ced65",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写辅料或物料信息\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -832,
+        240
+      ],
+      "id": "39d5e284-8781-419c-a8b9-07a5cd6bc873",
+      "name": "请填写辅料信息"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"辅料未绑定物料，无法查询\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1104,
+        304
+      ],
+      "id": "9beb35b9-0acd-4964-ba2d-0d6ce079c85f",
+      "name": "辅料未绑定物料"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT md.data,\n       md.createtime AS createtime1\nFROM mes.machine_data md\nWHERE md.data ->> 'bind_id' = '{{ $json.body.material }}'\nORDER BY md.createtime DESC\nLIMIT 1;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -656,
+        -480
+      ],
+      "id": "edaa35f9-f222-4f1e-af08-6ae62c7957f1",
+      "name": "查询物料绑定sn信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT md.data,\n  md.createtime\nFROM mes.machine_data md\nWHERE md.data ->>'material' = '{{ $json.body.material }}'\nORDER BY md.createtime DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -656,
+        -304
+      ],
+      "id": "ec7061e4-dda8-4392-bbb6-eff471853c6d",
+      "name": "查询物料绑定sn信息1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0b372c65-6c6e-4c94-9ddc-6b25b061d25e",
+              "leftValue": "={{ $json.body.material }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -944,
+        -128
+      ],
+      "id": "4a373c3d-e097-4c66-9f93-361e402d9855",
+      "name": "根据物料查询"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -448,
+        -416
+      ],
+      "id": "ebe46fc4-e783-4413-856d-6ae21d8bf653",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        -384
+      ],
+      "id": "77268c0c-03b7-47b5-953e-8a75323c0f24",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取输入项 (因为你的 Input 是一个包含 huge array 的单对象)\nconst inputItem = $input.first();\n\n// 防御性检查：如果没数据\nif (!inputItem || !inputItem.json) {\n  return {\n    json: {\n      code: 200,\n      data: { list: [] }\n    }\n  };\n}\n\n// 2. 提取核心数组 binding_history\n// 注意：这里不再是 $input.all()，而是取 json 里面的特定字段\nconst rootJson = inputItem.json;\nconst sourceArray = Array.isArray(rootJson.binding_history) ? rootJson.binding_history : [];\n\n// 3. 遍历数组进行格式化\nconst formattedList = sourceArray.map(item => {\n  // 逻辑：sn 优先 -> retroid -> bind_id (兜底) -> \"\"\n  const sn = item.sn || item.retroid || item.bind_id || \"\";\n\n  return {\n    procedure_name: item.procedure_name ? item.procedure_name.toString() : \" \",\n    sn: sn,\n    material: item.material || \"\",\n    bind_id: item.bind_id || \"\",\n    // 时间逻辑：优先取 item 自己的 createtime1，如果没有则取外层公共的\n    creatime1: item.createtime1 || rootJson.creatime1 || \"\",\n    creatime: item.createtime || rootJson.creatime || \"\"\n  };\n});\n\n// 4. 返回最终结构\nreturn {\n  json: {\n    code: 200,\n    data: {\n      list: formattedList\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        -384
+      ],
+      "id": "e508fd32-de0d-4b16-9151-a4bdf3cbccb7",
+      "name": "Code1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c2ea177-de74-4d3a-8174-fafd0662c1a0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        -368
+      ],
+      "id": "295101af-f89d-4d6c-b751-48c54195ee0b",
+      "name": "判断是否存在数据"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取所有输入 items (不仅仅是第一个)\nconst allItems = $input.all();\n\n// 2. 遍历所有数据，整理格式\n// 我们把 data 里面的内容(sn, bind_id) 和外面的 createtime1 合并在一起\n// 这样每一条历史记录都带有时间\nconst historyList = allItems.map(item => {\n    return {\n        // 将 data 对象里的字段 (sn, bind_id, procedure_name) 展开\n        ...item.json.data,\n        // 把外面的时间字段也放进来，方便查看\n        createtime1: item.json.createtime1\n    };\n});\n\n// 3. 返回结果\n// 返回一个单独的对象，因为这时候我们要把多行数据整合成一个 Response\nreturn {\n    \"code\": \"200\",\n    \"binding_history\": historyList, // 这里现在是一个包含所有数据的数组\n    \n    // 取第一条数据的时间作为整个包的时间（或者你可以留空）\n    \"creatime1\": allItems.length > 0 ? allItems[0].json.createtime1 : null,\n    // 防错处理：如果原始数据里没有 createtime，给个 null\n    \"creatime\": allItems.length > 0 ? (allItems[0].json.createtime || null) : null\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -384
+      ],
+      "id": "7914a71c-994c-4815-a986-735d0e21ea3f",
+      "name": "整理数据"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT md.data,\n       md.createtime AS createtime1\nFROM mes.machine_data md\n-- 直接使用 IN 语法\n-- 注意：括号里面直接放 n8n 的变量，不要再加额外的引号，因为我们在 Code Node 里拼好了\nWHERE (md.data ->> 'bind_id')::text IN ( {{ $json.sql_filter }} )\nORDER BY md.createtime DESC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        -144
+      ],
+      "id": "557480ef-7cd7-4452-8268-e3a96b522f45",
+      "name": "查询辅料绑定sn信息",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT md.data,\n       md.createtime\nFROM mes.machine_data md\nWHERE md.data ->> 'bind_id' LIKE '%' || '{{ $json.body.bind_id }}' || '%'\nORDER BY md.createtime DESC\n;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -704,
+        -80
+      ],
+      "id": "b9074f55-5a5b-4c00-add0-cb87e8c23467",
+      "name": "查询辅料绑定物料信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c2ea177-de74-4d3a-8174-fafd0662c1a0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        -272
+      ],
+      "id": "2203657a-a5e6-4c2b-a94f-8e1cfbc7f824",
+      "name": "判断是否存在数据1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "data.bind_id",
+              "field2": "data.material"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        720,
+        -80
+      ],
+      "id": "43b4746a-74e4-417e-803d-146b0a07ed55",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 提取 material\nconst materials = items.map(item => item.json.data.material);\n\n// 2. 去重、过滤空值、去除首尾空格\nconst uniqueMaterials = [...new Set(materials.filter(m => m))].map(m => m.toString().trim());\n\n// 3. 【核心修改】拼接成带单引号的 SQL 格式\n// 结果长这样: 'PPW5100492','PPW5100491','PPW5100198'\nconst sqlReadyString = \"'\" + uniqueMaterials.join(\"','\") + \"'\";\n\nreturn [\n  {\n    json: {\n      sql_filter: sqlReadyString, // 这个字段直接给 SQL 用\n      debug_count: uniqueMaterials.length\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -240
+      ],
+      "id": "e2d73048-a853-4e94-a8c5-b226987196c9",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "根据物料查询",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请填写辅料信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询物料绑定sn信息": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据物料查询": {
+      "main": [
+        [
+          {
+            "node": "查询物料绑定sn信息1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询物料绑定sn信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询辅料绑定物料信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询物料绑定sn信息1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否存在数据": {
+      "main": [
+        [
+          {
+            "node": "整理数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "辅料未绑定物料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询辅料绑定物料信息": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在数据1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "判断是否存在数据1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "辅料未绑定物料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询辅料绑定sn信息": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "判断是否存在数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "查询辅料绑定sn信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "46",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "material": "",
+            "bind_id": "GZ2509071136WY0720"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/bind_id_query_material",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "d055382a-1e51-45d2-85b6-e9303c1d9bee",
+  "activeVersionId": "d055382a-1e51-45d2-85b6-e9303c1d9bee",
+  "versionCounter": 44,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-17T09:36:33.326Z",
+      "createdAt": "2025-09-17T09:36:33.326Z",
+      "role": "workflow:owner",
+      "workflowId": "GsUl71rgR7YRcqIB",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

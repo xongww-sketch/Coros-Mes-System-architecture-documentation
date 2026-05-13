@@ -1,0 +1,368 @@
+{
+  "updatedAt": "2025-12-27T00:36:15.636Z",
+  "createdAt": "2024-07-30T05:09:27.151Z",
+  "id": "nZijTngck0nKIISA",
+  "name": "get_job_number_sum-Weight",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) from consm_deviceweight where jobnumber='{{ $json.body }}'"
+      },
+      "id": "09f60e83-ad11-4f44-b794-0d965b9428b4",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        80
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"count\":{{ $json[''] }}\n} ",
+        "options": {}
+      },
+      "id": "a69ae1be-06ca-4878-9ea7-60c31f35248f",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1632,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "ac80266a-bde8-47f3-a510-69b16b82f494",
+              "leftValue": "={{ $json.body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c7a0855e-d9f6-4f50-b70e-d37cfb6335e5",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        800,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\",\n  \"message\":\"工单不能为空！\"\n}",
+        "options": {}
+      },
+      "id": "157bd859-cc4b-4125-bf18-07cdb8b6c8d8",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "path": "=getJobNumber",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "2a550426-0200-4c22-8af2-c194991f70e5",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        592,
+        288
+      ],
+      "webhookId": "3ca697f2-783f-4f57-a850-e1054a9b2ef9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a996b076-b49f-495d-baee-6329e890dcf0",
+              "leftValue": "={{ $json[''] }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        80
+      ],
+      "id": "a47ceb41-db20-4628-a10a-5a9007a8f828",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a996b076-b49f-495d-baee-6329e890dcf0",
+              "leftValue": "={{ Number($json.count) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        240
+      ],
+      "id": "de817487-7f39-4024-993c-43874a842e81",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"count\":{{ $json['count'] }}\n} ",
+        "options": {}
+      },
+      "id": "4453a24b-7b67-41b0-a135-41fa25561a03",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1648,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(DISTINCT md.retroid_id) AS count\nFROM mes.machine_data AS md\nWHERE \n    -- 确保这里与创建的索引表达式完全一致\n    md.data->>'orderNumber' = $1 \n    AND md.procedure_detail_id = 79\n    AND NOT EXISTS (\n        SELECT 1 \n        FROM mes.machine_data AS md2 \n        WHERE md2.retroid_id = md.retroid_id\n          AND md2.procedure_detail_id = 91 \n          AND md2.createtime > md.createtime\n          -- 只有在其他条件都满足时才检查这个JSON，利用数据库短路特性\n          AND md2.data->>'procedure_detail_id_old' = '79'\n    );",
+        "options": {
+          "queryReplacement": "={{ $json.body }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1072,
+        240
+      ],
+      "id": "53da7087-d65e-420a-b605-f239a24730d2",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Respond to Webhook": [
+      {
+        "json": {
+          "": 0
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.54",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "10",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": 1000005684,
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getJobNumber",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "420419b8-22c4-4f25-a400-d8e38a0179ea",
+  "activeVersionId": "420419b8-22c4-4f25-a400-d8e38a0179ea",
+  "versionCounter": 42,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-06-18T08:23:36.116Z",
+      "createdAt": "2025-06-18T08:23:36.116Z",
+      "role": "workflow:owner",
+      "workflowId": "nZijTngck0nKIISA",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

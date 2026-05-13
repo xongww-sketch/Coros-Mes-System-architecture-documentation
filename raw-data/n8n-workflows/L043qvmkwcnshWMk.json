@@ -1,0 +1,377 @@
+{
+  "updatedAt": "2025-04-24T07:22:02.318Z",
+  "createdAt": "2025-03-18T05:55:00.921Z",
+  "id": "L043qvmkwcnshWMk",
+  "name": "镭雕机接口",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "laser_machine",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        -20
+      ],
+      "id": "2e6a635c-d083-4baf-84cf-e52994f02b3f",
+      "name": "Webhook",
+      "webhookId": "00f065c4-cd83-4ab3-a073-106bfdff980e"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1a724c9-69b5-4485-b741-25d362adead8",
+              "leftValue": "={{ $json.body.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        -20
+      ],
+      "id": "72d81efe-7775-4799-bca6-a1bdad36eccf",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n   \"sn\":\"{{ $json.retroid }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        -40
+      ],
+      "id": "b2bfaba9-1c98-43cb-9b44-aabd1c803298",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "let inputArray = $input.all();\nlet result = null;\n\nconsole.log(\"Received Input Array:\", inputArray);\n\n// 检查输入是否为非空数组且至少有一个元素\nif (Array.isArray(inputArray) && inputArray.length > 0) {\n    console.log(\"Input array is valid.\");\n\n    let json = inputArray[0].json; // 获取json对象\n\n    if (json.body) {\n        console.log(\"Body found:\", json.body);\n        \n        const body = json.body;\n        \n        if (body.uuid) {\n            console.log(\"UUID found:\", body.uuid);\n\n            let url = body.uuid;\n\n            // 使用正则表达式捕获需要的部分\n            const regex = /a=.*?([\\dA-Fa-f]+)&b=([\\dA-Fa-f]+)&c=([\\dA-Fa-f]+)/;\n            const match = url.match(regex);\n\n            if (match && match.length === 4) { // 如果成功匹配\n                console.log(\"Matched:\", match);\n\n                // 用 a 参数末尾、b 和 c 生成 uuidId\n                body.uuidId = [match[1], match[2], match[3]].join('');\n\n                // 用 a 参数末尾和 c 生成 uuid_unique\n                body.uuid_unique = [match[1], match[3]].join('');\n            } else {\n                console.log(\"No match found.\");\n            }\n\n            result = body; // 设置最终结果体\n        } else {\n            console.log(\"UUID not found in body.\");\n        }\n    } else {\n        console.log(\"Body not found.\");\n    }\n} else {\n    console.log(\"Input array is empty or not an array.\");\n}\n\n// 返回最终处理的 JSON 对象\nconsole.log(\"Result:\", result);\nreturn result;\n"
+      },
+      "id": "edc91b41-28b1-4286-bf5d-b99df1b3c852",
+      "name": "根据机型转换uuid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "31f8e166-406b-4fc8-8759-f2890a0e43d5",
+              "leftValue": "={{ $json.uuidId.length }}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "38e0e901-34f8-40b3-876c-cd3d63381f05",
+              "leftValue": "={{ $json.uuid_unique.length }}",
+              "rightValue": 18,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e4f48492-1730-4a28-8218-16ce1888c24b",
+      "name": "判断转换后UUID长度是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT retroid \nFROM YFConsumer.dbo.consm_barcodebindinfo\nWHERE uuid = '{{ $json.uuid }}'\nOR uuid_unique = '{{ $json.uuid_unique }}';\n"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        -20
+      ],
+      "id": "ecbcee46-55b6-4582-b5e8-760fda8913d5",
+      "name": "Microsoft SQL",
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "FNgMAIvmy5GiZUlV",
+          "name": "Microsoft SQL_mes_YFConsumer"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fab63968-3f27-4a6e-92f4-c9425ebd3651",
+              "leftValue": "={{ $json.retroid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        -20
+      ],
+      "id": "b8ea4534-6b55-424b-a58b-834b328671af",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"409\",\n  \"message\":\"请检查该uuid是否填写正确，条码绑定记录中无该条条码信息\"\n}",
+        "options": {}
+      },
+      "id": "beed7872-390b-4573-95c1-a359080546a3",
+      "name": "报错信息：请检查该底壳条码是否填写正确，底壳生成记录中无该条条码信息",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"201\",\n  \"message\":\"数据库错误！\",\n}\n",
+        "options": {}
+      },
+      "id": "fd99ed57-712c-4c7c-ac82-0a9c256c5509",
+      "name": "数据库错误！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        600,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "根据机型转换uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据机型转换uuid": {
+      "main": [
+        [
+          {
+            "node": "判断转换后UUID长度是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断转换后UUID长度是否正确": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查该底壳条码是否填写正确，底壳生成记录中无该条条码信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查该底壳条码是否填写正确，底壳生成记录中无该条条码信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.82",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "244",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br",
+            "content-type": "multipart/form-data; boundary=--------------------------REDACTED"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "uuid": "https://r.coros.com/6?a=COROS APEX 2 9BDD60&b=F7AF3d28038E&c=3D28038DF7E4&d=0&e=0&f=0"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/laser_machine",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "a8af3017-49ae-4f87-a1e3-c349251b7dea",
+  "activeVersionId": "a8af3017-49ae-4f87-a1e3-c349251b7dea",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:56:15.405Z",
+      "createdAt": "2025-04-24T05:56:15.405Z",
+      "role": "workflow:owner",
+      "workflowId": "L043qvmkwcnshWMk",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

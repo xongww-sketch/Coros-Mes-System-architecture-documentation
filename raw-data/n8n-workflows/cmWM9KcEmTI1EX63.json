@@ -1,0 +1,594 @@
+{
+  "updatedAt": "2025-02-17T06:57:41.287Z",
+  "createdAt": "2024-05-22T05:22:51.539Z",
+  "id": "cmWM9KcEmTI1EX63",
+  "name": "DefectiveFirmtype_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写所有必填项\"\n}",
+        "options": {}
+      },
+      "id": "8ef1609a-e22b-4f45-ab0e-000f7af2eb2d",
+      "name": "请填写所有必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -980,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0443791c-4c2b-481a-bba6-54c1f625acc2",
+              "leftValue": "={{ $json.query.ActiveDate_End }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "bca85e86-93d6-40d3-94c1-b795c012fa49",
+              "leftValue": "={{ $json.query.ActiveDate_Start }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "42111964-bd45-4533-beb0-5cb99aac67e3",
+              "leftValue": "={{ $json.query.firmware_type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c72f31f7-d8d8-4bf1-bde8-008dada30719",
+      "name": "判断所有必填项是否已填",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1220,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "path": "DefectiveFirmtype_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "84da76d6-34f7-41e9-afee-7f9f43931310",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1380,
+        60
+      ],
+      "webhookId": "f66e6894-ae30-4411-9ee3-e0b85f9d2793"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT (*) FROM public.defective_records dr JOIN public.activation_records ar ON dr.active_id = ar.id WHERE to_timestamp(ar.activatetime::bigint) >= '{{ $json.timeIntervals[0][0] }}'::timestamp AND to_timestamp(ar.activatetime::bigint) <= '{{ $json.timeIntervals[0][1] }}'::timestamp + interval '1 day' - interval '1 second' AND ar.firmware_type = '{{$json.firmware_type}}' \n\n\n\n\n",
+        "options": {
+          "queryReplacement": ""
+        }
+      },
+      "id": "8502a0fd-0aee-42fc-9644-fbc6dc916c53",
+      "name": "查询各地区各时段的不良设备数量",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -40,
+        60
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input=$input.all();\nconst output=$('构建查询数据1').all();\nconst result = input.map((item, index) => {\n  return {\n    firmware_type: output[index].json.firmware_type,\n    categories: output[index].json.categories,\n    activecount: item.json.count\n  };\n});\nreturn result;\n"
+      },
+      "id": "cadc9e00-ac96-43d1-ac92-1ddafefabfcc",
+      "name": "整理查询结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('构建查询数据1').all();"
+      },
+      "id": "d23a51cc-2613-4f6c-8006-f4f9572f3ade",
+      "name": "构建不良数据查询语句",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input=$input.all();\nconst output=$('构建查询数据1').all();\nconst result = input.map((item, index) => {\n  return {\n    firmware_type: output[index].json.firmware_type,\n    categories: output[index].json.categories,\n    defectivecount: item.json.count\n  };\n});\nreturn result;\n"
+      },
+      "id": "2681eb73-47f1-477b-90d5-30557c126d79",
+      "name": "整理查询结果1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{  {\n  \"code\":\"200\",\n  \"searchList\":$json.result,\n  \"categoriesData\":$json.categoriesData\n}  \n}}",
+        "options": {}
+      },
+      "id": "2131bf30-58b3-4e73-92be-52b4a6a4e99c",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        660,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f12927b7-c6e8-4e92-9a70-2e6d25f1b144",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "354df04f-237e-47be-b59d-42e14751c00d",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        120,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假定获取输入的query对象\nlet inputQuery = $input.all()[0].json.query;\n\n// 从输入对象中读取开始和结束日期\nlet activeDate_Start = inputQuery.ActiveDate_Start;\nlet activeDate_End = inputQuery.ActiveDate_End;\n\n// 将字符串日期转换为Date对象\nlet startDate = new Date(activeDate_Start);\nlet endDate = new Date(activeDate_End);\n\n// 将每月的时间段存储到categories和timeIntervals中\nlet categories = [];\nlet timeIntervals = [];\n\nwhile (startDate < endDate) {\n  // 当前处理的月份的年月\n  let year = startDate.getFullYear();\n  let month = (startDate.getMonth() + 1).toString().padStart(2, '0'); // 格式化月为两位数\n\n  // 计算本月的结束日期\n  let endOfMonth = new Date(year, startDate.getMonth() + 1, 0);\n\n  // 如果本月结束日期超过了endDate，则使用endDate\n  if (endOfMonth > endDate) {\n    endOfMonth = endDate;\n  }\n\n  // 添加到categories的显示月份,包含年份\n  let category = `${year}年${month}月`;\n  categories.push(category);\n\n  // 创建时间段,格式[开始时间, 结束时间]\n  timeIntervals.push([\n    startDate.toISOString().split('T')[0], // 当前月份的开始日期\n    endOfMonth.toISOString().split('T')[0] // 当前月份的结束日期\n  ]);\n\n  // 更新下一个区间的开始日期\n  startDate = new Date(year, startDate.getMonth() + 1, 1);\n}\n\n// 获取机型列表\nlet firmware_types = JSON.parse(inputQuery.firmware_type);\n\n// 存储最终的查询参数列表\nlet queryList = [];\n\n// 对每个机型生成一个查询参数对象\nfor (let firmware_type of firmware_types) {\n  let { firmware_type: _, ...query } = inputQuery; // 排除原始查询参数中的 \"firmType\" 属性\n  query = {\n    ...query, // 其他原始查询参数\n    \"categories\": categories,\n    \"timeIntervals\": timeIntervals,\n    \"firmware_type\": firmware_type // 使用当前循环的机型值\n  };\n  queryList.push(query);\n}\n\n\n// 返回查询参数列表\nreturn queryList;\n\n\n\n\n\n"
+      },
+      "id": "a518a7a3-1abe-4ed0-b41a-abd977d95b75",
+      "name": "划分时间区间1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取唯一的categories值\nconst categoriesSet = new Set($input.all().map(item => item.json.categories[0]));\nconst categoriesData = Array.from(categoriesSet).sort();\n\n// 构建包含国家和对应数据的对象\nconst firmware_typeMap = new Map();\n$input.all().forEach(item => {\n  const firmware_type = item.json.firmware_type;\n  const category = item.json.categories[0];\n  const defectiveCount = parseInt(item.json.defectivecount);\n\n  if (!firmware_typeMap.has(firmware_type)) {\n    firmware_typeMap.set(firmware_type, {});\n  }\n\n  if (!firmware_typeMap.get(firmware_type)[category]) {\n    firmware_typeMap.get(firmware_type)[category] = { defectivecount: 0, activecount: 0 };\n  }\n\n  firmware_typeMap.get(firmware_type)[category].defectivecount = defectiveCount;\n});\n\n// 将 activecount 数据加入到countryMap中\n$('整理查询结果').all().forEach(item => {\n  const firmware_type = item.json.firmware_type;\n  const category = item.json.categories[0];\n  const activeCount = parseInt(item.json.activecount);\n\n  if (!firmware_typeMap.has(firmware_type)) {\n    firmware_typeMap.set(firmware_type, {});\n  }\n\n  if (!firmware_typeMap.get(firmware_type)[category]) {\n    firmware_typeMap.get(firmware_type)[category] = { defectivecount: 0, activecount: 0 };\n  }\n\n  firmware_typeMap.get(firmware_type)[category].activecount = activeCount;\n});\n\n// 生成最终的数据结构\nconst result = [];\nfirmware_typeMap.forEach((categories, firmware_type) => {\n  const defectiveCounts = categoriesData.map(category => categories[category]?.defectivecount || 0);\n  const activeCounts = categoriesData.map(category => categories[category]?.activecount || 0);\n\n  result.push({ \n    name: firmware_type, \n    defectivecounts: defectiveCounts, \n    activecounts: activeCounts \n  });\n});\n\nreturn {\n  result: result,\n  categoriesData: categoriesData // 保留categoriesData作为可能有用的引用\n};\n\n\n\n\n\n"
+      },
+      "id": "8462bee7-41ca-4738-9ae4-ef5bc6b075f1",
+      "name": "Code2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] - 不良品查询失败",
+        "html": "=",
+        "options": {}
+      },
+      "id": "be67cd6d-90f8-4aab-b97f-6ef23202948e",
+      "name": "数据库接口调用失败1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        280
+      ],
+      "webhookId": "2c97756b-37be-4d2a-baee-0c301be01558",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT (*) FROM public.activation_records WHERE to_timestamp(activatetime::bigint) >= '{{ $json.timeIntervals[0][0] }}'::timestamp AND to_timestamp(activatetime::bigint) <=  '{{ $json.timeIntervals[0][1] }}'::timestamp + interval '1 day' - interval '1 second'  AND firmware_type = '{{ $json.firmware_type }}' ;\n\n\n\n\n\n",
+        "options": {
+          "queryReplacement": "="
+        }
+      },
+      "id": "badf7e70-2159-46a8-9e8d-1ddd414efe3d",
+      "name": "查询该时间段的激活设备条数1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -680,
+        60
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f12927b7-c6e8-4e92-9a70-2e6d25f1b144",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "32bed208-05f9-40a6-b912-6ed9de731ac2",
+      "name": "判断查询结果1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"402\",\n  \"msg\":\"该激活时段无激活设备\"\n}",
+        "options": {}
+      },
+      "id": "8dda2fc5-c256-4946-bf45-dbf60fb164db",
+      "name": "该激活时段无激活设备1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -220,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"该时段激活的设备截止今天无不良记录\"\n}",
+        "options": {}
+      },
+      "id": "6425725e-c2ec-436f-a2ec-6e2fd5ed49de",
+      "name": "该时段激活的设备截止今天无不良记录1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        540,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const firmwareTypes = $('划分时间区间1').all().map(item => item.json.firmware_type);\nconst counts = $('划分时间区间1').all().map(item => item.json.count);\nconst activeDateStarts = $('划分时间区间1').all().map(item => item.json.ActiveDate_Start);\nconst activeDateEnds = $('划分时间区间1').all().map(item => item.json.ActiveDate_End);\n\nconst List = firmwareTypes.flatMap((firmware_type, firmware_typeIndex) => {\n  const timeIntervals = $('划分时间区间1').all()[firmware_typeIndex].json.timeIntervals;\n  const categories = $('划分时间区间1').all()[firmware_typeIndex].json.categories;\n\n  return timeIntervals.map((interval, intervalIndex) => {\n    return {\n      firmware_type: firmware_type,\n      count: counts[firmware_typeIndex],\n      ActiveDate_Start: activeDateStarts[firmware_typeIndex],\n      ActiveDate_End: activeDateEnds[firmware_typeIndex],\n      categories: [categories[intervalIndex]],\n      timeIntervals: [interval]\n    };\n  });\n});\n\nreturn List;\n\n\n\n"
+      },
+      "id": "04d5cd1a-e30a-48cc-a360-2c598319b0e5",
+      "name": "构建查询数据1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -840,
+        60
+      ]
+    }
+  ],
+  "connections": {
+    "判断所有必填项是否已填": {
+      "main": [
+        [
+          {
+            "node": "划分时间区间1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请填写所有必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断所有必填项是否已填",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询各地区各时段的不良设备数量": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库接口调用失败1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理查询结果": {
+      "main": [
+        [
+          {
+            "node": "构建不良数据查询语句",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建不良数据查询语句": {
+      "main": [
+        [
+          {
+            "node": "查询各地区各时段的不良设备数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理查询结果1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "整理查询结果1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该时段激活的设备截止今天无不良记录1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "划分时间区间1": {
+      "main": [
+        [
+          {
+            "node": "构建查询数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询该时间段的激活设备条数1": {
+      "main": [
+        [
+          {
+            "node": "判断查询结果1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库接口调用失败1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询结果1": {
+      "main": [
+        [
+          {
+            "node": "整理查询结果",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该激活时段无激活设备1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建查询数据1": {
+      "main": [
+        [
+          {
+            "node": "查询该时间段的激活设备条数1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.18.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "firmware_type": "[\"COROS B18\",\"COROS M1\"]",
+            "ActiveDate_Start": "2021-06-01",
+            "ActiveDate_End": "2022-06-01"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/DefectiveFirmtype_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "c06f5664-6a48-4a36-a2a9-b3e3e25c4537",
+  "activeVersionId": "c06f5664-6a48-4a36-a2a9-b3e3e25c4537",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:56.804Z",
+      "createdAt": "2024-01-26T07:49:15.286Z",
+      "id": "nTeYqAfpKKoeAJjH",
+      "name": "品质部门应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-05-22T05:22:51.539Z",
+      "createdAt": "2024-05-22T05:22:51.539Z",
+      "role": "workflow:owner",
+      "workflowId": "cmWM9KcEmTI1EX63",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

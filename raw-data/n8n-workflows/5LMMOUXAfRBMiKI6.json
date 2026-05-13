@@ -1,0 +1,230 @@
+{
+  "updatedAt": "2024-12-13T07:46:44.354Z",
+  "createdAt": "2024-12-13T06:52:33.933Z",
+  "id": "5LMMOUXAfRBMiKI6",
+  "name": "downloadSN_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "downloadSN_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "67538a97-b692-482d-8e65-9acfeb48f0df",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        480,
+        420
+      ],
+      "webhookId": "f8274d9e-dcd8-44a4-b89d-4c4fe6739484"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"data\":\"{{ $json.retroid }}\"\n}",
+        "options": {}
+      },
+      "id": "c94dd11f-cba3-444a-be3e-49837d663f83",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid_generate_id",
+              "value": "={{ $json.query.listid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a9397e5e-e17a-4104-9b97-2058b2b380aa",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        700,
+        420
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3bac7a6-8b0f-48b9-b056-dca831698933",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "155ef170-e82e-41c5-9e76-ce05360fd231",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        920,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c6dfbec8-3945-4ee2-9d39-ace27c087c3d",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.29.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "listid": "20"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/downloadSN_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "81c45af5-6a92-4bd3-984e-5e2cedf9216f",
+  "activeVersionId": "81c45af5-6a92-4bd3-984e-5e2cedf9216f",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-12-13T06:52:33.933Z",
+      "createdAt": "2024-12-13T06:52:33.933Z",
+      "role": "workflow:owner",
+      "workflowId": "5LMMOUXAfRBMiKI6",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

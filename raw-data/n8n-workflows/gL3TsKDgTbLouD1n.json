@@ -1,0 +1,251 @@
+{
+  "updatedAt": "2025-04-24T07:11:34.444Z",
+  "createdAt": "2025-04-07T08:41:12.170Z",
+  "id": "gL3TsKDgTbLouD1n",
+  "name": "get_terminal_ip_list",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/resource/getIp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "id": "d9cb2f86-a61a-41e4-aa76-f71ac137b9fc",
+      "name": "Webhook",
+      "webhookId": "3c95ee3c-0791-4ddb-b624-3137de0b0125"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, ip, mac \nFROM mes.mes.device_registration dr\nWHERE create_time > NOW() - INTERVAL '30 minutes' or update_time > NOW()- INTERVAL '30 minutes'\nAND NOT EXISTS (\n    SELECT 1 \n    FROM mes.mes.resources r \n    WHERE r.resource_mac = dr.mac\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        520,
+        0
+      ],
+      "id": "f833ff38-4771-468f-9fb7-3bf96778895a",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "executeOnce": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 201,\n  \"message\":\"数据库错误\"\n}",
+        "options": {}
+      },
+      "id": "135ded29-524b-4961-b871-fc5fec226873",
+      "name": "数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"设备注册成功！\",\n   \"data\":{{ JSON.stringify($json) }}\n}",
+        "options": {}
+      },
+      "id": "5560160d-2aab-4321-9def-bf6ab1eca614",
+      "name": "设备注册成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8fd8cc1-5f5c-431d-9a6b-de09e6685cc0",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        -140
+      ],
+      "id": "5d3b3386-f5fb-4dff-81ad-fed6a39ff289",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "deviceList",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        -220
+      ],
+      "id": "5bbd8516-38e8-4225-9789-0d4f186ca380",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"暂无设备注册！\"\n}",
+        "options": {}
+      },
+      "id": "50ffb855-0ac4-4ce3-828c-ff2857caaa4b",
+      "name": "暂无设备注册",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1180,
+        -20
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "暂无设备注册",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "设备注册成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {}
+      }
+    ]
+  },
+  "versionId": "aa47cca2-bd95-41d4-aaa7-13c726d2ed15",
+  "activeVersionId": "aa47cca2-bd95-41d4-aaa7-13c726d2ed15",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T06:42:37.445Z",
+      "createdAt": "2025-04-24T06:42:37.445Z",
+      "role": "workflow:owner",
+      "workflowId": "gL3TsKDgTbLouD1n",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

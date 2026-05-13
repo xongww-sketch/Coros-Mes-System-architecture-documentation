@@ -1,0 +1,367 @@
+{
+  "updatedAt": "2026-01-05T11:45:27.964Z",
+  "createdAt": "2025-11-13T02:40:00.052Z",
+  "id": "b6p3riESFLFFTyD5",
+  "name": "温湿度数据查询",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/env/temperature",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "56d26d04-391b-436e-95c7-8eb1bf0be57d",
+      "name": "Webhook",
+      "webhookId": "cc2738a9-178f-40d4-a341-de4e16da254c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "165d0a24-8cc4-4eae-92fc-423ebb2fdcce",
+              "leftValue": "={{ $json.query.beginTime }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "441cb9cd-0d25-4170-972b-08db50896990",
+              "leftValue": "={{ $json.query.endTime }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "f9069c26-cee1-4081-91ef-0533557c28d7",
+      "name": "判断查询条件是否为空"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, temperature, humidity, \"createTime\"\n\tFROM mes.device_environment where \"deviceId\"='{{ $json.query.deviceId }}' and \"createTime\">='{{ $json.query.beginTime }}' and \"createTime\"<'{{ $json.query.endTime }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        864,
+        -288
+      ],
+      "id": "cedf7199-00a2-4df0-8800-c7dc4911a090",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  // 统一转换为本地时区的完整日期时间\n  item.json.query.beginTime = new Date(item.json.query.beginTime).toLocaleString('zh-CN', {\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    second: '2-digit',\n    hour12: false\n  }).replace(/\\//g, '-');\n  \n  item.json.query.endTime = new Date(item.json.query.endTime).toLocaleString('zh-CN', {\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    second: '2-digit',\n    hour12: false\n  }).replace(/\\//g, '-');\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -352
+      ],
+      "id": "94a85ed7-0dee-41a5-a244-010e8bde6d13",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1152,
+        -80
+      ],
+      "id": "14f61b00-6795-4a61-92cc-7868a7818552",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"存在查询条件为空，请保证查询条件都不为空！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        608,
+        144
+      ],
+      "id": "1846dc84-8130-4d36-9e44-5e8f83f9cf40",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{{ JSON.stringify($json.data) }}\n}",
+        "options": {}
+      },
+      "id": "e8c3ede4-2721-4df6-8d52-36f99e307688",
+      "name": "Respond package List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1648,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "fbfd3002-bb10-441a-9564-9f7e6da73d69",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 203,\n  \"message\":\"暂无数据！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1648,
+        -208
+      ],
+      "id": "0b64b054-777d-4051-81cc-8a9be1d77dc2",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7992586a-eec3-4b9b-a33d-893065eb0f9f",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        -288
+      ],
+      "id": "d5072c89-fe9f-4aaf-bf97-637460e6e03f",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断查询条件是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询条件是否为空": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond package List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "beginTime": "2026-01-05T03:32:50.830Z",
+            "endTime": "2026-01-05T11:32:50.829Z",
+            "deviceId": "3"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/env/temperature",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "727caf3f-000c-412c-9594-cf67e467a2f9",
+  "activeVersionId": "727caf3f-000c-412c-9594-cf67e467a2f9",
+  "versionCounter": 85,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-13T02:40:00.052Z",
+      "createdAt": "2025-11-13T02:40:00.052Z",
+      "role": "workflow:owner",
+      "workflowId": "b6p3riESFLFFTyD5",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

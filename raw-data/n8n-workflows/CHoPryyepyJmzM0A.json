@@ -1,0 +1,3481 @@
+{
+  "updatedAt": "2025-02-05T03:04:33.842Z",
+  "createdAt": "2024-02-26T07:02:25.314Z",
+  "id": "CHoPryyepyJmzM0A",
+  "name": "样机试用",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "id": "9c3092fc-1eae-4256-912d-a005eac152cd",
+      "name": "未到审批节点直接返回",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        3600
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"challenge\": \"{{$json.body.challenge }}\"\n} ",
+        "options": {}
+      },
+      "id": "661b6413-6603-4b84-b83c-ecfb759ca946",
+      "name": "响应飞书信息",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -3340,
+        3100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c9024e34-fbc9-407e-8096-6de7e1ab7327",
+              "leftValue": "={{ $json.invalidPhoneNumbers }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9207bdc3-653d-46b7-b0bc-59cf6a98dbb5",
+      "name": "验证飞书表单数据是否正确",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1580,
+        2840
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\njsonData=JSON.parse($input.all()[0].json.data.form);\nconsole.log(jsonData.find(el=>el.name==='试用明细-有赞订单号')?.value)\n  $input.all()[0].json.orderList = jsonData.find(el=>el.name==='试用明细-有赞订单号')?.value.map(e=>{\n    return e[0].value\n  });\nreturn $input.all();"
+      },
+      "id": "131435f4-ecbc-4615-b5ab-dc3a53157704",
+      "name": "获取订单ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1840,
+        3400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet res=$input.all()[0].json.data.items.find(val=>val.name==='试用体验卡');\nres.accessToken=$('获取有赞token').all()[0].json.data.access_token;\nres.authorityId=$('获取有赞token').all()[0].json.data.authority_id;\nres.phoneNumbers=$('获取到下单人信息').all()[0].json.phoneNumbers;\nreturn res;"
+      },
+      "id": "e0bcc366-84d5-4f97-8679-f45f787f99f5",
+      "name": "获取到试用体验卡",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        1860
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "efdf8d5f-9890-49e2-895d-0e2a075c8e5c",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "73df0074-3c6d-42d0-944f-649a5f0b4db4",
+      "name": "判断更新操作是否成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        3540
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "78fa513e-9d54-4496-8522-17bcc68675e5",
+              "leftValue": "={{ $json.data.is_success }}",
+              "rightValue": "successful",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8b6c6f9d-b8bc-446d-811e-d8c4957ca2e5",
+      "name": "判断权益卡是否发放成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2700,
+        1740
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a7ecb1a5-f667-4596-88e9-9075d6ad0f7a",
+              "leftValue": "={{ $json.data.task_list.at(-1).node_name }}",
+              "rightValue": "填写有赞订单号",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "5702c57a-c26c-4c1d-aa24-cf64a422071e",
+              "leftValue": "={{ $json.data.task_list.at(-1).status }}",
+              "rightValue": "APPROVED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "070ace34-e105-40f4-b285-6e3c84ad00b5",
+      "name": "判断是否上传订单号",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2300,
+        3580
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "5e5666ec-0c84-4191-849d-5412e5ea8e4a",
+              "leftValue": "={{ $json.data.access_token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "757770aa-0c9a-40d9-95f9-6458fe85751e",
+      "name": "判断token是否存在",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        560,
+        2260
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ $input.all().length}}",
+        "options": {}
+      },
+      "id": "409109a2-8713-4834-88a2-c9d67f3050d6",
+      "name": "Loop Over Items7",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        5160,
+        2560
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "表单数据错误！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "手机号有误，请检查手机号是否正确！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "46a5df72-4008-4e6c-a654-b055830ca55e",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -1220,
+        3000
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "数据库错误！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "订单号更新失败！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a6e8f226-70ac-4854-9fff-c2f09d45c08c",
+      "name": "Edit Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -600,
+        3400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "有赞调用错误！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "有赞token获取失败，请联系技术人员！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6cc71aa5-ab41-4511-80cb-b1aa8e562f87",
+      "name": "Edit Fields3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        920,
+        2320
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "试用卡发放失败！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "暂未找到对应试用卡！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9ebf672b-102f-4ba1-802c-936643b36fde",
+      "name": "Edit Fields4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1500,
+        2040
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "权益卡发放失败！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "权益卡发放失败，请重新发放！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c921095a-2200-42c0-b550-ea0c9ae413e4",
+      "name": "Edit Fields5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        3340,
+        1840
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "申请成功！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "权益卡发放成功！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d940a213-f459-4b7e-80e2-d902a8406a44",
+      "name": "Edit Fields6",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        3640,
+        1440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v1/message/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"template_id\":\"1021\",\n    \"user_id\":\"{{ $json.user_id }}\",\n    \"custom_title\":\"@i18n@1\",\n    \"custom_content\":\"@i18n@2\",\n    \"note\":\"@i18n@3\",\n    \"actions\":[\n         {\n            \"action_name\":\"@i18n@4\",\n            \"url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\",\n            \"android_url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\",\n            \"ios_url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\",\n            \"pc_url\":\"https://applink.feishu.cn/client/mini_program/open?appId=cli_9cb844403dbb9108&mode=appCenter&path=pc%2Fpages%2Fin-process%2Findex%3FenableTrusteeship%3Dtrue%26instanceId%3D{{ $json[\"instance_code\"] }}%26source%3Dapproval_bot&relaunch=true\"\n        }\n    ],\n    \"i18n_resources\":[\n        {\n            \"locale\":\"en-US\",\n            \"is_default\":true,\n            \"texts\":{\n                \"@i18n@1\":\"{{ $json.approval_name }}\",\n                \"@i18n@2\":\"{{ $json.title }}\",\n                \"@i18n@3\":\"{{ $json.message }}！\",\n                \"@i18n@4\":\"查看详情\"\n            }\n        }\n    ]\n} ",
+        "options": {}
+      },
+      "id": "2ba7fe45-3e69-44a8-b15b-0b1eb139d923",
+      "name": "飞书机器人处理消息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        5440,
+        2580
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst token=$vars.lark_tenant_access_token;\nlet timeline=$('获取审批实例详情').all()[0].json.data.timeline;\nconsole.log(timeline);\n//去除重复的userId 使用mapObject 判断当前数组中是否有对应的userID，来进行去重\nconst messageObj=timeline.reduce((accumulator,currentValue)=>{\n  if(!accumulator.mapObject.hasOwnProperty(currentValue.user_id)){\n    accumulator.mapObject[currentValue.user_id] = true;  \n    accumulator.unique.push(currentValue);   \n  }\n  return accumulator;\n},{ unique: [], mapObject: {} }).unique;\nfor(let i=0;i<messageObj.length;i++){\n  messageObj[i].approval_name=$('获取审批实例详情').all()[0].json.data.approval_name;\n  messageObj[i].approval_code=$('获取审批实例详情').all()[0].json.data.approval_code;\n  messageObj[i].instance_code=$('获取审批实例详情').all()[0].json.data.instance_code;\n  messageObj[i].token=token;\n  messageObj[i].title=$input.all()[0].json.title;\n  messageObj[i].message=$input.all()[0].json.message;\n}\nreturn messageObj;"
+      },
+      "id": "b0244f30-6ba4-4d3d-b0f1-1cd29af3914c",
+      "name": "处理失败消息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4900,
+        2560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "449109c7-f3e4-4f03-bd35-55e5d62827f5",
+              "leftValue": "={{ $json.orderList }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "630e2e18-23b5-439f-90cc-299df575fff3",
+      "name": "判断订单号是否为空",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1640,
+        3400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "数据库错误！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "订单号不能为空！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d6087966-ebdf-47ba-a683-4237f389e0f0",
+      "name": "Edit Fields7",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -600,
+        3240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22550d1-504c-411e-985d-3564c2bd7c3d",
+              "name": "title",
+              "value": "数据库操作成功！",
+              "type": "string"
+            },
+            {
+              "id": "9fe257f3-9c08-42fd-ae4e-6bfb087a006b",
+              "name": "message",
+              "value": "订单号更新成功！",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1312a8e-f164-4d52-9ebd-f76fd9000e58",
+      "name": "Edit Fields8",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -600,
+        3720
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "23ccbc58-9b43-4c71-b80b-014d27f07c6f",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "duplicate key value violates unique constraint \"prototype_trial_pkey\"",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d1b95507-ac5c-4e0c-8f8e-f3a7559e21d5",
+      "name": "判断数据是否插入成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        2580
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '撤销审批实例',\n  '{   \n\"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n\"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\", \n\"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\" \n}  ',\n   '{{ JSON.stringify($json) }}',\n  5\n);\nupdate prototype_trial SET status=1 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'\n",
+        "options": {}
+      },
+      "id": "0cac6566-4ed8-40dc-bbe5-2015d83dfa0d",
+      "name": "记录操作日志5",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1680,
+        2240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '撤销审批实例',\n  '{   \n\"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n\"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\", \n\"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\" \n}  ',\n   '{{ JSON.stringify($json) }}',\n  5\n);\nupdate prototype_trial SET status=1 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'\n",
+        "options": {}
+      },
+      "id": "3df0de74-7981-4402-94b5-098668425a0a",
+      "name": "记录撤销操作日志",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -1000,
+        2820
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '撤销审批实例',\n  '{   \n\"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n\"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\", \n\"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\" \n}  ',\n   '{{ JSON.stringify($json) }}',\n  5\n);\nupdate prototype_trial SET status=1 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'\n",
+        "options": {}
+      },
+      "id": "af3abd9d-d039-43b8-843d-b13a31908a25",
+      "name": "记录撤销操作日志1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -380,
+        3560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "prototype_trial",
+          "mode": "list",
+          "cachedResultName": "prototype_trial"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_phonenumber": "={{ $('获取到下单人信息').all()[0].json.phoneNumber }}",
+            "trial_expiration_date": "={{ $('获取到下单人信息').all()[0].json.trialExirationDate }}",
+            "id": "={{ $('获取审批实例详情').all()[0].json.data.instance_code }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_username",
+              "displayName": "order_username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_phonenumber",
+              "displayName": "order_phonenumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prototype_uuid",
+              "displayName": "prototype_uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "prototype_sn",
+              "displayName": "prototype_sn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "delivery_time",
+              "displayName": "delivery_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "trial_status",
+              "displayName": "trial_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "trial_expiration_date",
+              "displayName": "trial_expiration_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refund_amounts",
+              "displayName": "refund_amounts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "refund_time",
+              "displayName": "refund_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "377ba595-218d-4e91-8b44-d8832c4becc6",
+      "name": "发放权益卡记录试用到期时间",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -1980,
+        2380
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/auth/token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "d89d72c2af4c35b010"
+            },
+            {
+              "name": "client_secret",
+              "value": "REDACTED"
+            },
+            {
+              "name": "authorize_type",
+              "value": "silent"
+            },
+            {
+              "name": "grant_id",
+              "value": "40929169"
+            },
+            {
+              "name": "refresh",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4bcb4b8c-d181-40f7-8f30-f33ec680377e",
+      "name": "获取有赞token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -460,
+        2260
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/api/youzan.scrm.customer.card.grant/4.0.0",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $('获取到试用体验卡').item.json[\"accessToken\"] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"params\":{\n  \"kdt_id\":\t40929169,\n  \"user\":{\"account_type\":2,\"account_id\":\"{{ $('Split Out').item.json.phoneNumbers }}\"},\n  \"card_alias\":\"{{ $('获取到试用体验卡').item.json[\"card_alias\"] }}\"\n}\n} ",
+        "options": {}
+      },
+      "id": "96dc17b0-126c-410a-aa20-e43d7b3bdcbe",
+      "name": "给用户发放权益卡",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2460,
+        1740
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/api/youzan.scrm.card.get/4.0.0",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $('获取到试用体验卡').item.json[\"accessToken\"] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"params\":{\n  \"card_alias\":\"{{$('获取到试用体验卡').item.json[\"card_alias\"]}}\"\n}\n} ",
+        "options": {}
+      },
+      "id": "2cf1f5a0-2bf7-4053-90bf-bd97118f7c56",
+      "name": "获取到具体的权益卡信息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2900,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v4/instances/cancel",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n  \"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\",\n  \"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\"\n}   ",
+        "options": {}
+      },
+      "id": "e8d58037-8f12-49c9-b278-4b49fb36ca65",
+      "name": "终止审批流程4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        3340,
+        2060
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '撤销审批实例',\n  '{   \n\"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n\"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\", \n\"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\" \n}  ',\n   '{{ JSON.stringify($json) }}',\n  5\n);\nupdate prototype_trial SET status=1 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'\n",
+        "options": {}
+      },
+      "id": "16940c30-c33c-49a9-a7fc-fb9ebac45b44",
+      "name": "记录操作日志4",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        3560,
+        2060
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v4/instances/cancel",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n  \"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\",\n  \"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\"\n}   ",
+        "options": {}
+      },
+      "id": "f1030c61-83ce-4981-9d22-59ed2721b94b",
+      "name": "终止审批流程3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1500,
+        2240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v4/instances/cancel",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n  \"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\",\n  \"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\"\n}   ",
+        "options": {}
+      },
+      "id": "a24ef082-569a-47ce-b1a4-dbf013b69357",
+      "name": "终止审批流程2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        920,
+        2560
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v4/instances/cancel",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n  \"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\",\n  \"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\"\n}   ",
+        "options": {}
+      },
+      "id": "2a549d5f-9685-4ad6-b5ef-1201c7362abc",
+      "name": "终止审批流程",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1220,
+        2820
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/approval/v4/instances/cancel",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n  \"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\",\n  \"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\"\n}   ",
+        "options": {}
+      },
+      "id": "30fea8d6-e929-4ea7-b06d-e8b88c2420ad",
+      "name": "终止审批流程1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -600,
+        3560
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "approval_info",
+          "mode": "list",
+          "cachedResultName": "approval_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uuid": "={{ $json.body.uuid }}",
+            "app_id": "={{ $json.body.event.app_id }}",
+            "approval_code": "={{ $json.body.event.approval_code }}",
+            "instance_code": "={{ $json.body.event.instance_code }}",
+            "operate_time": "={{ Number($json.body.event.operate_time) }}",
+            "status": "={{ $json.body.event.status }}",
+            "tenant_key": "={{ $json.body.event.tenant_key }}",
+            "type": "={{ $json.body.event.type }}",
+            "token": "REDACTED",
+            "ts": "={{ Number($json.body.ts) }}",
+            "event": "={{ $json.body.event }}",
+            "info_status": 0,
+            "info_type": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "app_id",
+              "displayName": "app_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approval_code",
+              "displayName": "approval_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "custom_key",
+              "displayName": "custom_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "def_key",
+              "displayName": "def_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "generate_type",
+              "displayName": "generate_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "instance_code",
+              "displayName": "instance_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "open_id",
+              "displayName": "open_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "operate_time",
+              "displayName": "operate_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_key",
+              "displayName": "tenant_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ts",
+              "displayName": "ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event",
+              "displayName": "event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "info_type",
+              "displayName": "info_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "info_status",
+              "displayName": "info_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b72b1eb9-3afc-4a5a-93cd-d92b6a76d0dc",
+      "name": "存储消息，判断该消息是否被消费",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -3540,
+        3120
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/approval/v4/instances/{{ $json.instance_code }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "2d54f408-e059-4b94-b29a-e7c34401c6a2",
+      "name": "获取审批实例详情",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -3120,
+        3100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "84vwhYzvww7jyoIT",
+          "name": "Lark Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "6f0f6f40-e024-41ce-aa90-3c124bd55227",
+              "leftValue": "={{$input.all()[0].json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "345b5869-2c9a-4a8a-b0e7-18e9f7741ca1",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2120,
+        2820
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "equity_card",
+          "mode": "list",
+          "cachedResultName": "equity_card"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "member_phone": "={{ $('Split Out').item.json.phoneNumbers }}",
+            "status": 0,
+            "create_time": "={{ new Date() }}",
+            "member_name": "={{ $('获取到下单人信息').item.json.memberName }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "member_name",
+              "displayName": "member_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "member_phone",
+              "displayName": "member_phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expired_time",
+              "displayName": "expired_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cdef0990-fc61-49f5-a51e-53aa9690376e",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        3160,
+        1440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "approval_info",
+          "mode": "list",
+          "cachedResultName": "approval_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uuid": "={{ $('存储消息，判断该消息是否被消费').item.json.uuid }}",
+            "info_status": 1
+          },
+          "matchingColumns": [
+            "uuid"
+          ],
+          "schema": [
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "app_id",
+              "displayName": "app_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_code",
+              "displayName": "approval_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "custom_key",
+              "displayName": "custom_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "def_key",
+              "displayName": "def_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "generate_type",
+              "displayName": "generate_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "instance_code",
+              "displayName": "instance_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "open_id",
+              "displayName": "open_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "operate_time",
+              "displayName": "operate_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_key",
+              "displayName": "tenant_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ts",
+              "displayName": "ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "event",
+              "displayName": "event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "info_type",
+              "displayName": "info_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "info_status",
+              "displayName": "info_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "34908f91-7e59-47e0-ae2d-cb8dbd6e5812",
+      "name": "修改消息状态，表明消息已经被处理",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        3640,
+        1280
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfunction validatePhoneNumber(phoneNumbers) {\n    const regex = /^1[3-9]\\d{9}$/;\n    const invalidNumbers = phoneNumbers.filter(e => !regex.test(e));\n    return invalidNumbers;\n}\njsonData=JSON.parse($('获取审批实例详情').all()[0].json.data.form);\n  $input.all()[0].json.phoneNumbers = jsonData.find(el=>el.name==='手机号明细')?.value.map(item => item[0].value);\n$input.all()[0].json.channel = jsonData.find(el=>el.name==='流出渠道')?.value;\n  $input.all()[0].json.memberName = jsonData.find(el=>el.name==='合作方名称')?.value;\n// 调用函数并输出结果\nconst invalidPhoneNumbers = validatePhoneNumber($input.all()[0].json.phoneNumbers);\n\n//校验所有手机号是否正确\nif (invalidPhoneNumbers.length !== 0) {\n  $input.all()[0].json.invalidPhoneNumbers=invalidPhoneNumbers;\n}\n  $input.all()[0].json.trialExirationDate=jsonData.find(el=>el.name==='DateInterval')?.value.end;\n\nreturn $input.all();"
+      },
+      "id": "18d886fd-9c3a-4c68-8e3a-eff995491696",
+      "name": "获取到下单人信息",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        2840
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "approval_info",
+          "mode": "list",
+          "cachedResultName": "approval_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uuid": "={{ $('存储消息，判断该消息是否被消费').item.json.uuid }}",
+            "info_type": 1
+          },
+          "matchingColumns": [
+            "uuid"
+          ],
+          "schema": [
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "app_id",
+              "displayName": "app_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "approval_code",
+              "displayName": "approval_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "custom_key",
+              "displayName": "custom_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "def_key",
+              "displayName": "def_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "generate_type",
+              "displayName": "generate_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "instance_code",
+              "displayName": "instance_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "open_id",
+              "displayName": "open_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "operate_time",
+              "displayName": "operate_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_key",
+              "displayName": "tenant_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ts",
+              "displayName": "ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "event",
+              "displayName": "event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "info_type",
+              "displayName": "info_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "info_status",
+              "displayName": "info_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "30bfc24c-d50d-42b5-8925-b9b392923d45",
+      "name": "修改消息类型",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -1920,
+        2840
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "prototype_trial",
+          "mode": "list",
+          "cachedResultName": "prototype_trial"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.data.instance_code }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eea90915-fdf8-4b53-a577-beba3dff63e1",
+      "name": "防止重复消息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -2320,
+        2820
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '撤销审批实例',\n  '{   \n\"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n\"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\", \n\"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\" \n}  ',\n   '{{ JSON.stringify($json) }}',\n  5\n);\nupdate prototype_trial SET status=1 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'\n",
+        "options": {}
+      },
+      "id": "7a6cac45-84ac-489b-89d3-ff0847c7f3c5",
+      "name": "记录撤销操作日志2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1140,
+        2560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "abe11d37-0ee2-47f3-bdb2-4a5e9d91038a",
+              "leftValue": "={{ $json.data.items }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7d2acf06-5b85-41ab-b11c-63e988013ec5",
+      "name": "判断试用卡列表是否为空",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        2060
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/api/youzan.scrm.customer.card.delete/4.0.0",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $('获取到试用体验卡').item.json[\"accessToken\"] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"params\":{\n  \"user\":{\"account_type\":2,\"account_id\":\"{{ $json.phoneNumbers }}\"},\n  \"card_alias\":\"{{ $('获取到试用体验卡').item.json[\"card_alias\"] }}\"\n}\n} ",
+        "options": {}
+      },
+      "id": "54653ed2-2f2f-4b73-ac10-6537dac529b1",
+      "name": "删除用户权益卡",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1920,
+        1820
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.youzanyun.com/api/youzan.scrm.card.list/3.0.0",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $json.data.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3166019-d1bd-481b-a98e-e4db541cf754",
+      "name": "获取到试用卡列表",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        920,
+        2060
+      ],
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '撤销审批实例',\n  '{   \n\"approval_code\": \"{{ $('获取审批实例详情').all()[0].json.data.approval_code }}\",\n\"instance_code\": \"{{ $('获取审批实例详情').all()[0].json.data.instance_code }}\", \n\"user_id\": \"{{$('获取审批实例详情').all()[0].json.data.task_list.at(-1).open_id}}\" \n}  ',\n   '{{ JSON.stringify($json) }}',\n  3\n);\nupdate prototype_trial SET step=3 WHERE id='{{$('获取审批实例详情').all()[0].json.data.instance_code}}'\n",
+        "options": {}
+      },
+      "id": "b4278120-809e-420f-a994-701e5470ae4a",
+      "name": "记录操作日志3",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2120,
+        1600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '获取有赞token',\n  '{\"authorize_type\": \"silent\",  \"client_id\": \"d89d72c2af4c35b010\",  \"client_secret\": \"87af3d6827d2d417341a7acdb06d48d6\",  \"grant_id\": \"40929169\",  \"refresh\": false}',\n   '{{ JSON.stringify($json) }}',\n  1\n);\nupdate prototype_trial SET step=1 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'",
+        "options": {}
+      },
+      "id": "c23e0ba1-88e5-4eae-879c-797d80a79955",
+      "name": "记录操作日志",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -180,
+        2040
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '获取有赞试用卡列表',\n  '{\n   \"page\":\"1\"\n  }',\n   '{{ JSON.stringify($json) }}',\n  2\n);\nupdate prototype_trial SET step=2 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'",
+        "options": {}
+      },
+      "id": "017cbb95-f44b-450c-8750-71da3d832048",
+      "name": "记录操作日志1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        1760
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into api_log(instance_id,api_name,transfer_args,transfer_result,step) values (\n'{{ $('获取审批实例详情').all()[0].json.data.instance_code }}',\n  '有赞发放会员权益卡',\n  '{\n  \"params\":{\n  \"kdt_id\":\t40929169,\n  \"user\":{\"account_type\":2,\"account_id\":\"{{ $('获取到下单人信息').item.json[\"phoneNumber\"] }}\"},\n  \"card_alias\":\"{{ $('获取到试用体验卡').item.json[\"card_alias\"] }}\"\n}\n} ',\n   '{{ JSON.stringify($json) }}',\n  4\n);\n\nupdate prototype_trial SET step=4 WHERE id='{{ $('获取审批实例详情').all()[0].json.data.instance_code }}'",
+        "options": {}
+      },
+      "id": "43b4ac58-c1e1-47db-a516-49a03ad73da5",
+      "name": "记录操作日志2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2680,
+        1540
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "601543bc-e6c7-4dbb-9b33-0eb9a28e502a",
+              "leftValue": "={{ $('获取审批实例详情').all()[0].json.data.task_list.at(-1).node_name }}",
+              "rightValue": "填写有赞订单号",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "9717a6a6-43a2-437c-b395-e7dbee0f1d1a",
+              "leftValue": "={{ $('获取审批实例详情').all()[0].json.data.task_list.at(-1).status }}",
+              "rightValue": "PENDING",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e38956f7-89b6-48fc-8a85-7fe5eb5f1c47",
+      "name": "判断该节点是否到达填写有赞订单号",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2860,
+        3100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "prototype_trial",
+          "mode": "list",
+          "cachedResultName": "prototype_trial"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_number": "={{ $json.orderList }}",
+            "id": "={{ $json.data.instance_code}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_phonenumber",
+              "displayName": "order_phonenumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "trial_expiration_date",
+              "displayName": "trial_expiration_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_remind",
+              "displayName": "is_remind",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "partners",
+              "displayName": "partners",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "28a76b5f-3d62-4ae8-8851-46971bce3c81",
+      "name": "更新订单号",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -1240,
+        3540
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "prototype_trial",
+          "mode": "list",
+          "cachedResultName": "prototype_trial"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('获取审批实例详情').all()[0].json.data.instance_code }}",
+            "order_phonenumber": "={{ $('获取到下单人信息').all()[0].json.phoneNumber }}",
+            "trial_expiration_date": "={{ $('获取到下单人信息').all()[0].json.trialExirationDate }}",
+            "channel": "={{ $('获取到下单人信息').all()[0].json.channel }}",
+            "partners": "={{ $('获取到下单人信息').all()[0].json.memberName }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_phonenumber",
+              "displayName": "order_phonenumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "trial_expiration_date",
+              "displayName": "trial_expiration_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_remind",
+              "displayName": "is_remind",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "partners",
+              "displayName": "partners",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f75943c7-fef9-4068-b13f-696d53e20d47",
+      "name": "飞书试用申请审批信息记录2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -1220,
+        2360
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "prototype_trial",
+          "mode": "list",
+          "cachedResultName": "prototype_trial"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('获取审批实例详情').all()[0].json.data.instance_code }}",
+            "order_phonenumber": "={{ $json.phoneNumbers }}",
+            "trial_expiration_date": "={{ $('获取到下单人信息').all()[0].json.trialExirationDate }}",
+            "channel": "={{ $('获取到下单人信息').all()[0].json.channel }}",
+            "partners": "={{ $('获取到下单人信息').all()[0].json.memberName }}",
+            "create_time": "={{ new Date() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "order_phonenumber",
+              "displayName": "order_phonenumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "trial_expiration_date",
+              "displayName": "trial_expiration_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_remind",
+              "displayName": "is_remind",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "partners",
+              "displayName": "partners",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0f846aa2-c79a-4624-bdd6-ad887ef830b2",
+      "name": "飞书试用申请审批信息记录",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -1220,
+        2580
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "phoneNumbers",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "2e9ba74f-6bd0-4600-a2fd-df0667db4eb4",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1720,
+        1860
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "b31b2330-294b-4451-8092-b434033b7733",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3400,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/prototypeTrial",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ef713734-59d9-4aee-b9cc-320846a7f17e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3720,
+        3120
+      ],
+      "webhookId": "12006aba-6f76-401e-93a7-261beb4d1798"
+    }
+  ],
+  "connections": {
+    "响应飞书信息": {
+      "main": [
+        [
+          {
+            "node": "获取审批实例详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "验证飞书表单数据是否正确": {
+      "main": [
+        [
+          {
+            "node": "飞书试用申请审批信息记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "终止审批流程",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取订单ID": {
+      "main": [
+        [
+          {
+            "node": "判断订单号是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到试用体验卡": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断更新操作是否成功": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "终止审批流程1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断权益卡是否发放成功": {
+      "main": [
+        [
+          {
+            "node": "获取到具体的权益卡信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "终止审批流程4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否上传订单号": {
+      "main": [
+        [
+          {
+            "node": "获取订单ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "未到审批节点直接返回",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断token是否存在": {
+      "main": [
+        [
+          {
+            "node": "获取到试用卡列表",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "终止审批流程2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items7": {
+      "main": [
+        [],
+        [
+          {
+            "node": "飞书机器人处理消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理失败消息": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断订单号是否为空": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "更新订单号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        [
+          {
+            "node": "处理失败消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据是否插入成功": {
+      "main": [
+        [
+          {
+            "node": "获取有赞token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取有赞token": {
+      "main": [
+        [
+          {
+            "node": "判断token是否存在",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "记录操作日志",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录操作日志",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "给用户发放权益卡": {
+      "main": [
+        [
+          {
+            "node": "判断权益卡是否发放成功",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "记录操作日志2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录操作日志2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到具体的权益卡信息": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "终止审批流程4": {
+      "main": [
+        [
+          {
+            "node": "记录操作日志4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录操作日志4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "终止审批流程3": {
+      "main": [
+        [
+          {
+            "node": "记录操作日志5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录操作日志5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "终止审批流程2": {
+      "main": [
+        [
+          {
+            "node": "记录撤销操作日志2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录撤销操作日志2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "终止审批流程": {
+      "main": [
+        [
+          {
+            "node": "记录撤销操作日志",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录撤销操作日志",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "终止审批流程1": {
+      "main": [
+        [
+          {
+            "node": "记录撤销操作日志1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录撤销操作日志1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存储消息，判断该消息是否被消费": {
+      "main": [
+        [
+          {
+            "node": "响应飞书信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取审批实例详情": {
+      "main": [
+        [
+          {
+            "node": "判断该节点是否到达填写有赞订单号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "修改消息类型",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到下单人信息": {
+      "main": [
+        [
+          {
+            "node": "验证飞书表单数据是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "修改消息类型": {
+      "main": [
+        [
+          {
+            "node": "获取到下单人信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "防止重复消息": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断试用卡列表是否为空": {
+      "main": [
+        [
+          {
+            "node": "获取到试用体验卡",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "终止审批流程3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "删除用户权益卡": {
+      "main": [
+        [
+          {
+            "node": "给用户发放权益卡",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "记录操作日志3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录操作日志3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到试用卡列表": {
+      "main": [
+        [
+          {
+            "node": "判断试用卡列表是否为空",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "记录操作日志1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录操作日志1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断该节点是否到达填写有赞订单号": {
+      "main": [
+        [
+          {
+            "node": "防止重复消息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断是否上传订单号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新订单号": {
+      "main": [
+        [
+          {
+            "node": "判断更新操作是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "飞书试用申请审批信息记录": {
+      "main": [
+        [
+          {
+            "node": "判断数据是否插入成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "删除用户权益卡",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "修改消息状态，表明消息已经被处理",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "存储消息，判断该消息是否被消费",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "RjOoKWQQ5FCZ0o5B"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "123.58.10.238",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "454",
+            "user-agent": "Go-http-client/1.1",
+            "content-type": "application/json;charset=utf-8",
+            "unit": "eu_nc",
+            "x-lark-request-nonce": "584447063",
+            "x-lark-request-timestamp": "1738724145",
+            "x-lark-signature": "REDACTED",
+            "x-request-id": "cuhd6cbc77u0votb50n0",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "uuid": "REDACTED",
+            "event": {
+              "app_id": "cli_a69c9ae94c16500e",
+              "approval_code": "3EDE78C8-2990-4CE3-82C9-2D2382C295A9",
+              "instance_code": "3E16D193-708D-422D-A0D8-29B545443FA7",
+              "instance_operate_time": "1738724143374",
+              "operate_time": "1738724143374",
+              "status": "PENDING",
+              "tenant_key": "2c2fc8f0574f175f",
+              "type": "approval_instance",
+              "uuid": "2b5dc5fb"
+            },
+            "token": "REDACTED",
+            "ts": "1738724145.425776",
+            "type": "event_callback"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/prototypeTrial",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "ff96f9d4-5caa-417b-922f-0fa72f5ceee9",
+  "activeVersionId": "ff96f9d4-5caa-417b-922f-0fa72f5ceee9",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:12:55.284Z",
+      "createdAt": "2024-04-24T09:12:55.284Z",
+      "id": "I6FeqDLYYpIOV1kH",
+      "name": "样机试用申请API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-02-26T07:02:25.327Z",
+      "createdAt": "2024-02-26T07:02:25.327Z",
+      "role": "workflow:owner",
+      "workflowId": "CHoPryyepyJmzM0A",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    },
+    {
+      "updatedAt": "2025-11-04T02:52:08.350Z",
+      "createdAt": "2025-11-04T02:52:08.350Z",
+      "role": "workflow:editor",
+      "workflowId": "CHoPryyepyJmzM0A",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

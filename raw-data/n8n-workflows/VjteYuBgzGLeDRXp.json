@@ -1,0 +1,1465 @@
+{
+  "updatedAt": "2025-12-03T06:04:39.973Z",
+  "createdAt": "2024-07-31T09:41:28.353Z",
+  "id": "VjteYuBgzGLeDRXp",
+  "name": "createprocess_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写必填项\"\n}",
+        "options": {}
+      },
+      "id": "e5542b30-bfc5-48ad-ab44-b00bb0368676",
+      "name": "请填写必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "dba3f5e8-40c8-45f0-a877-3458caca89eb",
+              "leftValue": "={{ $json.body.procedure_list_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4f81e771-5103-4c82-b981-345d8b652fee",
+              "leftValue": "={{ $json.body.product_model_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "735275de-896d-447d-8268-06737f611fbb",
+              "leftValue": "={{ $json.body.procedure_list }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1f15ff5b-557a-4cef-9fa8-e727b7ea19e4",
+              "leftValue": "={{ $json.body.user }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "58ff0378-4181-4efd-ba69-7d0fbc434dd6",
+      "name": "判断是否填写必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        352,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"该工艺流程已存在\"\n}",
+        "options": {}
+      },
+      "id": "85ae10e3-0174-4d5e-aafb-8a732b043471",
+      "name": "该工艺流程已存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1648,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "6e3637fe-6d41-4be2-b4fa-f6dbf757a398",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f821a789-d3ae-4d0c-a0fc-d4aa2f111557",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据').all();"
+      },
+      "id": "855b3281-2332-4ec0-aeb4-941910f8c117",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"procedure_list_name\": \"{{ $json.body.procedure_list_name }}\",\n  \"product_model_id\": \"{{ $json.body.product_model_id }}\",\n  \"procedure_detail_id\": {\n    \"procedure_detail_id\": {{ JSON.stringify(JSON.parse($json.body.procedure_list).map(item => item.procedure_detail_id)) }}\n  },\n  \"user_id\": \"{{ $json.body.user }}\",\n  \"current_version\": \"{{ $json.body.version }}\"\n}\n",
+        "options": {}
+      },
+      "id": "53e39051-99af-41db-8d2f-40b44efa1c03",
+      "name": "整理数据",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库报错，工艺流程插入失败，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "96cf90b1-ccdc-40aa-8691-c2714cbaf88d",
+      "name": "数据库报错",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4064,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"创建/更新成功\"\n}",
+        "options": {}
+      },
+      "id": "1d23055f-471f-403f-aacc-82d4ea755970",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4144,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "3007c243-07fb-4a85-bed6-0b05ba1f1167",
+              "leftValue": "={{ $json.body.procedure_list_id }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7170f20d-d771-41f4-899f-50a88c9e8a8b",
+      "name": "判断是否属于新增",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        528,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d5aa0410-5a44-418a-9335-b69d8fe2208a",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b8677a18-25f9-409f-939f-d303659d59a3",
+      "name": "If4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2448,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_list",
+          "mode": "list",
+          "cachedResultName": "procedure_list"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_list_name",
+              "value": "={{ $json.procedure_list_name }}"
+            },
+            {
+              "column": "product_model_id",
+              "value": "={{ $json.product_model_id }}"
+            },
+            {
+              "column": "status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f54458be-1a38-4273-8e86-f89217bd65e8",
+      "name": "查询重复项",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        912,
+        352
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "createprocess_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "eb00f132-157f-4a81-8d58-8bc7e4947e90",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        208,
+        368
+      ],
+      "webhookId": "f80d41dc-ca99-4906-b353-aa69d80bb7ae"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"procedure_list_name\": \"{{ $json.body.procedure_list_name }}\",\n  \"product_model_id\": \"{{ $json.body.product_model_id }}\",\n  \"procedure_detail_id\": \"{{ JSON.stringify({ 'procedure_detail_id': JSON.parse($json.body.procedure_list).map(item => item.procedure_detail_id) }).replace(/\"/g, '\\\\\"') }}\",\n \"procedure_list_id\":\"{{ $json.body.procedure_list_id }}\",\n  \"change_reason\":\"{{ $json.body.change_reason }}\",\n  \"version\":\"{{ $json.body.version }}\",\n  \"user_id\":\"{{ $json.body.user }}\"\n}\n\n\n\n\n",
+        "options": {}
+      },
+      "id": "ee0efc05-6051-4b4f-b0b6-38aa505d3671",
+      "name": "整理数据1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f5aa83b8-2035-4c1d-9c78-d81f7d131abb",
+              "leftValue": "={{ $json.inserted_rows }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "5caec408-0757-409f-9998-21500a04f38c",
+              "leftValue": "={{ $json.updated_rows }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2e8100c0-229f-47e6-9de5-57d9deada7cc",
+      "name": "判断更新和插入是否成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "6e3637fe-6d41-4be2-b4fa-f6dbf757a398",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1e41198b-2fd7-4fcb-b853-e552c8042f03",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "procedure_detail_id.procedure_detail_id",
+        "options": {
+          "destinationFieldName": "procedure_detail_id"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        352
+      ],
+      "id": "d3cb3551-a03e-436e-9dc4-03cc26bb23d0",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_list",
+          "mode": "list",
+          "cachedResultName": "procedure_list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "procedure_list_name": "={{ $json.procedure_list_name }}",
+            "current_version": "={{ $json.current_version }}",
+            "product_model_id": "={{ $json.product_model_id }}",
+            "createtime": "={{ $now }}",
+            "status": 1,
+            "user_id": "={{ $json.user_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "procedure_list_id",
+              "displayName": "procedure_list_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procedure_list_name",
+              "displayName": "procedure_list_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "current_version",
+              "displayName": "current_version",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_model_id",
+              "displayName": "product_model_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "907c789e-4efb-46bc-b888-6542632ba9f6",
+      "name": "插入工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1312,
+        352
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据').all();"
+      },
+      "id": "3eb63297-d5a9-412d-99c4-e15ac8ce488f",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取从当前节点输入的所有数据\nconst historyProcedureIds = $input.all().map(item => {\n  return parseInt(item.json.history_procedure_id, 10);\n});\n\n// 构建需要的输出格式\nconst historyProcedureData = {\n  \"history_procedure_id\": {\n    \"history_procedure_detail_id\": historyProcedureIds\n  }\n};\n\n// 获取'整理数据'节点的所有数据\nconst Outputs = $('整理数据').all();\n\nconst procedure_list_id = $(\"插入工序表\").first().json.procedure_list_id;\n\n// 将历史过程ID和整理数据组合\nconst combinedResult = Outputs.map(item => {\n  return {\n    ...item.json, // 导入'整理数据'中的所有字段\n    ...historyProcedureData, // 添加历史过程ID的数据\n    procedure_list_id:procedure_list_id\n  };\n});\n\nreturn combinedResult;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        320
+      ],
+      "id": "13605d42-7679-472a-addb-897c813d2365",
+      "name": "整合数据"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_detail",
+          "mode": "list",
+          "cachedResultName": "history_procedure_detail"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_detail_id",
+              "value": "={{ $json.procedure_detail_id }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "createtime",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1872,
+        352
+      ],
+      "id": "4ce0e6d1-3880-4667-81bc-1816d5ca27b6",
+      "name": "查询历史工序",
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取从当前节点输入的所有数据作为数组\nconst historyProcedureIds = $input.all().map(item => item.json.history_procedure_id);\n\n// 构建需要的输出格式，并使用 JSON.stringify 保持一致格式\nconst historyProcedureData = {\n  \"history_procedure_detail_id\": JSON.stringify({\n    \"history_procedure_detail_id\": historyProcedureIds.flat()\n  })\n};\n\n// 获取'整理数据'节点的所有数据\nconst Outputs = $('整理数据1').all();\n\n// 将历史过程ID和整理数据组合\nconst combinedResult = Outputs.map(item => {\n  return {\n    ...item.json,                // 导入'整理数据'中的所有字段\n    ...historyProcedureData  // 添加历史过程ID的数据\n  };\n});\n\nreturn combinedResult;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        528
+      ],
+      "id": "b3b740b5-985a-4978-a921-8a409b19d012",
+      "name": "整合数据1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_detail",
+          "mode": "list",
+          "cachedResultName": "history_procedure_detail"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_detail_id",
+              "value": "={{ $json.procedure_detail_id }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "history_procedure_id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1504,
+        528
+      ],
+      "id": "f7705611-46f5-41ad-b544-1d69b2c0924a",
+      "name": "查询历史工序1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.update_and_insert_procedure_list(\n    {{ $json.user_id }},  -- INTEGER\n    '{{ $json.procedure_list_name }}',  -- VARCHAR\n    '{{ $json.procedure_detail_id }}',  -- JSON\n    '{{ $json.version }}',  -- VARCHAR\n    '{{ $json.change_reason }}',  -- VARCHAR\n    {{ $json.product_model_id }},  -- INTEGER\n    {{ $json.procedure_list_id }},  -- INTEGER\n    '{{ $json.history_procedure_detail_id }}'  -- JSON\n);\n",
+        "options": {}
+      },
+      "id": "54aa921f-4ed0-4aaa-b8e2-f3d2147f40db",
+      "name": "插入更新工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1808,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 n8n 的所有输入\nconst input = $input.all();\n\nlet output = [];\n\ntry {\n  // 遍历每个输入项\n  input.forEach(item => {\n    const jsonData = item.json;\n\n    // 确保输入中包含了我们需要的字段\n    if (jsonData && typeof jsonData.procedure_detail_id === 'string') {\n      // 解析 procedure_detail_id 中的 JSON 数据\n      const procedureDetails = JSON.parse(jsonData.procedure_detail_id).procedure_detail_id;\n\n      // 为每个 procedure_detail_id 创建一个新的对象，并保留其他属性\n      procedureDetails.forEach(detailId => {\n        output.push({\n          \"procedure_list_name\": jsonData.procedure_list_name,\n          \"product_model_id\": jsonData.product_model_id,\n          \"procedure_detail_id\": detailId.toString(),\n          \"procedure_list_id\": jsonData.procedure_list_id,\n          \"change_reason\": jsonData.change_reason,\n          \"version\": jsonData.version,\n          \"user_id\": jsonData.user_id\n        });\n      });\n    } else {\n      throw new Error('输入数据不符合预期格式');\n    }\n  });\n} catch (error) {\n  throw new Error('解析 procedure_detail_id 出错: ' + error.message);\n}\n\n// 将结果赋值给 n8n 的输出\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        512
+      ],
+      "id": "4dad8167-9158-43f7-a584-ae4373d46390",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_list",
+          "mode": "list",
+          "cachedResultName": "history_procedure_list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "version": "={{ $json.current_version }}",
+            "procedure_list_name": "={{ $json.procedure_list_name }}",
+            "createtime": "={{ $now }}",
+            "status": 1,
+            "product_model_id": "={{ $json.product_model_id }}",
+            "user_id": "={{ $json.user_id }}",
+            "procedure_detail_id": "={{ $json.procedure_detail_id }}",
+            "procedure_list_id": "={{ $json.procedure_list_id }}",
+            "history_procedure_detail_id": "={{ $json.history_procedure_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "history_procedure_list_id",
+              "displayName": "history_procedure_list_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_model_id",
+              "displayName": "product_model_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_list_name",
+              "displayName": "procedure_list_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "change_reason",
+              "displayName": "change_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_list_id",
+              "displayName": "procedure_list_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_detail_id",
+              "displayName": "history_procedure_detail_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "89d1947e-dd3f-4f46-ad2a-50ac60c7d1d1",
+      "name": "插入历史工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2208,
+        368
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('整理数据1').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        512
+      ],
+      "id": "c72914d5-9236-46fb-b64c-3bcbeccc29ec",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_list",
+          "mode": "list",
+          "cachedResultName": "history_procedure_list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "procedure_list_id": "={{ $json.procedure_list_id }}",
+            "status": 2
+          },
+          "matchingColumns": [
+            "procedure_list_id"
+          ],
+          "schema": [
+            {
+              "id": "history_procedure_list_id",
+              "displayName": "history_procedure_list_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "product_model_id",
+              "displayName": "product_model_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procedure_list_name",
+              "displayName": "procedure_list_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "change_reason",
+              "displayName": "change_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "procedure_list_id",
+              "displayName": "procedure_list_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "history_procedure_detail_id",
+              "displayName": "history_procedure_detail_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        896,
+        512
+      ],
+      "id": "d9b9db72-4273-453e-8094-e5a9ecd82e36",
+      "name": "更改状态",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "判断是否填写必填项": {
+      "main": [
+        [
+          {
+            "node": "判断是否属于新增",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请填写必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该工艺流程已存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据": {
+      "main": [
+        [
+          {
+            "node": "查询重复项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否属于新增": {
+      "main": [
+        [
+          {
+            "node": "整理数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "整理数据1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询重复项": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "该工艺流程已存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否填写必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理数据1": {
+      "main": [
+        [
+          {
+            "node": "更改状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断更新和插入是否成功": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "查询历史工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入工序表": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "插入工序表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据": {
+      "main": [
+        [
+          {
+            "node": "插入历史工序表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询历史工序": {
+      "main": [
+        [
+          {
+            "node": "整合数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询历史工序1": {
+      "main": [
+        [
+          {
+            "node": "整合数据1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据1": {
+      "main": [
+        [
+          {
+            "node": "插入更新工序表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入更新工序表": {
+      "main": [
+        [
+          {
+            "node": "判断更新和插入是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "查询历史工序1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入历史工序表": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更改状态": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "919",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_list_name": "测试工艺",
+            "product_model_id": "5",
+            "procedure_list": "[{\"procedure_list_id\":43,\"product_model_name\":\"R4\",\"procedure_detail_id\":152,\"procedure_name\":\"成品返投工艺流程确认\",\"current_version\":\"1.0\",\"common_proocedure\":true,\"history_procedure_id\":\"237\",\"checkrule\":true,\"procedure_dataupload\":2,\"procedure_scheduling\":3,\"scheduling_description\":\"成品测试\",\"procedure_dataupload_bool\":true},{\"procedure_detail_id\":96,\"procedure_name\":\"RF测试\",\"product_model_name\":null,\"current_version\":\"1.0\",\"common_proocedure\":true,\"checkrule\":false}]",
+            "procedure_list_id": "43",
+            "user": "1",
+            "change_reason": "",
+            "version": "1233"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/createprocess_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "54bb514a-6648-4bd3-a8d5-3d51b5c8edfa",
+  "activeVersionId": "54bb514a-6648-4bd3-a8d5-3d51b5c8edfa",
+  "versionCounter": 36,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T07:17:53.350Z",
+      "createdAt": "2025-04-24T07:17:53.350Z",
+      "role": "workflow:owner",
+      "workflowId": "VjteYuBgzGLeDRXp",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

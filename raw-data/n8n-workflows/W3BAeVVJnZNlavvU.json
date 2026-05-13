@@ -1,0 +1,434 @@
+{
+  "updatedAt": "2025-04-15T06:09:41.769Z",
+  "createdAt": "2024-05-16T09:28:00.412Z",
+  "id": "W3BAeVVJnZNlavvU",
+  "name": "consm_barcodebindinfodelete_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "74c8b295-36c6-4a20-a999-72dbf8b5c850",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "67fb92f0-a0d1-4110-87a4-1a0de462c49b",
+      "name": "判断token是否有效",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        180,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM test.\"user\" \nWHERE token = '{{ $json.headers.token }}' \nAND TO_TIMESTAMP(tokenexpire) > CURRENT_TIMESTAMP;\n",
+        "options": {}
+      },
+      "id": "26fc3154-6c08-4c54-a008-b214969e52d3",
+      "name": "查询Token信息",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        20,
+        360
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DECLARE @Reason NVARCHAR(MAX) = '{{$json.body.reason}}';\nDECLARE @ID INT = {{$json.body.id}};\nBEGIN TRANSACTION;\n\nINSERT INTO YFConsumer.dbo.consm_barcodeoverworkbindinfo (id, jobnumber, ordernumber, productcode, clientcode, retroid, baseline,\n    uuid, BaseLineBatch, BatteryBatch, procedurevalue, isstateok, ischeck, createtime, modifytime, Channel, uuid_unique, reason, overworktime)\nSELECT id, jobnumber, ordernumber, productcode, clientcode, retroid, baseline,\n    uuid, BaseLineBatch, BatteryBatch, procedurevalue, isstateok, ischeck, createtime, modifytime, Channel, uuid_unique, @Reason, GETDATE()\nFROM YFConsumer.dbo.consm_barcodebindinfo\nWHERE id = @ID;\nSELECT @@ROWCOUNT AS InsertedRows\n\nDELETE  TOP (1) FROM YFConsumer.dbo.consm_barcodebindinfo\nWHERE id = @ID;\n\nSELECT @@ROWCOUNT AS DeletedRows;\n\nCOMMIT TRANSACTION;\n\n\n"
+      },
+      "id": "430b99b3-a63a-4c55-a5ae-d5578bd7998b",
+      "name": "删除记录",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        520,
+        360
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "b95d5f96-5062-4f43-99a5-40a5fea8f0f1",
+              "leftValue": "={{ $input.all()[0].json.DeletedRows }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "faabf5e1-2204-46a6-9508-5eddea0de7f4",
+              "leftValue": "={{ $input.all()[1].json.InsertedRows }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "08e8e1cd-938b-4014-819d-ec15e29b9045",
+      "name": "判断删除是否成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        700,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\" : \"删除失败，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "4c96b999-172a-46bf-8437-cbcc32e91773",
+      "name": "删除失败",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        860,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\" : \"条码绑定记录删除成功\"\n}",
+        "options": {}
+      },
+      "id": "bc9ffc0c-070e-4653-82b2-9162f40cfde5",
+      "name": "成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        860,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d857c50e-f3e7-4df7-b6d5-61585dec116a",
+              "leftValue": "={{ $json.body.id }}",
+              "rightValue": "={{ null }}",
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "a6635406-bcb3-4787-b246-24d9fdc91afd",
+              "leftValue": "={{ $json.body.reason }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "id": "6a23f9ae-1b85-4d9f-b190-79fb5eb4fc30",
+      "name": "判断受否填写必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        360
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\" : \"请填写必填项\"\n}",
+        "options": {}
+      },
+      "id": "253e1979-ef70-470a-8741-6f5476ec9910",
+      "name": "请填写必填项",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        120,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\" : \"已过有效期，请重新登录\"\n}",
+        "options": {}
+      },
+      "id": "21d9ae00-2d62-4cf3-8c94-e6613ac3f375",
+      "name": "已过有效期，请重新登录",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consm_barcodebindinfodelete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "29d75571-918e-4309-a9c8-3562694ae4b6",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -280,
+        360
+      ],
+      "webhookId": "bb6a41b4-ebf9-405a-bf2e-6fd12013fdd7"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('判断受否填写必填项').all()\n\nreturn input"
+      },
+      "id": "d127592f-ec30-4b75-bcd0-73b0c0a3f530",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        360
+      ]
+    }
+  ],
+  "connections": {
+    "判断token是否有效": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "已过有效期，请重新登录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询Token信息": {
+      "main": [
+        [
+          {
+            "node": "判断token是否有效",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "删除记录": {
+      "main": [
+        [
+          {
+            "node": "判断删除是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断删除是否成功": {
+      "main": [
+        [
+          {
+            "node": "成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "删除失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断受否填写必填项": {
+      "main": [
+        [
+          {
+            "node": "查询Token信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请填写必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断受否填写必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "删除记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.25.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "50",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "token": "REDACTED",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "id": 2227027,
+            "reason": "功能不良解绑拆机"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/consm_barcodebindinfodelete",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "920b59dd-fd4b-4dc1-8d45-56a953143d0e",
+  "activeVersionId": "920b59dd-fd4b-4dc1-8d45-56a953143d0e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:32.105Z",
+      "createdAt": "2024-01-26T07:50:15.258Z",
+      "id": "Sagrd0CJUl5QtuS4",
+      "name": "MES相关应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-05-16T09:28:00.412Z",
+      "createdAt": "2024-05-16T09:28:00.412Z",
+      "role": "workflow:owner",
+      "workflowId": "W3BAeVVJnZNlavvU",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

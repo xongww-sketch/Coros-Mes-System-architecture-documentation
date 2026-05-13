@@ -1,0 +1,350 @@
+{
+  "updatedAt": "2025-10-27T23:54:33.439Z",
+  "createdAt": "2024-07-25T02:57:35.094Z",
+  "id": "wu7n8e2pUx2hInJs",
+  "name": "自我检查 - Webhook",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":0\n}",
+        "options": {}
+      },
+      "id": "83a62a01-28e5-4ed2-9f22-8d09d78d8533",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        272
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "fe0a43ee-b446-450a-9163-1f6d17a97b24",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        464,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Webhook\nhttps://n8n.mes.coros.team/test/health_check",
+        "height": 264,
+        "width": 578,
+        "color": 6
+      },
+      "id": "6171a81e-b352-4a24-a43f-1431a3a06ab1",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        368,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Check N8N WebHook service\n\n",
+        "height": 470,
+        "width": 1398
+      },
+      "id": "a83d88ad-46dd-41ce-b349-11b68b905ecc",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "70e8a251-306c-4c2d-bff5-441b6d24ba18",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  n8n-WebHook服务不可用",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "d4624744-5b93-4564-ae87-c04d7ae40225",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        768
+      ],
+      "retryOnFail": false,
+      "webhookId": "8b78a78f-e622-4af5-a9ed-a18bdec309c2",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "7835b4f6-6a9a-46d1-81c1-6877572295fb",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "upstream",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "2c6db324-de7e-4cca-9334-5225ca800759",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        912,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"host\":\"https://n8n.mes.coros.team\",\n  \"path\":\"/prod/health_check\",\n  \"upstream\":[5680,5681,5682]\n\n}\n",
+        "options": {}
+      },
+      "id": "ae5a5e2c-515e-46a3-8f50-5baf0936d7ce",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.host }}:{{ $json.upstream }}{{ $json.path }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "f1f79d46-ca8e-43ee-9c5c-6e2b113b6c9b",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1168,
+        608
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "path": "health_check",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b8f12040-fff0-4434-8117-11e7e06f917e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        480,
+        272
+      ],
+      "webhookId": "3da8787d-07bc-446f-9c6a-2adf355d5c9b"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2024-07-25T11:44:46.011+08:00",
+          "Readable date": "July 25th 2024, 11:44:46 am",
+          "Readable time": "11:44:46 am",
+          "Day of week": "Thursday",
+          "Year": "2024",
+          "Month": "July",
+          "Day of month": "25",
+          "Hour": "11",
+          "Minute": "44",
+          "Second": "46",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "user-agent": "axios/1.6.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "host": "192.168.128.8:5680",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/health_check",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "8ffb8289-b422-41b8-849b-9b534a4e6574",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 2,
+  "tags": [
+    {
+      "updatedAt": "2024-07-25T03:29:57.142Z",
+      "createdAt": "2024-07-25T03:29:57.142Z",
+      "id": "VFkA8Y3moGq6Xflw",
+      "name": "N8N service"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-07-25T02:57:35.094Z",
+      "createdAt": "2024-07-25T02:57:35.094Z",
+      "role": "workflow:owner",
+      "workflowId": "wu7n8e2pUx2hInJs",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

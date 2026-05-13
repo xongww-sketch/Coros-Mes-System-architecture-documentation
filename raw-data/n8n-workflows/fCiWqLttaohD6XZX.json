@@ -1,0 +1,756 @@
+{
+  "updatedAt": "2026-01-19T04:22:53.138Z",
+  "createdAt": "2025-04-21T08:34:08.087Z",
+  "id": "fCiWqLttaohD6XZX",
+  "name": "select_all_unbind",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "select_all_unbind",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -16
+      ],
+      "id": "37882bd4-94d0-45bb-ab6f-7f6d0ac38fac",
+      "name": "Webhook",
+      "webhookId": "378ac7c9-d9ed-4d24-9ec4-540bf9faff50"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8e68b913-5f14-4aea-9a10-4cab7ef3ecce",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        -160
+      ],
+      "id": "05291bd5-681b-4ea2-80ae-4a49591a877a",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        -128
+      ],
+      "id": "77e1f07b-6cd4-4c31-a46c-218d90c2c340",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"sn未传\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        368
+      ],
+      "id": "9c567505-076e-478f-9a4a-f030c0a2761c",
+      "name": "参数未传"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r WHERE r.retroid_id = '{{ $json.data[0].json.retroid_id }}'AND\nr.status in('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        432,
+        -160
+      ],
+      "id": "4dfa959b-79da-46f7-91c4-aa4810ea896e",
+      "name": "查询sn是否存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"sn不存在\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        144
+      ],
+      "id": "ce315d5c-2dbb-488e-a886-1e004610b600",
+      "name": "sn不存在"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md\nwhere md.procedure_detail_id ='62'and md.retroid_id = '{{ $('If2').item.json.retroid_id }}'\nLIMIT 20000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1104,
+        -144
+      ],
+      "id": "0a1e213d-6166-4e61-a07a-6338d9d42728",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"数据库错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        128
+      ],
+      "id": "40cb83c1-ee7e-4f7a-89f6-60c6c30756bc",
+      "name": "数据库错误"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 PostgreSQL 查询结果\nconst dbResults = $input.all();\n\n// 处理结果为空的情况\nif (!dbResults || dbResults.length === 0) {\n  return {\n    json: {\n      code: 200,\n      data: {\n        list: []  // 明确返回空数组\n      }\n    }\n  };\n}\n\nconst formattedList = dbResults.map(item => {\n  const dataOld = item?.json?.data?.data_old || {};\n  const unbindData = item?.json?.data || {};\n\n  // 兼容 sn / retroid\n  const snValue =\n    (dataOld.sn ?? \"\").toString().trim() ||\n    (dataOld.retroid ?? \"\").toString().trim();\n\n  return {\n    proceduer_name: (dataOld.procedure_name ?? \" \").toString(),\n    sn: snValue,  // <= 改这里\n    createtime: item?.json?.createtime || \"\",\n    machine_data_id: item?.json?.machine_data_id || \"\",\n    unbind_id: (unbindData.unbind_id ?? \"\").toString().trim(),\n    remark: unbindData.remark || \"\"\n  };\n});\n\n// 返回标准格式响应\nreturn {\n  json: {\n    code: 200,\n    data: {\n      list: formattedList\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        -128
+      ],
+      "id": "409969e2-a200-46b2-a901-1fe8268ead0c",
+      "name": "Code",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const sn = $('Webhook').first().json.body.sn;\nconst uuid = $('Webhook').first().json.body.uuid;\n\n\nconst cleanSn =sn.replace(/\\s|\\/n/g, '')\n\n\nreturn{json:{\n        body:{\n          sn:cleanSn,\n          uuid:uuid\n}\n}\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -16
+      ],
+      "id": "5a744c26-0c64-41bc-89c4-7189adcf9cc8",
+      "name": "去除空格或换行"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4907b0f0-dd83-4e02-9d9b-81dd99454673",
+              "leftValue": "={{ $json.body.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -16
+      ],
+      "id": "51490ff3-7360-400c-8262-2bf25857891f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d0a98bba-b8bf-4d64-9303-31357285e0cc",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "96425461-cdbd-4a54-b99f-28df7e89127d",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 39,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        -144
+      ],
+      "id": "80532bf6-070b-40c1-a88a-e22c80fa014c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3753d9e2-8d60-44aa-be40-11d7a406a779",
+              "leftValue": "={{ $json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        224
+      ],
+      "id": "429ccd5d-9cb3-4ff9-851a-6b81b10dafbc",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8e68b913-5f14-4aea-9a10-4cab7ef3ecce",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        1584
+      ],
+      "id": "60fa486c-9ce9-4ff8-9202-663c8b83d70c",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        1488
+      ],
+      "id": "c1c320da-b0bb-4fb7-99f3-c68105761c9c",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r WHERE r.retroid = '{{ $('去除空格或换行').item.json.body.sn }}' AND\nr.status in('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        288,
+        1552
+      ],
+      "id": "332701f5-7b65-45a7-9b82-c8764e624a93",
+      "name": "查询sn是否存在1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md\nwhere md.procedure_detail_id ='62'and md.retroid_id = '{{ $('查询sn是否存在').item.json.retroid_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        784,
+        1488
+      ],
+      "id": "01f6933b-54de-45e2-97ac-aa57353bed2e",
+      "name": "Postgres1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 PostgreSQL 查询结果\nconst dbResults = $input.all();\n\n// 处理结果为空的情况\nif (!dbResults || dbResults.length === 0) {\n  return {\n    json: {\n      code: 200,\n      data: {\n        list: []  // 明确返回空数组\n      }\n    }\n  };\n}\n\n// 映射数据到所需格式\nconst formattedList = dbResults.map(item => ({\n  proceduer_name: item.json.data.data_old.procedure_name?.toString() || \"0\",  // 确保转换为字符串\n  sn: item.json.data.data_old.sn || \"\",\n  createtime: item.json.createtime || \"\",\n  machine_data_id: item.json.machine_data_id || \"\",\n  unbind_id:\n    item.json.data.unbind_id || \"\"\n}));\n\n// 返回标准格式响应\nreturn {\n  json: {\n    code: 200,\n    data: {\n      list: formattedList\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        1488
+      ],
+      "id": "6981d823-d256-44a8-800c-2606a726121f",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zIsWkclkRfztC4WQ",
+          "mode": "list",
+          "cachedResultName": "1.Mes重构 — uuidGetSn"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "da471b18-871b-4e99-838d-037a6d115d96",
+      "name": "uuid查sn",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"uuid未绑定sn\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        32
+      ],
+      "id": "000b387a-6ed0-4350-b3b2-8c4da427d1d6",
+      "name": "uuid为绑定sn"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r WHERE r.retroid = '{{ $('If3').item.json.body.sn }}'AND\nr.status in('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        544,
+        160
+      ],
+      "id": "470b2fc0-ecd0-4105-8697-b773f365efe0",
+      "name": "查询sn是否存在2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "去除空格或换行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否存在": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "去除空格或换行": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "uuid查sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uuid为绑定sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "查询sn是否存在1": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否存在2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "参数未传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uuid查sn": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否存在2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "49",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W92BP10165",
+            "uuid": ""
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/select_all_unbind",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "802a335a-c95c-4d75-9e1b-193681559df1",
+  "activeVersionId": "802a335a-c95c-4d75-9e1b-193681559df1",
+  "versionCounter": 36,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:20:32.326Z",
+      "createdAt": "2025-04-24T03:20:32.326Z",
+      "role": "workflow:owner",
+      "workflowId": "fCiWqLttaohD6XZX",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

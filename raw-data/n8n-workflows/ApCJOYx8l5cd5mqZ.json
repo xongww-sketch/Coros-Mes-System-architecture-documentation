@@ -1,0 +1,508 @@
+{
+  "updatedAt": "2025-12-30T07:30:21.981Z",
+  "createdAt": "2025-06-19T03:24:48.813Z",
+  "id": "ApCJOYx8l5cd5mqZ",
+  "name": "box_info_reprint",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/boxInfo/reprint",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        288
+      ],
+      "id": "47c7afe5-dc6c-46c4-8279-3425a922685e",
+      "name": "Webhook",
+      "webhookId": "b89fcdb3-b004-47b4-b8d6-713e38768515"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst item=$input.all()[0].json.body;\n//声明异常返回对象\nlet errMsg=null;\n\n\nif(errMsg!=null){\n  return {\n    errMsg:errMsg\n  }\n}else{\n  return {\n    boxId:item.config.boxId,\n    ordernumber:item.config.orderNumber,\n    ticketNo:item.config.ticketNo\n  }\n}"
+      },
+      "id": "ae726717-055c-40f0-930e-a2ca7cb5d5fb",
+      "name": "校验输入参数是否有误",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "df83a32c-dd19-4a2a-b187-2b86bb75e35f",
+              "leftValue": "={{ $json.errMsg }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "de6cde33-265f-4d6f-bea4-58d4ee53e842",
+      "name": "判断校验是否有异常",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        80,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"201\",\n  \"errMsg\":\"{{ $json.errMsg }}\"\n} ",
+        "options": {}
+      },
+      "id": "53a92792-1f98-4acd-b8c5-80c1187a6740",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT uuid,ordernumber2,jobnumber2 from YFConsumer.dbo.consm_barcodeinfo where jobnumber2='{{ $json.ticketNo }}' AND boxId={{ $json.boxId }}"
+      },
+      "id": "d733057c-5c51-4572-9c62-15c4884f448e",
+      "name": "判断数据库中是否存在该条码的包装记录",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        0
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"data\":{{JSON.stringify( $json.retroid)}}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2112,
+        64
+      ],
+      "id": "8751a2ec-9b2b-482b-92aa-1747852cc0d6",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.retroid_id,r.retroid from mes.mes.machine_data as m join mes.mes.retroid as r on m.retroid_id=r.retroid_id where m.data->>'ticketNo' ='{{ $json.ticketNo }}'and m.data->>'boxId'='{{ $json.boxId }}' and m.procedure_detail_id=81 AND NOT EXISTS (\n    SELECT 1 \n    FROM mes.mes.machine_data AS md2 \n    WHERE md2.procedure_detail_id = 91 \n      AND md2.createtime > m.createtime\n      AND md2.retroid_id = m.retroid_id\n      AND md2.data->>'procedure_detail_id_old'='81'\n  );;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        272
+      ],
+      "id": "c45cd8c3-9830-44f7-8ef3-9539971c7da3",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6e81c4a4-666b-4d67-a3c2-3e99512ecd06",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "8d924c4c-68e0-422a-ab7f-52776518dc04",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "40d6a58c-7f64-4761-b26d-87695a163c08",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        272
+      ],
+      "id": "d4e69acd-11a5-4874-b5e1-8777044b4fb6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\",\n  \"errMsg\":\"数据库错误\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1648,
+        432
+      ],
+      "id": "32d0511b-9f3b-447e-81f8-d60f7d3deb27",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "02311474-d324-4d1a-8834-6b37634e78ab",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        240
+      ],
+      "id": "26fd2739-13d0-4cbc-acad-0fec20bb5f81",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb186935-d045-465d-8f23-dc22d90f22a7",
+              "name": "retroid",
+              "value": "={{ $json.uuid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        -64
+      ],
+      "id": "2609819e-f5ef-4a66-8b26-b3d94870a49e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        64
+      ],
+      "id": "c6dd3c5a-16d9-4dc3-9e4c-febc10e53007",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "校验输入参数是否有误": {
+      "main": [
+        [
+          {
+            "node": "判断校验是否有异常",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断校验是否有异常": {
+      "main": [
+        [
+          {
+            "node": "判断数据库中是否存在该条码的包装记录",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据库中是否存在该条码的包装记录": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "校验输入参数是否有误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.149",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "168",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "code": 1,
+            "config": {
+              "orderNumber": "1000005757",
+              "ticketNo": "1000005757",
+              "boxId": "12",
+              "quantity": "36",
+              "watchWeight": "0.076",
+              "type": "watch",
+              "print": "1",
+              "resource_id": 355
+            }
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/boxInfo/reprint",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "227d7bbf-a7d9-40a2-862b-5c260ce86945",
+  "activeVersionId": "227d7bbf-a7d9-40a2-862b-5c260ce86945",
+  "versionCounter": 40,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-06-19T03:24:48.813Z",
+      "createdAt": "2025-06-19T03:24:48.813Z",
+      "role": "workflow:owner",
+      "workflowId": "ApCJOYx8l5cd5mqZ",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

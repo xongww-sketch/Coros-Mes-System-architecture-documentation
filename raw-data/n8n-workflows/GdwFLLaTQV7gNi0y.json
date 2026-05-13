@@ -1,0 +1,515 @@
+{
+  "updatedAt": "2025-07-14T06:42:17.064Z",
+  "createdAt": "2025-07-14T06:11:43.252Z",
+  "id": "GdwFLLaTQV7gNi0y",
+  "name": "get_sn_by_uid_new",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_sn_by_uid_new",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        0
+      ],
+      "id": "36d48a8f-a76d-4e64-abb7-98b2eb347315",
+      "name": "Webhook",
+      "webhookId": "473c92f3-bd5b-4071-a0b0-a7e6e4c776bf"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "81177f9b-6ce6-49e1-8d65-7f86d3cdd6c7",
+              "leftValue": "={{ $json.body.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -992,
+        0
+      ],
+      "id": "97482e5b-89c5-4d49-8c73-a12c42b5bf97",
+      "name": "判断入参"
+    },
+    {
+      "parameters": {
+        "jsCode": "let inputArray = $input.all();\nlet result = null;\n\n// Check if input is a non-empty array\nif (Array.isArray(inputArray) && inputArray.length > 0) {\n    let firstItem = inputArray[0];\n\n    if (firstItem?.json?.body) {\n        let body = firstItem.json.body;\n\n        if (body.uuid) {\n            let uuid_original = body.uuid.trim();\n            let uuid_original2 = body.uuid;\n          \n\n            // Process based on UUID format\n            if (uuid_original.length === 30) {\n                // Handle 30-character UUID format\n                body.uuid = uuid_original;\n                // Remove characters at positions 16-17 (17th and 18th characters)\n                body.uuid_unique = body.uuid.slice(0, 16) + body.uuid.slice(18);\n                body.uuid_original=uuid_original;\n            } else {\n                // Handle URL format\n                const regex = /a=[\\w\\s]+?([A-Fa-f\\d]+)&b=([A-Fa-f\\d]+)&c=([A-Fa-f\\d]+)/;\n                const match = uuid_original2.match(regex);\n\n                if (match && match.length === 4) {\n                    const parts = [match[1], match[2], match[3]].map(s => s.toLowerCase());\n                    body.uuid = parts.join('');\n                    body.uuid_unique = body.uuid.slice(0, 16) + body.uuid.slice(18);\n                    body.uuid_original=uuid_original;\n                }\n            }\n\n            result = body;\n            console.log(\"Processed UUID:\", { uuid: body.uuid, uuid_unique: body.uuid_unique });\n\n            \n        } else {\n            console.log(\"UUID not found in body.\");\n        }\n    } else {\n        console.log(\"Body not found in first item.\");\n    }\n} else {\n    console.log(\"Input array is empty or not an array.\");\n}\n\nreturn result;"
+      },
+      "id": "aa2d8c42-8730-4c4e-b748-042fb1521867",
+      "name": "根据入参获取uuid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n   \"sn\":\"{{ $json.data.sn }}\",\n   \"retroid_id \":{{ $json.retroid_id }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        -32
+      ],
+      "id": "bb19797e-471e-4759-9dff-716aab183e97",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59ca4e32-cda6-4307-a439-00d0e1f70222",
+              "name": "=history_procedure_id",
+              "value": "={{ $json.history_procedure_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d8dc6cf2-0a7d-4c40-a8d3-e40033d46c36",
+              "name": "procedure_detail_id",
+              "value": "={{ $json.procedure_detail_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a7bc9a7b-bb54-4fe4-ac63-dcd2f25b9100",
+              "name": "uuidId",
+              "value": "={{ $('根据入参获取uuid').item.json.uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "9d4d52ae-830e-4fb4-b8a8-48385cafff63",
+              "name": "uuid_unique",
+              "value": "={{ $('根据入参获取uuid').item.json.uuid_unique }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "f52ac9db-b3de-4400-b4ad-d28a75c0def2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        288
+      ],
+      "id": "60dca052-2f45-42d9-8d46-d0feaa43e5f5",
+      "name": "数据库错误"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "995676de-3879-40f9-aadc-c694ae3d6408",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 39,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        -32
+      ],
+      "id": "77f0c569-fa95-4fd6-847a-f17bd0511008",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"该uuid未绑定sn\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        256
+      ],
+      "id": "f9215dc5-9655-4e5a-85fc-d031cfac604e",
+      "name": "uuid未绑定sn"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.machine_data md\njoin mes.retroid r on r.retroid_id = md.retroid_id\nwhere (LOWER(md.data ->>'bind_id')=LOWER('{{ $('切割uuid').item.json.uuid }}') or (LOWER(md.data ->>'unbind_id')=LOWER('{{ $('切割uuid').item.json.uuid_original }}'))) and md.procedure_detail_id in (select pd.procedure_detail_id from mes.procedure_detail pd \nwhere pd.procedure_name in('物料解除绑定','SN与UUID绑定') )\nand r.status in('1','2')\norder by createtime DESC\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "960aad8f-ede0-4ad8-8966-e28fbaaba41a",
+      "name": "查询工序表中对应的uuid",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_detail",
+          "mode": "list",
+          "cachedResultName": "history_procedure_detail"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "procedure_name",
+              "value": "SN与UUID绑定"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "history_procedure_id",
+            "procedure_detail_id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -592,
+        0
+      ],
+      "id": "d487ff79-1702-4e8f-bf5a-faf52342772c",
+      "name": "查询对应的工序",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"uuid格式错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        304
+      ],
+      "id": "ca8de0f9-0eae-4e30-92c5-3faecbfe71d4",
+      "name": "uuid格式错误"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8391dc00-7679-4b7b-b1e4-37e01b2cb723",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        -16
+      ],
+      "id": "f4039c3b-454d-4265-b4df-8a1f78139d2f",
+      "name": "If1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断入参",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断入参": {
+      "main": [
+        [
+          {
+            "node": "根据入参获取uuid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uuid格式错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据入参获取uuid": {
+      "main": [
+        [
+          {
+            "node": "查询对应的工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "查询工序表中对应的uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uuid未绑定sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工序表中对应的uuid": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应的工序": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uuid未绑定sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.208",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "106",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "uuid": "https://r.coros.com/6?a=COROS NOMAD 8FD84F&b=F0C569986477&c=C890F3972C7B&d=0&e=0&f=0\r",
+            "code": 2
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/get_sn_by_uid_API",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "history_procedure_id": "39",
+          "procedure_detail_id": "39",
+          "uuidId": "8fd84ff0c569986477c890f3972c7b",
+          "uuid_unique": "a05795d4202cbe1080f06b948c7c"
+        }
+      }
+    ]
+  },
+  "versionId": "7308d673-ec46-497c-a24f-a415e7dcd3d9",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-07-14T06:11:43.252Z",
+      "createdAt": "2025-07-14T06:11:43.252Z",
+      "role": "workflow:owner",
+      "workflowId": "GdwFLLaTQV7gNi0y",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,757 @@
+{
+  "updatedAt": "2025-08-27T07:52:19.300Z",
+  "createdAt": "2025-08-26T12:36:10.579Z",
+  "id": "NkDgiRUlfRIH1utc",
+  "name": "工序查询通用接口 copy",
+  "description": null,
+  "active": true,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        -96
+      ],
+      "id": "254c642e-9235-4e6a-9e18-b41940cbb713",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -208
+      ],
+      "id": "32f42682-2436-4d29-9584-1d1fff778870",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_history AS (\n    SELECT json_array_elements_text((history_procedure_detail_id->>'history_procedure_detail_id')::json) AS detail_id\n    FROM mes.history_procedure_list\n    WHERE history_procedure_list_id = '{{ $json.history_procedure_list_id }}'\n)\nSELECT DISTINCT ON (hpd.procedure_detail_id) hpd.*\nFROM mes.history_procedure_detail hpd\nWHERE hpd.history_procedure_id IN (\n    SELECT detail_id::int FROM latest_history\n)\nAND hpd.procedure_dataupload = 2\nORDER BY hpd.procedure_detail_id, hpd.createtime DESC;\n",
+        "options": {}
+      },
+      "id": "1046f03c-c95a-4697-84bc-e282c75b2135",
+      "name": "查询对应工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        128,
+        -304
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d27f55e9-4ca2-47d2-a5b6-f9b483ef8794",
+              "name": "joborder_number",
+              "value": "={{ $json.joborder_number }}",
+              "type": "string"
+            },
+            {
+              "id": "e4d13f1a-cc38-42fb-af77-8664b49fe084",
+              "name": "procedure_list_id",
+              "value": "={{ $json.procedure_list_id }}",
+              "type": "number"
+            },
+            {
+              "id": "1bb465b6-34e7-4e73-ab0f-187221a4c9db",
+              "name": "history_procedure_list_id",
+              "value": "={{ $json.history_procedure_list_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        -304
+      ],
+      "id": "cb4980e2-32ac-49b9-a0da-4054d5c79303",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ed0f4c26-71f1-45d7-bef7-9047c7ea026b",
+              "leftValue": "={{ $json.procedure_name }}",
+              "rightValue": "={{$('When Executed by Another Workflow').item.json.body.procedure_name}}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        -304
+      ],
+      "id": "2070e25e-d67f-4291-a505-57e62878efd7",
+      "name": "Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "065a917d-5238-4bef-ab01-e95e33285fd1",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        -304
+      ],
+      "id": "aa4f30a2-cfb6-4941-9683-5df5b4f14b8e",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a2631239-7450-4cd9-a012-017e44004780",
+              "leftValue": "={{ $json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        -288
+      ],
+      "id": "f4206cde-be21-43a4-a76b-333e2b421c92",
+      "name": "判断sn是否在body"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1e9e5f6-b9c1-484b-acfd-38ff601235b1",
+              "leftValue": "={{ $json.query.retroid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        -96
+      ],
+      "id": "5abd9be9-2b9a-4310-920e-63ee4cbee34b",
+      "name": "判断sn是否在query"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a2631239-7450-4cd9-a012-017e44004780",
+              "leftValue": "={{ $json.body.procedure_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        192
+      ],
+      "id": "50e1cc70-c183-4665-8fda-fac575283b3a",
+      "name": "判断是否要工序名称"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        480,
+        288
+      ],
+      "id": "ab85f973-05e2-4307-b290-6561648b67a0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        656,
+        256
+      ],
+      "id": "97ff90f7-bba7-4b77-98f3-b591ee4b3765",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "procedure_detail",
+          "mode": "list",
+          "cachedResultName": "procedure_detail"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "procedure_name",
+              "value": "={{ $json.body.procedure_name }}"
+            },
+            {
+              "column": "status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        32,
+        176
+      ],
+      "id": "644de5ac-a7f7-4e57-9bf3-8e7c981ba811",
+      "name": "查询工序编号",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_detail",
+          "mode": "list",
+          "cachedResultName": "history_procedure_detail"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_detail_id",
+              "value": "={{ $json.procedure_detail_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        304,
+        160
+      ],
+      "id": "f3751dc1-d8b2-4be2-a318-06eb97f25485",
+      "name": "查询历史工序编号",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n       r.retroid_id,\n       jo.joborder_number,\n       jo.joborder_id,\n       pm.product_model_name,\n       pi.product_code,\n       jo.procedure_list_id,\n       jo.history_procedure_list_id\nFROM mes.retroid r\nJOIN mes.retroid_generate rg ON r.retroid_generate_id = rg.retroid_generate_id\nJOIN mes.joborder jo ON rg.joborder_id = jo.joborder_id\nJOIN mes.product_info pi ON jo.product_id = pi.product_id\nJOIN mes.product_model pm ON pi.product_model_id = pm.product_model_id\nWHERE r.retroid = '{{ $json.query.retroid }}'\n  and r.status in('1','2') ;    -- 替换成你要查询的 retroid\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -336,
+        -112
+      ],
+      "id": "08b40e21-5e11-4b11-a974-e2cee41f8474",
+      "name": "查询相关信息-retroid",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n       r.retroid_id,\n       jo.joborder_number,\n       jo.joborder_id,\n       pm.product_model_name,\n       pi.product_code,\n       jo.procedure_list_id,\n       jo.history_procedure_list_id\nFROM mes.retroid r\nJOIN mes.retroid_generate rg ON r.retroid_generate_id = rg.retroid_generate_id\nJOIN mes.joborder jo ON rg.joborder_id = jo.joborder_id\nJOIN mes.product_info pi ON jo.product_id = pi.product_id\nJOIN mes.product_model pm ON pi.product_model_id = pm.product_model_id\nWHERE r.retroid = '{{ $json.body.sn }}'\n  and r.status in('1','2') ;    -- 替换成你要查询的 retroid\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -400,
+        -304
+      ],
+      "id": "c97c2e9c-213c-4aa6-ae0e-12772c0364c3",
+      "name": "查询相关信息-sn",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d1048814-6da8-41b6-b7db-bbc257c37b2a",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        64
+      ],
+      "id": "bb0315aa-0411-4e9a-9fe3-b8ce088d9512",
+      "name": "判断工单是否存在"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n       joborder_number,\n       joborder_id,\n       procedure_list_id,\n       history_procedure_list_id\nFROM mes.joborder\nWHERE joborder_id = '{{ $json.body.joborder_id }}'\n  and status = 1 ; \n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -208,
+        48
+      ],
+      "id": "3d5cfe5d-b6d6-428b-9846-517cb0b1b054",
+      "name": "查询相关信息-joborder",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否在body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "查询对应工序表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应工序表": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否在body": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息-sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断sn是否在query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否在query": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息-retroid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断工单是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否要工序名称": {
+      "main": [
+        [
+          {
+            "node": "查询工序编号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工序编号": {
+      "main": [
+        [
+          {
+            "node": "查询历史工序编号",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "查询历史工序编号": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询相关信息-sn": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询相关信息-retroid": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工单是否存在": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息-joborder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断是否要工序名称",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询相关信息-joborder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.160.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "92",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {
+            "procedure_name": "LCD与TP绑定",
+            "material": "12345",
+            "joborder_id": "244",
+            "bind_id": "1234d"
+          },
+          "body": {
+            "procedure_name": "LCD与TP绑定",
+            "joborder_id": "244",
+            "material": "12345",
+            "bind_id": "1234d"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/binding_before_api_test",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "joborder_number": "1234567890",
+          "procedure_list_id": 23,
+          "history_procedure_list_id": "62"
+        }
+      }
+    ]
+  },
+  "versionId": "7fede308-e99d-4761-b28b-20148aa040c2",
+  "activeVersionId": "7fede308-e99d-4761-b28b-20148aa040c2",
+  "versionCounter": 16,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-08-26T12:36:10.579Z",
+      "createdAt": "2025-08-26T12:36:10.579Z",
+      "role": "workflow:owner",
+      "workflowId": "NkDgiRUlfRIH1utc",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

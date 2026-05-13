@@ -1,0 +1,260 @@
+{
+  "updatedAt": "2024-03-11T03:04:43.983Z",
+  "createdAt": "2024-03-11T02:07:37.720Z",
+  "id": "SLhwahsoEOxZavr7",
+  "name": "根据单据编号带出sku_code",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "getSkuCode",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d451ff91-5f77-4610-ad53-e93c93286fd7",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        260
+      ],
+      "webhookId": "e7d144be-7063-432d-8982-7adbaeee7b01"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"errMsg\":\"订单号不存在\",\n  \"data\":{\n    \"snList\":[]\n  }\n}",
+        "options": {}
+      },
+      "id": "1dddc817-a757-4d6c-b199-bfa8abd0971d",
+      "name": "订单号不存在",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bb23608d-0ba5-426b-9f99-3a12073359a2",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.detail.get"
+            },
+            {
+              "name": "code",
+              "value": "SDO249855035846"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3d25f89-0d3d-44c2-97b0-9b9a3e2f641c",
+      "name": "管易通过单据编号查询到对应订单信息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        860,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nfor (const item of $input.all()) {\n  let temp=JSON.parse(item.json.data);\n  console.log(temp)\n  \n let orderDetails=temp.orderDetail.details.map(el=>{\n    return {\n      sku_code:el.sku_code,\n      sku_name:el.sku_name,\n      quantity:el.qty,\n    }\n  })\n  //将sn和uuid分开存放在不同的数组中\n\n  result.push({\n    platform_code:temp.orderDetail.platform_code,\n    orderDetails:orderDetails\n  })\n}\n\nreturn result;"
+      },
+      "id": "a0230f72-3e16-4054-87ad-1dddc01e14fe",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "2c9e2405-a105-422e-8d88-00fe11071baf",
+      "name": "响应sku_code",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "3fea7831-97ca-492f-8cd4-5d2148ee2637",
+      "name": "Crypto",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        640,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nlet res={};\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n   \"method\":\"gy.erp.trade.detail.get\",\n  \"code\":\"SDO249855035846\"\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nresult.push(res);\nreturn result;"
+      },
+      "id": "c60cbb44-b30e-414c-ab7a-6415aabddbca",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "订单号不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "响应sku_code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "55a35b3b-22ee-427d-a436-484db323cf3c",
+  "activeVersionId": "55a35b3b-22ee-427d-a436-484db323cf3c",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-03-11T02:07:37.720Z",
+      "createdAt": "2024-03-11T02:07:37.720Z",
+      "role": "workflow:owner",
+      "workflowId": "SLhwahsoEOxZavr7",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

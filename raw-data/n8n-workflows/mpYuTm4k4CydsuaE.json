@@ -1,0 +1,373 @@
+{
+  "updatedAt": "2025-09-19T06:10:17.007Z",
+  "createdAt": "2025-09-15T08:10:53.628Z",
+  "id": "mpYuTm4k4CydsuaE",
+  "name": "get_fileURL_api",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_fileURL_api",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1360,
+        128
+      ],
+      "id": "9b21fb69-3d47-4ba5-b433-58996db09e71",
+      "name": "Webhook",
+      "webhookId": "22ffcd2a-6476-488e-bb11-bfeba7480ab5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select pd.procedure_name\nfrom mes.procedure_detail pd\nwhere pd.procedure_detail_id = {{ $json.body.procedure_detail_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -928,
+        48
+      ],
+      "id": "a80eb4bd-e364-4707-a09a-def55cc48d3c",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8e18e774-149b-49f6-a487-7b538a05de99",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -704,
+        32
+      ],
+      "id": "7f27487e-5105-4447-8073-e81a4e2e412b",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const procedure_name = $input.first().json.procedure_name;\nconst file_name = $('Webhook').first().json.body.file;\n\nreturn [{\n  json: {\n    procedure_name: procedure_name,\n    file_name: file_name\n  }\n}];\n// const procedureName = Buffer.from($input.first().json.procedure_name, 'utf8').toString('binary');\n// const fileName = Buffer.from($('Webhook').first().json.body.file, 'utf8').toString('binary');\n\n// const fullPath = `/mes-test/${procedureName}/${fileName}`;\n\n// return [{\n//   json: {\n//     path: fullPath\n//   }\n// }];\n\nconst procedureName = encodeURIComponent($input.first().json.procedure_name);\nconst fileName = encodeURIComponent($('Webhook').first().json.body.file);\n\nconst fullPath = `/mes-test/${procedureName}/${fileName}`;\n\nreturn [{\n  json: {\n    path: decodeURIComponent(fullPath) // 保持中文可读，但确保编码正确\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        16
+      ],
+      "id": "cd82662b-9ad9-49e4-ae17-c77f90415c3f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "652bbb3a-112a-45e9-9410-480a8496ee19",
+              "leftValue": "={{ $json.body.procedure_detail_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e8945510-7a17-4169-a388-9904943de7ce",
+              "leftValue": "={{ $json.body.file }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1152,
+        128
+      ],
+      "id": "b631ece2-45f4-4d68-a6ae-ac8e240f61ca",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"信息缺失\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -928,
+        240
+      ],
+      "id": "9e7a87f8-a624-4f41-a171-19ae1269bbed",
+      "name": "信息缺失"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        32
+      ],
+      "id": "cf9d27ab-ddfc-4d81-9e83-ad8a28835e85",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "=/mes/{{ $json.procedure_name }}/{{ $json.file_name }}",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        16
+      ],
+      "id": "68d82e42-e206-4abd-865e-350e74c473c6",
+      "name": "FTP",
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"500\",\n  \"msg\": \"数据库错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -624,
+        272
+      ],
+      "id": "92a0cd17-4101-40ec-b0a0-f1ae07e245b8",
+      "name": "数据库错误"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\": \"工序错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -464,
+        176
+      ],
+      "id": "c1bf31af-b22f-47dd-955d-e01b6200d87c",
+      "name": "工序错误"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工序错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "FTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "信息缺失",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FTP": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.192.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "44",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_detail_id": null,
+            "file": "R4.zip"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/get_fileURL_api",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "b6670eae-62a3-438c-8ebb-e2c3a944eed4",
+  "activeVersionId": "b6670eae-62a3-438c-8ebb-e2c3a944eed4",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-09-15T08:10:53.628Z",
+      "createdAt": "2025-09-15T08:10:53.628Z",
+      "role": "workflow:owner",
+      "workflowId": "mpYuTm4k4CydsuaE",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

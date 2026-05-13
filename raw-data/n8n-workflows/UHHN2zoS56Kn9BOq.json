@@ -1,0 +1,1971 @@
+{
+  "updatedAt": "2026-02-02T13:09:35.651Z",
+  "createdAt": "2026-01-27T06:43:17.415Z",
+  "id": "UHHN2zoS56Kn9BOq",
+  "name": "get_mespackingdata",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        -16
+      ],
+      "id": "2f731251-eaa5-4a64-ba0b-5eb00245b8b7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.00",
+              "type": "number"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.99",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "2738df9f-1cc3-49a4-a0c4-2fa5047381c7",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -64,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "8076b29e-78ed-464d-bf87-d769dd723655",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "41a175d7-d4b4-4b00-bbf1-cc8b7c7b37fe",
+      "name": "Date & Time1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -304
+      ],
+      "id": "f8f2958b-b301-44c2-8356-ce980fc2751f",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT b.retroid_id\nFROM mes.machine_data a\nJOIN mes.retroid b ON a.retroid_id::int = b.retroid_id\nWHERE a.createtime BETWEEN '{{ $json.startdate }}' AND '{{ $json.enddate }}'\nand b.status in ('1','2')\nand \nprocedure_detail_id = 79 ;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        128,
+        -288
+      ],
+      "id": "d3e47d23-a79d-44d2-8acf-6ccb42e631f3",
+      "name": "查询machine_data中新增数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT b.retroid_id\nFROM mes.machine_data a\nJOIN mes.retroid b ON a.retroid_id::int = b.retroid_id\nWHERE a.createtime BETWEEN '{{ $json.startdate }}' AND '{{ $json.enddate }}'\nand \nprocedure_detail_id = 79 ;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        128,
+        112
+      ],
+      "id": "0359384e-8ba9-4c80-ac42-e9d60e8f7f96",
+      "name": "查询machine_data中新增数据（越南mes）",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        496,
+        64
+      ],
+      "id": "c907669a-a912-4660-9d40-2100b861119e",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid_id",
+              "value": "={{ $json.retroid_id }}"
+            },
+            {
+              "column": "status",
+              "condition": "<",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        64
+      ],
+      "id": "83050208-c77d-42f3-bacc-ce76cf7301bd",
+      "name": "查询对应底壳号1",
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_binding AS (\n  SELECT md.*\n  FROM mes.machine_data md\n  JOIN (\n    SELECT retroid_id, procedure_detail_id, MAX(machine_data_id) AS max_id\n    FROM mes.machine_data\n    WHERE procedure_detail_id = 79\n      AND retroid_id = '{{ $json.retroid_id }}'\n    GROUP BY retroid_id, procedure_detail_id\n  ) latest\n    ON md.retroid_id = latest.retroid_id\n   AND md.procedure_detail_id = latest.procedure_detail_id\n   AND md.machine_data_id = latest.max_id\n),\nall_unbinding AS (\n  SELECT ub.*\n  FROM mes.machine_data ub\n  WHERE ub.procedure_detail_id = 91\n    AND ub.retroid_id = '{{ $json.retroid_id }}'\n),\nmerged AS (\n  SELECT * FROM latest_binding\n  UNION ALL\n  SELECT * FROM all_unbinding\n)\nSELECT *\nFROM merged\nORDER BY machine_data_id DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        816,
+        -16
+      ],
+      "id": "7c25b0aa-0597-460d-9186-738417cb009e",
+      "name": "查询当日最新生产数据1",
+      "credentials": {
+        "postgres": {
+          "id": "Ir2ZzViMPOUViQbd",
+          "name": "越南mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "越南",
+        "height": 416,
+        "width": 2144
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "27367af6-2e2e-48c1-b81b-53e7edd19179",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9a1e4fd6-f810-4d4a-8423-63d7d6b771d7",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        64
+      ],
+      "id": "5ca3a33d-ac1b-4e8e-a0b9-d6eef3759768",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取越南包装数据失败-get_mespackingdata",
+        "emailFormat": "text",
+        "text": "拉取越南包装数据失败",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        624
+      ],
+      "id": "125ee766-678a-4f62-9673-1484d35ab02a",
+      "name": "失败-越南生产数据",
+      "webhookId": "8cada67a-bc72-49cf-9d57-109c26a2a690",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8c108d4-26f1-411b-99ce-2e50df7feaab",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "48357567-78da-41aa-81b7-a1dd29635c9f",
+              "name": "packing_time",
+              "value": "={{ $json.createtime }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        -304
+      ],
+      "id": "f5164fe1-1b86-4116-b193-bc20e546ea02",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid_id",
+              "value": "={{ $json.retroid_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        496,
+        -304
+      ],
+      "id": "70f01d7f-6948-4a06-bb3e-965c39dca2a5",
+      "name": "查询对应底壳号",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_binding AS (\n  SELECT md.*\n  FROM mes.machine_data md\n  JOIN (\n    SELECT retroid_id, procedure_detail_id, MAX(machine_data_id) AS max_id\n    FROM mes.machine_data\n    WHERE procedure_detail_id = 79\n      AND retroid_id = '{{ $json.retroid_id }}'\n    GROUP BY retroid_id, procedure_detail_id\n  ) latest\n    ON md.retroid_id = latest.retroid_id\n   AND md.procedure_detail_id = latest.procedure_detail_id\n   AND md.machine_data_id = latest.max_id\n),\nall_unbinding AS (\n  SELECT ub.*\n  FROM mes.machine_data ub\n  WHERE ub.procedure_detail_id = 91\n    AND ub.retroid_id = '{{ $json.retroid_id }}'\n),\nmerged AS (\n  SELECT * FROM latest_binding\n  UNION ALL\n  SELECT * FROM all_unbinding\n)\nSELECT *\nFROM merged\nORDER BY machine_data_id DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        656,
+        -416
+      ],
+      "id": "b6c6d3dd-1f91-4ccb-8121-e7e82ad0c303",
+      "name": "查询当日最新生产数据",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "retroid_id",
+        "joinMode": "enrichInput2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        -304
+      ],
+      "id": "653dcbab-ceab-4062-925c-1b4f9ec59927",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f9ed3b1f-fd24-4371-b369-4b21cef3d229",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 79,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        -304
+      ],
+      "id": "a5e28af9-79ae-4f2b-9ce8-d31413081e59",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "pack_detail",
+          "mode": "list",
+          "cachedResultName": "pack_detail"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "createtime": "={{$json.packing_time}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1344,
+        -304
+      ],
+      "id": "10d3ec8f-946a-46d4-becc-ca87d96bcbb6",
+      "name": "插入到pack_detail",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "production_detail",
+          "mode": "list",
+          "cachedResultName": "production_detail"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.retroid }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1600,
+        -496
+      ],
+      "id": "219e0a08-ff5e-4a85-a1bc-26ee541b48d4",
+      "name": "查询生产数据中的相关资料",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "daily_info",
+          "mode": "list",
+          "cachedResultName": "daily_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "production_id": "={{ $json.id }}",
+            "machine_type": "={{ $json.machine_type }}",
+            "job_number": "={{ $json.job_number }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac.replace(/\\n/g, '') }}",
+            "battery": "={{ $json.battery.replace(/\\n/g, '')  }}",
+            "screen": "={{ $json.screen.replace(/\\n/g, '')  }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $now }}",
+            "country": "={{ $json.country }}",
+            "pack_id": "={{ $json.pack_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "production_id",
+              "displayName": "production_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_id",
+              "displayName": "delivery_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pack_id",
+              "displayName": "pack_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2400,
+        -512
+      ],
+      "id": "ee6c3272-758f-4b92-bb35-83747209fc01",
+      "name": "插入到daily_info",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "retroid",
+        "joinMode": "enrichInput1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2016,
+        -512
+      ],
+      "id": "251f8b4a-2ad1-4a1e-9334-56c54c001749",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72dc04b1-76c7-41ae-8f0c-519784a298dc",
+              "name": "pack_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "64bb540c-dc5f-4588-ad23-a3d32bf780f4",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1616,
+        -192
+      ],
+      "id": "7ccdb3ef-fb2d-4efe-9581-e1078f9d9e57",
+      "name": "整理出库资料"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        -512
+      ],
+      "id": "ac18d774-f425-4383-b248-94aad25fe13c",
+      "name": "Remove Duplicates2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        -512
+      ],
+      "id": "0ae09653-5eea-4e26-9145-daaddb2c614a",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取国内包装数据成功-get_mespackingdata",
+        "html": "={{JSON.stringify( $json.data )}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2832,
+        -512
+      ],
+      "id": "f91d93a4-3323-4b7b-ad41-2a8dbf9dd313",
+      "name": "成功",
+      "webhookId": "d1c8b9e3-8040-4640-8ee5-cf9b20b28730",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8c108d4-26f1-411b-99ce-2e50df7feaab",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "48357567-78da-41aa-81b7-a1dd29635c9f",
+              "name": "packing_time",
+              "value": "={{ $json.createtime }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        96
+      ],
+      "id": "948d5550-33d1-4123-baaa-8e719eb69e05",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "retroid_id",
+        "joinMode": "enrichInput2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "ee7868f0-1d64-4176-9875-9134cae95193",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f9ed3b1f-fd24-4371-b369-4b21cef3d229",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 79,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1168,
+        96
+      ],
+      "id": "aa158f0f-4af9-4042-a3d0-e24ef8fff0d0",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "pack_detail",
+          "mode": "list",
+          "cachedResultName": "pack_detail"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "createtime": "={{$json.packing_time}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1472,
+        96
+      ],
+      "id": "f7224385-93d6-463b-9db4-680a5f5e413a",
+      "name": "插入到pack_detail1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "production_detail",
+          "mode": "list",
+          "cachedResultName": "production_detail"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.retroid }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1728,
+        -32
+      ],
+      "id": "cce635b4-9c28-46e0-91c1-2ceba53b2b89",
+      "name": "查询生产数据中的相关资料1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes_daily_data",
+          "mode": "list",
+          "cachedResultName": "mes_daily_data"
+        },
+        "table": {
+          "__rl": true,
+          "value": "daily_info",
+          "mode": "list",
+          "cachedResultName": "daily_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "production_id": "={{ $json.id }}",
+            "machine_type": "={{ $json.machine_type }}",
+            "job_number": "={{ $json.job_number }}",
+            "uuid": "={{ $json.uuid }}",
+            "phase": "={{ $json.phase }}",
+            "wifi_mac": "={{ $json.wifi_mac.replace(/\\n/g, '') }}",
+            "battery": "={{ $json.battery.replace(/\\n/g, '')  }}",
+            "screen": "={{ $json.screen.replace(/\\n/g, '')  }}",
+            "remark": "={{ $json.remark }}",
+            "createtime": "={{ $now }}",
+            "country": "={{ $json.country }}",
+            "pack_id": "={{ $json.pack_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "production_id",
+              "displayName": "production_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_id",
+              "displayName": "delivery_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "machine_type",
+              "displayName": "machine_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wifi_mac",
+              "displayName": "wifi_mac",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "battery",
+              "displayName": "battery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screen",
+              "displayName": "screen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remark",
+              "displayName": "remark",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pack_id",
+              "displayName": "pack_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2480,
+        -48
+      ],
+      "id": "9573f6d8-6fb6-4cfe-86c4-45369c3ee639",
+      "name": "插入到daily_info1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "retroid",
+        "joinMode": "enrichInput1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2096,
+        -48
+      ],
+      "id": "da3c236b-b830-4e6c-9917-8d2480b9f076",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72dc04b1-76c7-41ae-8f0c-519784a298dc",
+              "name": "pack_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "64bb540c-dc5f-4588-ad23-a3d32bf780f4",
+              "name": "retroid",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1744,
+        240
+      ],
+      "id": "d8898448-8dbe-40e7-b802-3a71be5a34e0",
+      "name": "整理出库资料1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        2288,
+        -48
+      ],
+      "id": "eae546d8-5ce9-4820-af01-3e10613220e2",
+      "name": "Remove Duplicates3"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2672,
+        -48
+      ],
+      "id": "62d94c41-191a-4bdc-bf2a-74d8ca8ed6c3",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取越南包装数据成功-get_mespackingdata",
+        "html": "={{JSON.stringify( $json.data )}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2816,
+        -48
+      ],
+      "id": "16eb43ae-0512-4d78-8c93-586eb6ba0dce",
+      "name": "成功1",
+      "webhookId": "d1c8b9e3-8040-4640-8ee5-cf9b20b28730",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "拉取国内包装数据失败-get_mespackingdata",
+        "emailFormat": "text",
+        "text": "拉取国内包装数据失败",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1952,
+        -1008
+      ],
+      "id": "d4434e33-3662-4f69-8948-5b73ecd69c04",
+      "name": "失败-国内包装数据拉取失败",
+      "webhookId": "8cada67a-bc72-49cf-9d57-109c26a2a690",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time1": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "查询machine_data中新增数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询machine_data中新增数据（越南mes）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "查询对应底壳号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中新增数据": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-国内包装数据拉取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询machine_data中新增数据（越南mes）": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "查询对应底壳号1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应底壳号1": {
+      "main": [
+        [
+          {
+            "node": "查询当日最新生产数据1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询当日最新生产数据1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应底壳号": {
+      "main": [
+        [
+          {
+            "node": "查询当日最新生产数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "失败-国内包装数据拉取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询当日最新生产数据": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-国内包装数据拉取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "插入到pack_detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理出库资料": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates2": {
+      "main": [
+        [
+          {
+            "node": "插入到daily_info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到pack_detail": {
+      "main": [
+        [
+          {
+            "node": "整理出库资料",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询生产数据中的相关资料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询生产数据中的相关资料": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-国内包装数据拉取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到daily_info": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-国内包装数据拉取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "插入到pack_detail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到pack_detail1": {
+      "main": [
+        [
+          {
+            "node": "整理出库资料1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查询生产数据中的相关资料1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "失败-越南生产数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询生产数据中的相关资料1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入到daily_info1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理出库资料1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates3": {
+      "main": [
+        [
+          {
+            "node": "插入到daily_info1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "成功1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-11-13T01:00:45.013+08:00",
+          "Readable date": "November 13th 2025, 1:00:45 am",
+          "Readable time": "1:00:45 am",
+          "Day of week": "Thursday",
+          "Year": "2025",
+          "Month": "November",
+          "Day of month": "13",
+          "Hour": "01",
+          "Minute": "00",
+          "Second": "45",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ],
+    "日期格式转换-中国": [
+      {
+        "json": {
+          "startdate": "2025-12-23 00:00:00.00",
+          "enddate": "2025-12-23 23:59:59.99"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "retroid": "W35A068099",
+          "packing_time": "2025-12-23T00:44:46.699Z"
+        }
+      },
+      {
+        "json": {
+          "retroid": "W35A068495",
+          "packing_time": "2025-12-23T00:46:06.070Z"
+        }
+      }
+    ],
+    "Edit Fields1": [
+      {
+        "json": {
+          "retroid": "W35A068099",
+          "packing_time": "2025-12-23T00:44:46.699Z"
+        }
+      },
+      {
+        "json": {
+          "retroid": "W35A068495",
+          "packing_time": "2025-12-23T00:46:06.070Z"
+        }
+      }
+    ]
+  },
+  "versionId": "80afe43c-3c5c-4365-801c-986d8599d2a9",
+  "activeVersionId": "80afe43c-3c5c-4365-801c-986d8599d2a9",
+  "versionCounter": 51,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:43:17.415Z",
+      "createdAt": "2026-01-27T06:43:17.415Z",
+      "role": "workflow:owner",
+      "workflowId": "UHHN2zoS56Kn9BOq",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

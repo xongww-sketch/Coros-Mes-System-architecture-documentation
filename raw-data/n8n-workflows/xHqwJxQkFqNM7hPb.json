@@ -1,0 +1,401 @@
+{
+  "updatedAt": "2024-04-26T06:59:55.955Z",
+  "createdAt": "2024-04-25T08:34:48.269Z",
+  "id": "xHqwJxQkFqNM7hPb",
+  "name": "通过时间查询产品信息",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet isVaild=false;\nlet queryParam={};\nfor (const item of $input.all()) {\n  const regex = /^\\d{4}-\\d{2}-\\d{2}$/;\nif(regex.test(item.json.query.begintime)&&regex.test(item.json.query.endtime)){\n    isVaild=true;\n  queryParam.begintime=item.json.query.begintime+\" 00:00:00\";\n  queryParam.endtime=item.json.query.endtime+\" 23:59:59\"\n  }\n}\n\nif(isVaild){\n  return queryParam;\n  \n}else{\n  return {\n    errorMsg:\"请求参数格式不正确！\"\n  }\n}"
+      },
+      "id": "f79fa636-7504-4634-9fa5-def443200da3",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  a.jobnumber,\n  a.ordernumber,\n  a.productcode,\n  a.clientcode,\n  a.retroid,\n  a.uuid,\n  a.baseline,\n  a.BaseLinebatch as BaseLineBatch,\n  a.BatteryBatch,\n  a.createtime,\n  a.modifytime,\n  a.Channel,\n  b.MachineType,\n  b.phase\nFROM\n  YFConsumer.dbo.consm_barcodebindinfo a\nLEFT JOIN (\n  SELECT\n    retrospectorder,\n    phase,\n    MachineType,\n    createtime AS latest_createtime,\n    ROW_NUMBER() OVER (PARTITION BY retrospectorder ORDER BY createtime DESC) AS rn\n  FROM\n    YFConsumer.dbo.consm_jobinfo\n) b\nON a.ordernumber = b.retrospectorder AND b.rn = 1\nWHERE\n  a.createtime >= '{{ $json.begintime }}'\n  AND a.createtime <= '{{ $json.endtime }}';\n"
+      },
+      "id": "8c84e46e-0fe5-4ce0-9e5c-bccda32693c4",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        180
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "17b77fe0-8e05-40ac-9ba6-63e633c8263e",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2140,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "16c9fc15-9c6c-4114-b553-7e728484d398",
+              "leftValue": "={{ $json.errorMsg }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4f46975e-3024-4c50-ae84-cc4d91aa0e87",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        980,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"Code\": 1,\n  \"Msg\": \"{{$json.errorMsg}}\"\n}\n",
+        "options": {}
+      },
+      "id": "2b519636-a5e3-4182-be7a-3370735d45d1",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet watchList=[];\nlet helmetList=[];\nfor (const item of $input.all()) {\n  if(item.json.productcode=='watch'){\n    watchList.push(item.json)\n  }else{\n    helmetList.push(item.json)\n  }\n}\n\nreturn {\n  watchList:watchList,\n  helmetList:helmetList\n};"
+      },
+      "id": "bbe8a3a9-e188-47c6-a703-4aab2ed1f162",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "id": "b5afa117-c492-42e4-9b30-f8504753e6b0",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1860,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "id": "b9cb49b8-aa74-4791-86cd-308206ec0fe6",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1460,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "fileName": "watchList"
+      },
+      "id": "7bfb5f51-3f45-45d8-90cd-ad252505b00a",
+      "name": "Compression",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        1660,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "path": "getProductInfo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f144feca-8222-4502-8006-54bdac0dd48d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        560,
+        260
+      ],
+      "webhookId": "132395aa-40b3-4f29-88e9-7c5d31c8eea0"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "watchData",
+        "options": {}
+      },
+      "id": "234a2043-83fb-4ffa-89b1-b1117e0139a4",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79e6426e-abe0-4cf2-bf60-a34e382da6e5",
+              "name": "Code",
+              "value": "0",
+              "type": "string"
+            },
+            {
+              "id": "2021f55c-6f5d-4409-8e58-e3a06b6cd732",
+              "name": "Msg",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "940f6d5a-c610-4084-9599-9c16d5728bba",
+              "name": "watchData",
+              "value": "={{ $json.watchData }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "59134419-38df-4aef-931f-81c4c99769e8",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        2060,
+        800
+      ]
+    }
+  ],
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 600
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.49",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "sec-ch-ua": "\"Chromium\";v=\"124\", \"Google Chrome\";v=\"124\", \"Not-A.Brand\";v=\"99\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "sec-fetch-site": "none",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-user": "?1",
+            "sec-fetch-dest": "document",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7",
+            "cookie": "intercom-device-id-y10e7138=849bef7f-8e3e-4f87-a0a6-4b9184d7497b; intercom-session-y10e7138=Ym5tdTNKdmFYTFdhaDUvSTIyMHlaWkoybEY0cmNlaVlkQk1sSFkyWnp5c0puMFJIOXQrNHppMm9qazZ3MG81di0taDlkeDdKWmUwamkrSUZ1YlBVNG16UT09--d8a2af97957fc6cc70de3f63d70c234bf6bef8f5; n8n-auth=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk0Nzc1ZTFmLWZjMTctNDVlZS05ZTAwLWU3YmM3ZWMwNjA5MCIsImhhc2giOiJ5QjlSVG56cTFPIiwiYnJvd3NlcklkIjoiK3dCa2dlcktrbXFpT0dHejhyN0dneVB2YVNzdkY3S2xLTWtRc0FtVlRwVT0iLCJpYXQiOjE3MTM4NDM1MDgsImV4cCI6MTcxNDQ0ODMwOH0.JNAq8oB-qsZhywdXH7XfjJ7e6OE--SiYJpLg95jkWeU"
+          },
+          "params": {},
+          "query": {
+            "begintime": "2024-01-04",
+            "endtime": "2024-01-05"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getProductInfo",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "2c6ab05f-e007-4f97-930b-c85e3238cf26",
+  "activeVersionId": "2c6ab05f-e007-4f97-930b-c85e3238cf26",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:41.807Z",
+      "createdAt": "2024-01-29T03:43:19.869Z",
+      "id": "wbylAziHNIuwj3Uh",
+      "name": "MES查询应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-04-25T08:34:48.269Z",
+      "createdAt": "2024-04-25T08:34:48.269Z",
+      "role": "workflow:owner",
+      "workflowId": "xHqwJxQkFqNM7hPb",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

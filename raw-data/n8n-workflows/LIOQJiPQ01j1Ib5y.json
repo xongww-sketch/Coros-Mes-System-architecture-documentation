@@ -1,0 +1,411 @@
+{
+  "updatedAt": "2025-02-21T02:51:50.608Z",
+  "createdAt": "2024-12-25T05:45:58.111Z",
+  "id": "LIOQJiPQ01j1Ib5y",
+  "name": "sync_yf_smt_test",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "fb19a4d0-fd24-444d-98d7-9c776f90bd9d",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b85d115e-9962-4e0d-9237-e495085289fc",
+      "name": "判断参数校验的结果",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        -840,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $('Webhook').first().json.body}}",
+        "options": {}
+      },
+      "id": "91b3e767-7939-4680-a994-c46a2ee52647",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -600,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\n  /**\n * 根据 processId 校验数据字段\n * @param {Object} data - 需要校验的数据对象\n * @returns {Object} - 校验结果，包括是否有效和错误信息\n */\n\nlet res={};\nfunction validateData(data) {\n    // 初始化验证结果\n    const result = {\n        isValid: true,\n        errors: []\n    };\n\n    // 获取 processId\n    const processId = data.processId;\n\n    // 定义不同 processId 对应的必填字段\n    const requiredFieldsMap = {\n        '4': ['componentId', 'orderNumber', 'testTime', 'testResult'],\n        '5': ['componentId', 'orderNumber', 'testTime', 'testResult'],\n    };\n\n    // 检查 processId 是否有效\n    if (!processId || !requiredFieldsMap.hasOwnProperty(processId.toString())) {\n        result.isValid = false;\n        result.errors.push('无效的 processId，processId必须是测试段ID！');\n        return result;\n    }\n\n    // 获取对应的必填字段列表\n    const requiredFields = requiredFieldsMap[processId.toString()];\n\n    // 遍历必填字段，检查对应的字段是否存在且不为空\n    requiredFields.forEach(field => {\n        if (data[field] === undefined || data[field] === null || data[field] === '') {\n            result.isValid = false;\n            result.errors.push(`字段 '${field}' 对于 processId ${processId} 是必填项，且不能为空`);\n        }\n    });\n  // 在 validateData 函数中添加以下代码\n\n// 定义需要是日期时间格式的字段\nconst dateTimeFields = ['testTime', 'repairTime'];\n\n// 定义取值范围限定的字段\nconst valueConstraints = {\n    testResult: [1, 0]\n};\n\n // 定义日期时间格式的正则表达式 (YYYY-MM-DD HH:mm:ss)\n    const dateTimeRegex = /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/;\n\n    // 校验日期时间格式\n    requiredFields.forEach(field => {\n        if (dateTimeFields.includes(field)) {\n            // 使用正则表达式检查日期时间格式\n            if (!dateTimeRegex.test(data[field])) {\n                result.isValid = false;\n                result.errors.push(`字段 '${field}' 必须符合日期时间格式 YYYY-MM-DD HH:mm:ss`);\n            } else {\n                // 进一步检查日期的有效性\n                const date = new Date(data[field]);\n                if (isNaN(date.getTime())) {\n                    result.isValid = false;\n                    result.errors.push(`字段 '${field}' 包含无效的日期时间值`);\n                }\n            }\n        }\n    });\n\n// 校验取值范围\nObject.keys(valueConstraints).forEach(field => {\n    if (requiredFields.includes(field) && data[field]) {\n        if (!valueConstraints[field].includes(data[field])) {\n            result.isValid = false;\n            result.errors.push(`字段 '${field}' 的值必须是 ${valueConstraints[field].join(' 或 ')}`);\n        }\n    }\n});\n\n\n    return result;\n}\nfor (const item of $input.all()) {\n   res=validateData(item.json.body);\n   \n}\n\nreturn res;"
+      },
+      "id": "9908bec6-b4bf-4c6c-b4ff-b1f6cfbcd0ad",
+      "name": "参数校验，判断每个参数值是否为空",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/sync/smtTest",
+        "authentication": "jwtAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "cf1ffb73-c6e5-42fb-9c4d-7135b44d28c4",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1480,
+        720
+      ],
+      "webhookId": "85fdbbe8-ef60-42fb-af27-436238aec8b1",
+      "credentials": {
+        "jwtAuth": {
+          "id": "Dtc2pVVBtgFiFKvP",
+          "name": "JWT Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 0,\n  \"msg\":\"success\",\n  \"data\":{ \n    \"res\":\"数据同步成功！\"\n}\n}",
+        "options": {}
+      },
+      "id": "62654594-a58a-43c8-b545-7a79d6325368",
+      "name": "数据同步成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 40002,\n  \"msg\":\"error\",\n  \"data\":{\n   \"errors\":\"数据库错误！\"\n  }\n}",
+        "options": {}
+      },
+      "id": "158d731e-b49d-47db-b238-60e3b080f593",
+      "name": "数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 40001,\n  \"msg\":\"error\",\n  \"errors\":{{JSON.stringify($json.errors.join(\" \"))}}\n}",
+        "options": {}
+      },
+      "id": "12ba6cc8-3a24-431a-a446-2a35e909a5a1",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -560,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "smt_test",
+          "mode": "list",
+          "cachedResultName": "smt_test"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "component_id": "={{ $json.componentId }}",
+            "test_time": "={{ $json.testTime }}",
+            "create_time": "={{ $now }}",
+            "order_number": "={{ $json.orderNumber }}",
+            "test_result": "={{ $json.testResult }}",
+            "process_id": "={{ $json.processId }}"
+          },
+          "matchingColumns": [
+            "component_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "component_id",
+              "displayName": "component_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "process_id",
+              "displayName": "process_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "test_result",
+              "displayName": "test_result",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "is_deleted",
+              "displayName": "is_deleted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "test_time",
+              "displayName": "test_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -220,
+        600
+      ],
+      "id": "8ffb9353-d165-4898-9ce2-5f6151e0d2d2",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "判断参数校验的结果": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数校验，判断每个参数值是否为空": {
+      "main": [
+        [
+          {
+            "node": "判断参数校验的结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数校验，判断每个参数值是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "数据同步成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "112.93.141.174",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "147",
+            "authorization": "REDACTED",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "componentId": "SN23211211",
+            "processId": 4,
+            "orderNumber": "ORD002",
+            "testTime": "2023-10-11 11:00:00",
+            "testResult": false
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/sync/smtTest",
+          "executionMode": "production",
+          "jwtPayload": {
+            "my_field_1": "value 1",
+            "my_field_2": "value 2",
+            "iat": 1735094662
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "474b3d29-0b02-4a06-bfd3-8219d8e0fe05",
+  "activeVersionId": "474b3d29-0b02-4a06-bfd3-8219d8e0fe05",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-02-07T02:44:33.202Z",
+      "createdAt": "2025-02-07T02:44:33.202Z",
+      "role": "workflow:owner",
+      "workflowId": "LIOQJiPQ01j1Ib5y",
+      "projectId": "Y6ZOz21cjq2fKS18",
+      "project": {
+        "updatedAt": "2025-08-07T02:20:43.893Z",
+        "createdAt": "2025-02-07T02:43:11.522Z",
+        "id": "Y6ZOz21cjq2fKS18",
+        "name": "5.YF_MES_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

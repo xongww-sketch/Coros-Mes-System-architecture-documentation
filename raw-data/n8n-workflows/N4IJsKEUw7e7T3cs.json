@@ -1,0 +1,270 @@
+{
+  "updatedAt": "2026-01-06T09:51:22.363Z",
+  "createdAt": "2024-12-16T02:34:30.756Z",
+  "id": "N4IJsKEUw7e7T3cs",
+  "name": "createprocesssop_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH ranked_procedure_list AS (\n    SELECT\n        p.*,\n        ROW_NUMBER() OVER (PARTITION BY p.procedure_list_id ORDER BY p.createtime DESC) AS rn\n    FROM\n        mes.history_procedure_list p\n    WHERE\n        p.procedure_list_id = {{ $json.query.procedure_list_id }} \n        AND p.status = '1'\n),\nlatest_procedure_list AS (\n    SELECT\n        *\n    FROM\n        ranked_procedure_list\n    WHERE\n        rn = 1\n),\nexpanded_procedure_list AS (\n    SELECT\n        r.procedure_list_id,\n        r.procedure_list_name,\n        r.createtime,\n        r.user_id,\n        r.product_model_id,\n        r.version,\n        (x.value)::int AS procedure_detail_id,\n        x.ord AS procedure_detail_ord\n    FROM latest_procedure_list r\n    CROSS JOIN LATERAL jsonb_array_elements_text(\n        r.procedure_detail_id::jsonb -> 'procedure_detail_id'\n    ) WITH ORDINALITY AS x(value, ord)\n),\naggregated_change_history AS (\n    SELECT\n        p.procedure_list_id,\n        ARRAY_AGG(p.change_reason ORDER BY p.createtime DESC) AS change_reasons,\n        ARRAY_AGG(p.createtime ORDER BY p.createtime DESC) AS change_dates\n    FROM\n        ranked_procedure_list p\n    WHERE\n        p.procedure_list_id = {{ $json.query.procedure_list_id }} \n    GROUP BY\n        p.procedure_list_id\n),\nlatest_history_procedure AS (\n    SELECT\n        hpd.*,\n        ROW_NUMBER() OVER (PARTITION BY hpd.procedure_detail_id ORDER BY hpd.createtime DESC) AS rn\n    FROM\n        mes.history_procedure_detail hpd\n)\nSELECT\n    epl.procedure_list_id,\n    epl.procedure_list_name,\n    epl.version,\n    ac.change_reasons,\n    ac.change_dates,\n    m.product_model_name,\n    pd.procedure_detail_id,\n    pd.procedure_name,\n    pd.current_version,\n    pd.common_proocedure,\n    hpd.procedure_type,\n    hpd.standard_labor,\n    hpd.standard_people,\n    hpd.cycle_time,\n    hpd.procedure_dataupload,\n    hpd.procedure_scheduling,\n    hpd.checkrule\nFROM\n    expanded_procedure_list epl\nJOIN\n    aggregated_change_history ac ON epl.procedure_list_id = ac.procedure_list_id\nJOIN\n    mes.product_model m ON epl.product_model_id = m.product_model_id\nJOIN\n    mes.procedure_detail pd ON epl.procedure_detail_id = pd.procedure_detail_id\nJOIN\n    latest_history_procedure hpd ON pd.procedure_detail_id = hpd.procedure_detail_id\nWHERE\n    hpd.rn = 1\nORDER BY epl.procedure_detail_ord;\n",
+        "options": {}
+      },
+      "id": "766ae14d-5abc-4d01-b85d-26ea6b724ba7",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        352,
+        384
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假设 inputData 是您希望处理的输入数据\nlet inputData = $input.all();\nconsole.log(\"Input Data:\", inputData); // 打印整个输入，检查其格式和内容\n\nlet res = [];\nfor (const item of inputData) {\n    let itemJson = item.json;\n\n    // 打印处理的每个项\n    console.log(\"Processing item:\", itemJson);\n\n    // 确保 procedure_type 是一个有效的数组并替换为中文描述\n    if (Array.isArray(itemJson.procedure_type) && itemJson.procedure_type.length > 0) {\n        itemJson.procedure_type_description = itemJson.procedure_type.map(type => {\n            switch (type) {\n                case 1:\n                    return \"加工\";\n                case 2:\n                    return \"搬运\";\n                case 3:\n                    return \"存储\";\n                case 4:\n                    return \"检验\";\n                default:\n                    return \"未知类型\";\n            }\n        }).join(\"，\"); // 使用逗号连接多个过程类型描述\n    } else {\n        itemJson.procedure_type_description = \"未知过程类型\";\n    }\n\n    // 处理 procedure_dataupload 字段并设置中文描述\n    if (itemJson.hasOwnProperty('procedure_dataupload')) {\n        switch (itemJson.procedure_dataupload) {\n            case 1:\n                itemJson.procedure_dataupload_description = \"无需上传数据\";\n                break;\n            case 2:\n                itemJson.procedure_dataupload_description = \"需要上传数据\";\n                break;\n            default:\n                itemJson.procedure_dataupload_description = \"未知状态\";\n                break;\n        }\n    } else {\n        itemJson.procedure_dataupload_description = \"未知状态\";\n    }\n\n    // 新增处理 procedure_scheduling 字段并设置中文描述\n    if (itemJson.hasOwnProperty('procedure_scheduling')) {\n        switch (itemJson.procedure_scheduling) {\n            case 1:\n                itemJson.procedure_scheduling_description = \"前加工\";\n                break;\n            case 2:\n                itemJson.procedure_scheduling_description = \"组装测试\";\n                break;\n            case 3:\n                itemJson.procedure_scheduling_description = \"成品测试\";\n                break;\n            case 4:\n                itemJson.procedure_scheduling_description = \"包装\";\n                break;\n            default:\n                itemJson.procedure_scheduling_description = \"未知阶段\";\n                break;\n        }\n    } else {\n        itemJson.procedure_scheduling_description = \"未知阶段\";\n    }\n\n        // 处理 checkrule 字段并设置中文描述\n    if (itemJson.hasOwnProperty('checkrule')) {\n        switch (itemJson.checkrule) {\n            case true:\n                itemJson.checkrule_description = \"是\";\n                break;\n            case false:\n                itemJson.checkrule_description = \"否\";\n                break;\n            default:\n                itemJson.checkrule_description = \"未知\";\n                break;\n        }\n    } else {\n        itemJson.checkrule_description = \"未知\";\n    }\n  \n    res.push(itemJson);\n}\n\nconsole.log(\"Final result:\", res); // 打印最终结果\n\nreturn {\n    result: res\n};\n"
+      },
+      "id": "46093e93-4c6f-4d0a-a378-30de17dc3f4a",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items[0].json.result.map((procedure, index) => ({\n   NO: `C${index + 1}`,\n   产品型号: procedure.product_model_name, // 添加这一行\n   工序名称: procedure.procedure_name,\n   版本: procedure.current_version,\n   是否为通用工序: procedure.common_proocedure_description,\n   工序类型: procedure.procedure_type_description,\n   标准工时: procedure.standard_labor,\n   标准人力: procedure.standard_people,\n   节时工拍: procedure.cycle_time,\n   是否需要上传数据: procedure.procedure_dataupload_description,\n   工序分类:procedure.procedure_scheduling_description,\n   文件编号:procedure.version,\n   变更原因:procedure.change_reasons,\n   变更日期:procedure.change_dates,\n   是否校验前置所有工序: procedure.checkrule_description\n}));\n\n"
+      },
+      "id": "6349a61f-0c53-4495-8a7e-77e5906e4a4b",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let items = $input.all();\n\n// 提取机型信息\nconst model = items.length > 0 ? items[0].json['产品型号'] : '未知型号';\n\nlet htmlContent = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; }\n    table { width: 100%; border-collapse: collapse; margin-top: 20px; }\n    th, td { border: 1px solid black; padding: 8px; text-align: center; }\n    th { background-color: #f2f2f2; }\n    .header { text-align: left; font-weight: bold; margin-top: 20px; }\n    .footer { margin-top: 20px; }\n    button { margin: 10px; }\n  </style>\n</head>\n<body>\n  <h2 style=\"text-align: center;\">流程图及排拉图</h2>\n  <div class=\"header\">\n    <p>产品型号: ${model}</p>\n  </div>\n  \n  <!-- 下载和打印按钮 -->\n  <button onclick=\"downloadPage()\">下载页面</button>\n  <button onclick=\"window.print()\">打印页面</button>\n\n  <table>\n    <tr>\n      <th>NO</th>\n      <th>工序名称</th>\n      <th>加工</th>\n      <th>搬运</th>\n      <th>存储</th>\n      <th>检验</th>\n      <th>标准工时</th>\n      <th>标准人力</th>\n      <th>节时工拍</th>\n      <th>文件编号</th>\n      <th>是否校验前置所有工序</th>\n      <th>版本</th>\n    </tr>`;\n\nconst categories = {};\nconst summary = {\n  前加工: { direct: 0, maxTime: 0, standardTime: 0 },\n  组装测试: { direct: 0, maxTime: 0, standardTime: 0 },\n  成品测试: { direct: 0, maxTime: 0, standardTime: 0 },\n};\nconst indirectPersonnel = 1; // 每个制程固定的间接人员数量\nconst totalIndirect = 2; // 总计间接人员\n\n// 将数据按工序分类进行分组\nitems.forEach((item) => {\n  const category = item.json['工序分类'];\n  const standardTime = Number(item.json['标准工时']);\n  const manpower = Number(item.json['标准人力']);\n\n  if (summary[category]) {\n    summary[category].direct += manpower;\n    summary[category].standardTime += standardTime;\n    summary[category].maxTime = Math.max(\n      summary[category].maxTime,\n      standardTime,\n    );\n  }\n\n  if (!categories[category]) {\n    categories[category] = [];\n  }\n  categories[category].push(item.json);\n});\n\nitems.forEach((item) => {\n  const 工序类型 = item.json['工序类型'];\n  htmlContent += `<tr>\n        <td>${item.json['NO']}</td>\n        <td>${item.json['工序名称']}</td>\n        <td>${工序类型.includes('加工') ? '●' : ''}</td>\n        <td>${工序类型.includes('搬运') ? '●' : ''}</td>\n        <td>${工序类型.includes('存储') ? '●' : ''}</td>\n        <td>${工序类型.includes('检验') ? '●' : ''}</td>\n        <td>${item.json['标准工时']}</td>\n        <td>${item.json['标准人力']}</td>\n        <td>${item.json['节时工拍']}</td>\n        <td>${item.json['文件编号']}</td>\n        <td>${item.json['是否校验前置所有工序']}</td>\n        <td>${item.json['版本']}</td>\n      </tr>`;\n});\n\n// 计算和生成统计摘要\nhtmlContent += `\n  </table>\n  <div class=\"footer\">\n    <p style=\"text-align: left; font-weight: bold;\">统计摘要</p>\n    <table>\n      <tr>\n        <th>制程</th>\n        <th>直接人员配置(人)</th>\n        <th>间接人员配置(人)</th>\n        <th>总人数</th>\n        <th>瓶颈时间(S)</th>\n        <th>平衡率</th>\n        <th>标准工时(S/Pcs)</th>\n        <th>UPPH</th>\n      </tr>`;\n\nObject.keys(summary).forEach((category) => {\n  const data = summary[category];\n  const totalPeople = data.direct + indirectPersonnel;\n  const upph = data.maxTime\n    ? (3600 / data.maxTime / totalPeople).toFixed(2)\n    : 'N/A';\n  const balanceRate = data.maxTime\n    ? ((data.standardTime / (data.maxTime * totalPeople)) * 100).toFixed(1) +\n      '%'\n    : 'N/A';\n\n  htmlContent += `<tr>\n    <td>${category}</td>\n    <td>${data.direct}</td>\n    <td>${indirectPersonnel}</td>\n    <td>${totalPeople}</td>\n    <td>${data.maxTime.toFixed(1)}</td>\n    <td>${balanceRate}</td>\n    <td>${data.standardTime.toFixed(1)}</td>\n    <td>${upph}</td>\n  </tr>`;\n});\n\n// 计算总计\nconst totalDirect = Object.values(summary).reduce(\n  (sum, cat) => sum + cat.direct,\n  0,\n);\nconst totalStandardTime = Object.values(summary).reduce(\n  (sum, cat) => sum + cat.standardTime,\n  0,\n);\nconst totalMaxTime = Math.max(\n  ...Object.values(summary).map((cat) => cat.maxTime),\n);\nconst totalPeople =\n  totalDirect + indirectPersonnel * Object.keys(summary).length;\nconst totalBalanceRate = totalMaxTime\n  ? ((totalStandardTime / (totalMaxTime * totalPeople)) * 100).toFixed(1) + '%'\n  : 'N/A';\n\nhtmlContent += `\n  <tr>\n    <td>Total</td>\n    <td>${totalDirect}</td>\n    <td>${indirectPersonnel * Object.keys(summary).length}</td>\n    <td>${totalPeople}</td>\n    <td>${totalMaxTime.toFixed(1)}</td>\n    <td>${totalBalanceRate}</td>\n    <td>${totalStandardTime.toFixed(1)}</td>\n    <td>N/A</td>\n  </tr>\n</table>`;\n\n// 使用Set来避免重复\nconst changesSet = new Set();\nlet hasValidChanges = false;\n\n// 生成修订内容表格\nitems.forEach((item) => {\n  let reasons = item.json['变更原因'] || [];\n  let dates = item.json['变更日期'];\n\n  // 如果变更原因是单个值而不是数组，将其转换为数组以一致性处理\n  if (!Array.isArray(reasons)) {\n    reasons = [reasons];\n  }\n\n  reasons.forEach((reason, index) => {\n    if (reason) {\n      // 确保变更原因存在且不为null\n      const changeString = `${reason}_${dates[index]}`;\n      if (!changesSet.has(changeString)) {\n        changesSet.add(changeString);\n        hasValidChanges = true; // 存在有效的变更\n      }\n    }\n  });\n});\n\n// 只有在存在有效变更时才添加修订内容表格\nif (hasValidChanges) {\n  htmlContent += `\n    <p style=\"text-align: left; font-weight: bold;\">修订内容</p>\n    <table>\n      <tr>\n        <th>修订内容</th>\n        <th>修订日期</th>\n      </tr>`;\n\n  changesSet.forEach((changeEntry) => {\n    const [reason, date] = changeEntry.split('_');\n    htmlContent += `<tr>\n      <td>${reason}</td>\n      <td>${date}</td>\n    </tr>`;\n  });\n\n  htmlContent += `\n    </table>`;\n}\n\nhtmlContent += `\n  </div>\n  \n  <script>\n    function downloadPage() {\n      const element = document.createElement('a');\n      const htmlContent = document.documentElement.outerHTML;\n      const file = new Blob([htmlContent], {type: 'text/html'});\n      element.href = URL.createObjectURL(file);\n      element.download = \"page.html\";\n      document.body.appendChild(element);\n      element.click();\n      document.body.removeChild(element);\n    }\n  </script>\n</body>\n</html>`;\n\n// 去除多余的换行和空白\nhtmlContent = htmlContent.replace(/\\n/g, '').replace(/\\s+/g, ' ');\n\nreturn [{ json: { htmlContent } }];\n"
+      },
+      "id": "4538d117-1c3f-4dd5-8685-0a896bd82ffd",
+      "name": "Code2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.htmlContent }}"
+      },
+      "id": "82b44f9e-d633-430b-bcc0-33ae20caadc0",
+      "name": "HTML",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "543de722-604d-4cc1-a2ac-f327a7692036",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "path": "create_processsop",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b63b6ec1-41b1-463f-8608-2828e9c8607b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        128,
+        384
+      ],
+      "webhookId": "f5c00c22-2c9c-4d7b-8079-9d7a58e7037d"
+    }
+  ],
+  "connections": {
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.16.100.145",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "sec-fetch-site": "same-site",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-user": "?1",
+            "sec-fetch-dest": "iframe",
+            "referer": "https://appsmith.mes.coros.team/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "zh-CN,zh;q=0.9",
+            "cookie": "intercom-device-id-y10e7138=25949d3e-8dab-48d7-85e0-c2d1f88c1d26; ajs_anonymous_id=b933f22c-904b-4ce6-b970-2744f1133069; ajs_user_id=c7ff2bfc18fc5f9751a61be643705ebfbbdd6239bedeb253215913c4708f4dfb; mp_70b8ea94d623dd857fb555a76d11f944_mixpanel=%7B%22distinct_id%22%3A%20%22b933f22c-904b-4ce6-b970-2744f1133069%22%2C%22%24device_id%22%3A%20%22b933f22c-904b-4ce6-b970-2744f1133069%22%2C%22%24initial_referrer%22%3A%20%22https%3A%2F%2Fappsmith.mes.coros.team%2Fapp%2Fmes%2Fsn-682167c109ec661ea31cdd72%2Fedit%2Fwidgets%2Fppkgxae74b%22%2C%22%24initial_referring_domain%22%3A%20%22appsmith.mes.coros.team%22%2C%22__mps%22%3A%20%7B%7D%2C%22__mpso%22%3A%20%7B%7D%2C%22__mpus%22%3A%20%7B%7D%2C%22__mpa%22%3A%20%7B%7D%2C%22__mpu%22%3A%20%7B%7D%2C%22__mpr%22%3A%20%5B%5D%2C%22__mpap%22%3A%20%5B%5D%2C%22%24user_id%22%3A%20%22c7ff2bfc18fc5f9751a61be643705ebfbbdd6239bedeb253215913c4708f4dfb%22%7D",
+            "if-none-match": "W/\"3774-hhAlsHHwDkARJzmTGMa5nsbcY7A\""
+          },
+          "params": {},
+          "query": {
+            "procedure_list_id": "17"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/create_processsop",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "463cbea7-75bd-45d2-8f2a-38f68dab697d",
+  "activeVersionId": "463cbea7-75bd-45d2-8f2a-38f68dab697d",
+  "versionCounter": 36,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:54:10.897Z",
+      "createdAt": "2025-04-24T05:54:10.897Z",
+      "role": "workflow:owner",
+      "workflowId": "N4IJsKEUw7e7T3cs",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

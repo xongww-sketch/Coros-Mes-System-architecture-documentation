@@ -1,0 +1,90 @@
+{
+  "updatedAt": "2026-02-02T09:38:54.637Z",
+  "createdAt": "2026-02-02T09:15:29.160Z",
+  "id": "umAfFEVSSxo1wKK9",
+  "name": "我的工作流 16",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "automation/airtightnessTest",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a406df5c-a428-46cf-829d-4f84959d3964",
+      "name": "Webhook",
+      "webhookId": "b083cf5e-4d5f-4ad6-b7ac-f75963ec3931"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 定义需要校验的字段及其预期类型\n// 对应你的 C# LeakageTestSystem 类\nconst requiredFields = [\n  { name: 'SN', type: 'string' },\n  { name: 'isOK', type: 'boolean' },\n  { name: 'status', type: 'number' },                      // ushort -> number\n  { name: 'intakeDuration', type: 'number' },               // double -> number\n  { name: 'pressureStabilizationDuration', type: 'number' },// double -> number\n  { name: 'testDuration', type: 'number' },                 // double -> number\n  { name: 'deflationDuration', type: 'number' },            // double -> number\n  { name: 'intakePressure', type: 'number' },               // int -> number\n  { name: 'leakageUpperLimit', type: 'number' },            // int -> number\n  { name: 'leakageLowerLimit', type: 'number' },            // int -> number\n  { name: 'testSmallLeakValue', type: 'number' },           // int -> number\n  { name: 'testLargeLeakValue', type: 'number' },           // int -> number\n  { name: 'leakValue', type: 'number' }                     // int -> number\n];\n\n// 遍历每一个输入项 (item)\nfor (const item of items) {\n  const data = item.json;\n  const missingFields = [];\n\n  for (const field of requiredFields) {\n    const value = data[field.name];\n\n    // 校验逻辑\n    let isValid = true;\n\n    if (value === undefined || value === null) {\n      isValid = false;\n    } else {\n      switch (field.type) {\n        case 'string':\n          // 字符串不能为空且不能只包含空格\n          if (typeof value !== 'string' || value.trim() === '') {\n            isValid = false;\n          }\n          break;\n        \n        case 'number':\n          // 数字必须是有效的数字类型（排除 NaN），但在工业数据中 0 是有效值，所以不检查 !value\n          if (typeof value !== 'number' || isNaN(value)) {\n            isValid = false;\n          }\n          break;\n\n        case 'boolean':\n          // 布尔值必须是 true 或 false\n          if (typeof value !== 'boolean') {\n            isValid = false;\n          }\n          break;\n      }\n    }\n\n    if (!isValid) {\n      missingFields.push(field.name);\n    }\n  }\n\n  // 将校验结果附加到输出数据中\n  if (missingFields.length > 0) {\n    // 方案 A: 标记该数据为错误 (推荐)\n    item.json.validationPassed = false;\n    item.json.errorMsg = `缺少参数或参数格式错误: ${missingFields.join(', ')}`;\n  } else {\n    // 方案 B: 校验通过\n    item.json.validationPassed = true;\n  }\n}\n\n// 返回处理后的数据\n// 如果你想过滤掉错误的数据，可以在此之后接一个 \"If\" 节点判断 validationPassed 为 true\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "5594450e-7e3a-4327-8f60-ae65cd437533",
+      "name": "参数校验"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数校验",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "54b40f27-f6a7-4c87-b8c5-65782bb9be52",
+  "activeVersionId": null,
+  "versionCounter": 3,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-02-02T09:15:29.160Z",
+      "createdAt": "2026-02-02T09:15:29.160Z",
+      "role": "workflow:owner",
+      "workflowId": "umAfFEVSSxo1wKK9",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

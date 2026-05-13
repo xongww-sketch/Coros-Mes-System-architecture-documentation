@@ -1,0 +1,468 @@
+{
+  "updatedAt": "2025-06-04T02:01:57.274Z",
+  "createdAt": "2025-06-03T05:45:07.126Z",
+  "id": "DrryciMnmnoGLcup",
+  "name": "国补数据查询",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prodInfoHub-zszy.mofcom.gov.cn/mobile/mobileQuery",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "secretId ",
+              "value": "={{ $json.secretId }}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body_str }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        40
+      ],
+      "id": "8c5af97b-6028-4440-bc77-d711cf6ad579",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "search_info",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -820,
+        40
+      ],
+      "id": "602c5e1f-5757-4d53-b2d9-e4ae3f8f4844",
+      "name": "Webhook",
+      "webhookId": "a47a918f-90ba-4eff-b57f-5c7df92b75f8"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nlet jsonstr = JSON.stringify($json.body);\n\n//const timestamp = ($now.toMillis()/100).toFixed();\n//const timestamp = $now.toMillis();\n\n// POST 为 时间+Data\n// GET 为 Data+时间\n//const dataToEncrypt = timestamp + jsonstr;\n\n$input.item.json.jsonstr=jsonstr;\n//$input.item.json.timestamp=timestamp;\n\nreturn $input.item;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        40
+      ],
+      "id": "e7b3cae5-f9a9-4706-b7af-74eb8644b4e9",
+      "name": "SignContentSort_POST2"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const crypto = require('crypto');\nconst { Buffer } = require('buffer');\n\n// 返回包含两种格式的对象\nfunction hmac256Both(key, msg) {\n  const hmac = crypto.createHmac('sha256', Buffer.from(key));\n  hmac.update(msg, 'utf8');\n  const buffer = hmac.digest();\n  return {\n    raw: buffer,          // 二进制 Buffer\n    base64: buffer.toString('base64')  // Base64 字符串\n  };\n}\n\n$input.item.json.sign=hmac256Both($json.key,$json.sha256Hex).base64;\n\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        40
+      ],
+      "id": "250a8c22-212d-4290-b1b0-e06e3c958436",
+      "name": "hmac1"
+    },
+    {
+      "parameters": {
+        "type": "SHA256",
+        "value": "={{ $json.timestamp+$json.jsonstr}}",
+        "dataPropertyName": "sha256Hex"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        40
+      ],
+      "id": "d663e190-ddb1-4ac5-bb1b-50f735a1b3f9",
+      "name": "sha256hex2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取输入数据\nconst item = items[0]; // 假设输入数据是第一个项\nconst snCode = item.json.snCode; // 提取 snCode\n\n// 生成输出数据结构\nconst outputData = {\n  body: {\n    snCode: snCode,\n  },\n  keyid: \"REDACTED\",\n  key: \"REDACTED\",\n  timestamp: Date.now() // 获取当前时间戳\n};\n\n// 返回数据\nreturn [{ json: outputData }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        40
+      ],
+      "id": "004a0fd3-a803-4768-b713-eaee40aa8b60",
+      "name": "组装签名"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc654730-52b8-4461-b8f8-59ffe6d6c4de",
+              "name": "secretId",
+              "value": "={{ $json.keyid }}",
+              "type": "string"
+            },
+            {
+              "id": "522bea91-0a38-4f38-a975-75e60a5b3ef5",
+              "name": "sign",
+              "value": "={{ $json.sign }}",
+              "type": "string"
+            },
+            {
+              "id": "9cacb17b-5307-4a00-8a80-08478c96089e",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "505d726f-3240-4686-ba97-2924797b1627",
+              "name": "body",
+              "value": "={{ JSON.stringify($json.body) }}",
+              "type": "array"
+            },
+            {
+              "id": "ede0ec21-6bfe-42b9-80f8-f59bde678f4b",
+              "name": "body_str",
+              "value": "={{ $json.jsonstr }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        40
+      ],
+      "id": "a9608a91-d3ec-4b91-8902-665e2c603e90",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"已上传国库。\"\n  \n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        740,
+        -100
+      ],
+      "id": "f997ed6e-a506-4f17-8208-43d4bcbb8be5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2d3c8df9-4f55-412c-bace-47f3ff1621f8",
+              "leftValue": "={{ $json.body.snCode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -680,
+        40
+      ],
+      "id": "97b8261e-3155-486c-ae9c-696b839697e9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all(); // 确保从输入正确获取数据\n\n// 确保数据是一个数组\nif (!Array.isArray(data)) {\n  throw new Error('Data is not an array');\n}\n\nconst transformedData = data.map((item, index) => {\n  if (!item.json.body || typeof item.json.body !== 'object') {\n    throw new Error('Invalid json object');\n  }\n\n  const r = item.json.body;\n\n  return {\n    snCode: r.snCode\n  };\n});\n\nconsole.log('Transformed data:', transformedData);\n\n// 根据需求返回或进一步处理 transformedData\nreturn transformedData;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        40
+      ],
+      "id": "db8c7c85-b651-4eab-92cf-3b211e8c24c9",
+      "name": "组装参数"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ef799a14-1ba1-4f93-9d8e-dbbb2fbd2265",
+              "leftValue": "={{ $json.data.checkCode }}",
+              "rightValue": "T0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "1f207474-20b5-4a6b-bb32-e4181621f234",
+              "leftValue": "={{ $json.data.returnInfo.snCode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        40
+      ],
+      "id": "a238005b-22c9-4da4-857f-00d0b5477d2d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"400\",\n  \"msg\":\"{{$json.data.checkCodeDesc}}\"\n  \n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        760,
+        80
+      ],
+      "id": "3d7b5249-bcce-43dc-9e5f-35876db8a0f0",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SignContentSort_POST2": {
+      "main": [
+        [
+          {
+            "node": "sha256hex2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sha256hex2": {
+      "main": [
+        [
+          {
+            "node": "hmac1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装签名": {
+      "main": [
+        [
+          {
+            "node": "SignContentSort_POST2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hmac1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "组装参数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装参数": {
+      "main": [
+        [
+          {
+            "node": "组装签名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.29.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "17",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "snCode": "W31AY93459"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/search_info",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "e9a867b6-73cc-4dca-86d7-62ca6902a131",
+  "activeVersionId": "e9a867b6-73cc-4dca-86d7-62ca6902a131",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-06-03T05:45:07.126Z",
+      "createdAt": "2025-06-03T05:45:07.126Z",
+      "role": "workflow:owner",
+      "workflowId": "DrryciMnmnoGLcup",
+      "projectId": "3aQnrVmrPM3uNcK5",
+      "project": {
+        "updatedAt": "2025-09-08T04:25:23.564Z",
+        "createdAt": "2025-02-18T02:58:48.619Z",
+        "id": "3aQnrVmrPM3uNcK5",
+        "name": "2.国补接口",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "toolbox"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

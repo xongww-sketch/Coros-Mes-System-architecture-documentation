@@ -1,0 +1,807 @@
+{
+  "updatedAt": "2025-08-27T07:52:33.928Z",
+  "createdAt": "2025-07-11T09:21:27.311Z",
+  "id": "HjWyWJaixLRRvS7D",
+  "name": "手动同步 copy",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "collection": "customerdelivernotes",
+        "options": {
+          "limit": 10,
+          "sort": "{\"deliverTime\":1}"
+        },
+        "query": "={\"orderNo\":\"{{ $json.orderNo }}\",\n\"status\":30\n}"
+      },
+      "id": "cd8a98be-67a9-454a-aa82-9332b6714f80",
+      "name": "customerdelivernotes",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        288,
+        32
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "customerdelivernotes",
+        "options": {
+          "limit": 1,
+          "sort": "{\"_id\":1}"
+        },
+        "query": "={{ \nJSON.stringify(\n{ \"$expr\": { \"$eq\": [\"$_id\", { \"$toObjectId\":  $json._id}] } })\n\n\n }}\n\n "
+      },
+      "id": "4ae5eb87-16fa-4a26-aff2-1dc2abdbfb43",
+      "name": "customerdelivernotes1",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        720
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "customerorders",
+        "options": {
+          "limit": 1,
+          "sort": "{\"_id\":1}"
+        },
+        "query": "={\"orderNo\":\"{{ $json[\"订单号\"] }}\"} "
+      },
+      "id": "dcf439ee-b34a-4469-887a-ce68e88f9267",
+      "name": "customerorders1",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -240
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "Wes2ihUvPBXSjoW8",
+          "name": "MongoDB_OMS_Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT retroid,Channel from consm_barcodebindinfo  where \n\n\n  retroid IN {{ JSON.stringify($jmespath($json.goodsList,\"[*].snList[]\")).replace(\"[\",\"(\").replace(\"]\",\")\").replaceAll(\"\\\"\",\"'\") }};\n"
+      },
+      "id": "3e2782fa-fb39-435e-8ac9-06d32a354019",
+      "name": "SQL_update_mes",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "BEGIN TRANSACTION;\nupdate consm_barcodebindinfo set \n  Channel='{{ $json.channel }}',\n  modifytime=GETDATE() from consm_barcodebindinfo \n\n  where \n  retroid IN {{ $json.goodsList }};\n\nDECLARE @UpdatedRows INT;\nSET @UpdatedRows = @@ROWCOUNT;\n\nCOMMIT TRANSACTION;\nSELECT @UpdatedRows AS UpdatedRowsCount;\n"
+      },
+      "id": "5d30f67d-ebb2-4687-b8f6-e2799c439ae0",
+      "name": "SQL_update_mes1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        3504,
+        -320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "35db0625-a3d3-431b-9de3-3563015b2926",
+              "name": "orderNo",
+              "value": "={{ $json.orderNo }}",
+              "type": "string"
+            },
+            {
+              "id": "d0695a7b-94d8-4880-91b4-0096491ae36c",
+              "name": "channel",
+              "value": "={{ $json.path[0].tradeInfo.channel }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        -208
+      ],
+      "id": "cac117d2-5ff1-43e9-9d47-f6df8268aa2a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        960,
+        -128
+      ],
+      "id": "939fda51-c304-4656-8a06-26f2391c70e2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ddc26dc6-6e9a-446a-9864-df85a651bc8d",
+              "name": "goodsList1",
+              "value": "={{ JSON.stringify($jmespath($json.goodsList,\"[*].snList[]\")).replace(\"[\",\"(\").replace(\"]\",\")\").replaceAll(\"\\\"\",\"'\") }}",
+              "type": "string"
+            },
+            {
+              "id": "b43ba56f-f971-4bb4-9a43-2b14db2fa59d",
+              "name": "goodsList",
+              "value": "={{ $jmespath($json.goodsList,\"[*].snList[]\"). }}",
+              "type": "array"
+            },
+            {
+              "id": "ec6031e6-a7b8-46c1-bb0d-0bbb89fdd48d",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2288,
+        864
+      ],
+      "id": "7a567aab-a80f-40e9-980c-bc4d1a796b58",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "formTitle": "手动同步OMS渠道号到MES",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "订单号",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {},
+        "path": "3a7aec8d-a6c3-410e-a143-c5083bf619b2"
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -976,
+        -256
+      ],
+      "id": "8b6ac279-dbf1-4aa6-88a4-1041560388bc",
+      "name": "On form submission",
+      "webhookId": "3a7aec8d-a6c3-410e-a143-c5083bf619b2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5529c95f-9530-4175-bc69-4e656fa99533",
+              "leftValue": "={{ !$json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        -176
+      ],
+      "id": "938610e2-0c28-4f22-9a53-5a8bf94c5d52",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {
+          "formTitle": "订单号不存在，请重试。",
+          "buttonLabel": "返回"
+        },
+        "path": "5ca6c7e4-d76f-483d-990d-1135162feb67"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        32,
+        400
+      ],
+      "id": "8bf39780-2f6b-466b-8b7e-34d255195b55",
+      "name": "Form1",
+      "webhookId": "5ca6c7e4-d76f-483d-990d-1135162feb67"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Add a new field called 'myNewField' to the JSON of the item\n$input.item.json.myNewField = 1;\n\n\nlet goodsListAll=$jmespath($json.data,\"[*].goodsList[*].snList[][]\")\n\nconst goodsList = [...new Set(goodsListAll)];\n//.map(item => `\"${item.replace(/\"/g, '\"\"')}\"`) // 转义双引号\n//    .join(',');\nconst goodsListStr=`(${goodsList.map(item => `'${item.replace(/\"/g, '\"\"')}'`).join(',')})`\n\n\nlet goodsCount=goodsList?.length || 0\n\nreturn {goodsCount,goodsListStr,goodsList};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        112
+      ],
+      "id": "d47251f4-6348-4602-8c40-14382790932d",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        528,
+        112
+      ],
+      "id": "9a515548-af43-4f9c-b4a6-3792b1275cd4",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT top 20000  Channel,count(*) as sncount from consm_barcodebindinfo \n  where \n  retroid IN {{ $json.goodsListStr }} group by Channel\n\n"
+      },
+      "id": "e0dc7868-ed02-470e-8453-6b55a55c97e6",
+      "name": "SQL_update_mes2",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        -384
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldType": "html",
+              "elementName": "detail",
+              "html": "<!-- Your custom HTML here --->\n<hr>\n<h3>订单中的渠道号</h3>\n<p>渠道编号:{{ $('Merge').item.json.channel }}</p>\n<p>SN总数：{{ $('Merge').item.json.goodsCount }}</p>\n<br>\n<h3>MES系统中渠道号</h3>\n\n<p>{{ $json.Channel }}</p>\n<p>匹配到数量：{{ $json.sncount }}</p>\n<br>\n<h2>以上信息核对无误后，点击继续更新MES</h2>"
+            }
+          ]
+        },
+        "limitWaitTime": true,
+        "resumeAmount": 10,
+        "resumeUnit": "minutes",
+        "options": {
+          "buttonLabel": "继续"
+        },
+        "path": "a71db003-da16-4c8d-943d-605807ac4eea"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        3184,
+        -320
+      ],
+      "id": "1f73ea60-b891-417e-8907-cb12c7983dc0",
+      "name": "Form2",
+      "webhookId": "a71db003-da16-4c8d-943d-605807ac4eea"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0058420c-5375-4ce3-9932-11357aa5419e",
+              "leftValue": "={{ $json.Channel }}",
+              "rightValue": "={{ $('Merge').item.json.channel }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2832,
+        -528
+      ],
+      "id": "58330ed6-64d4-4c57-b52b-7b16ff9da5b9",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT  top 10000 Channel,count(*) as sncount from consm_barcodebindinfo \n group by Channel\n\n"
+      },
+      "id": "3abb86c0-06db-452d-b4c1-a7bb58b18afa",
+      "name": "SQL_update_mes3",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        1088
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        -384
+      ],
+      "id": "af15edc3-def7-4b13-92a4-22f1fdaab2ca",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "960f438d-ad80-4297-a5f1-86dc033d4db2",
+              "name": "Channel",
+              "value": "={{ $jmespath( $json.data,'[*].Channel').join(',') }}",
+              "type": "string"
+            },
+            {
+              "id": "b311e8ed-83bb-48a1-9b13-3aa05e7db742",
+              "name": "sncount",
+              "value": "={{ $jmespath($json.data,'sum([*].sncount)')}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2544,
+        -320
+      ],
+      "id": "19e90508-2a41-48d8-84be-f7333aa0b66b",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "渠道号一致，无需更新",
+        "completionMessage": "=MES渠道号：{{ $json.Channel }},\nOMS渠道号：{{ $('Merge').item.json.channel }}",
+        "options": {},
+        "path": "9e95d690-6e5b-4e0a-8892-ac243a8ebe4f"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        -704
+      ],
+      "id": "e95696ff-eaee-4671-81dc-a38370351c1b",
+      "name": "Form3",
+      "webhookId": "9e95d690-6e5b-4e0a-8892-ac243a8ebe4f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "24cf2533-a7ed-4eb5-ada1-e7e119c9d983",
+              "leftValue": "={{ $json.goodsCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        -128
+      ],
+      "id": "720723f5-6a7f-463f-aa18-281e8c4f9d4c",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "formTitle": "此订单未查到SN记录。",
+          "buttonLabel": "返回"
+        },
+        "path": "2a13cfb5-95f9-4e4e-99c9-c181d5195bcc"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -16
+      ],
+      "id": "f178447e-3dee-4f82-94b6-44c5935f5b44",
+      "name": "Form5",
+      "webhookId": "2a13cfb5-95f9-4e4e-99c9-c181d5195bcc"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "redirect",
+        "redirectUrl": "https://n8n.mes.coros.team/form/4307759a-c2e1-4396-aa80-bf4aad65debb",
+        "path": "24acccd5-d4bc-4aec-9429-1295d88cf9de"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        768
+      ],
+      "id": "21dda00f-7a5d-4822-999e-691ca3e54f88",
+      "name": "Form-redirect-home",
+      "webhookId": "24acccd5-d4bc-4aec-9429-1295d88cf9de"
+    }
+  ],
+  "connections": {
+    "customerdelivernotes": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "customerorders1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "customerdelivernotes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "customerorders1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Form1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form1": {
+      "main": [
+        [
+          {
+            "node": "Form-redirect-home",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL_update_mes2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Form3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Form2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL_update_mes3": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form2": {
+      "main": [
+        [
+          {
+            "node": "SQL_update_mes1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "SQL_update_mes2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Form5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form5": {
+      "main": [
+        [
+          {
+            "node": "Form-redirect-home",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "订单号": "SO1060240001",
+          "submittedAt": "2025-07-11T17:16:51.013+08:00",
+          "formMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "cc2fd767-2f34-4244-8515-b5a1f529f1d4",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-07-11T09:21:27.311Z",
+      "createdAt": "2025-07-11T09:21:27.311Z",
+      "role": "workflow:owner",
+      "workflowId": "HjWyWJaixLRRvS7D",
+      "projectId": "W2w8tFYL8Ed6J49w",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:55.733Z",
+        "createdAt": "2025-01-28T16:53:34.840Z",
+        "id": "W2w8tFYL8Ed6J49w",
+        "name": "4.OMS_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

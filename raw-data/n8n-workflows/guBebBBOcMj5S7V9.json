@@ -1,0 +1,351 @@
+{
+  "updatedAt": "2025-05-14T02:57:45.034Z",
+  "createdAt": "2024-07-11T03:33:37.278Z",
+  "id": "guBebBBOcMj5S7V9",
+  "name": "getResourceList",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "343f49e0-cd76-4ae4-b3b3-abb615cc5eed",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{\n    \"resourceList\":{{ JSON.stringify($json.data) }},\n\"total_count\":{{ $('Postgres1').first().json.total_count ? $('Postgres1').first().json.total_count :0}}\n  }\n}",
+        "options": {}
+      },
+      "id": "5ed89c9c-4804-4e98-be81-d6600b7c7891",
+      "name": "Respond package List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2100,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "allFieldsExcept",
+        "fieldsToExclude": "total_count",
+        "options": {}
+      },
+      "id": "887ad95b-78b2-4dbb-ba14-1115f6205f85",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  r.id, \n  r.resource_name, \n  r.resource_type, \n  r.resource_mac,\n  r.update_status,\n  r.resource_info->> 'ip' AS ip,\n  r.package_id,\n  p.package_name,\n  p.package_version,\n  r.create_time,\n  r.online_update_time,\n  COUNT(*) OVER() AS total_count \nFROM \n  mes.resources r \nLEFT JOIN \n  mes.installation_package p \nON \n  r.package_id = p.package_id  \n  WHERE\n   r.is_delete = 0 and r.resource_type=1  {{ $json.sqlStr }} \nORDER BY \n  r.create_time DESC \nLIMIT \n  $3  \nOFFSET \n  $4;",
+        "options": {
+          "queryReplacement": "={{ $json.params[0]??'' }},{{ $json.params[1]??'' }},{{ $json.pageSize }},{{ $json.offset }}"
+        }
+      },
+      "id": "69d507bd-b7b6-4ccb-94e4-9439a87f59ac",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1220,
+        400
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sqlParamsArray = $input.all().map(item => {\n  const { resourceName, resourceType, isOnline } = item.json.body;\n  const conditions = [];\n  const params = [];\n\n  // 使用参数化查询防止SQL注入 \n  if (resourceName) {\n    conditions.push(`r.resource_name ILIKE $${params.length + 1}`); // PG使用ILIKE实现大小写不敏感\n    params.push(`%${resourceName}%`);\n  }\n  if (resourceType) {\n    conditions.push(`r.resource_type = $${params.length + 1}`);\n    params.push(resourceType);\n  }\n  if (isOnline) {\n    // 使用PostgreSQL的AGE函数 \n    const timeCondition = isOnline === \"1\" \n      ? `AGE(NOW(), r.online_update_time) < INTERVAL '20 seconds'`\n      : `AGE(NOW(), r.online_update_time) > INTERVAL '20 seconds'`;\n    conditions.push(timeCondition);\n  }\n\n  // 分页参数验证 \n  const pageNo = Math.max(parseInt(item.json.body.pageNo, 10) || 1, 1);\n  const pageSize = Math.max(parseInt(item.json.body.pageSize, 10) || 10, 1);\n  const offset = (pageNo - 1) * pageSize;\n\n  return {\n    sqlStr: conditions.length \n      ? `and ${conditions.join(' AND ')}` \n      : '',\n    params: params, // 参数值集合\n    offset: offset,\n    pageSize: pageSize\n  };\n});\n\nreturn sqlParamsArray;"
+      },
+      "id": "82aeec1b-c6b2-4ead-b891-9f5b115a1fd7",
+      "name": "build sql statement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resource/getResourceList",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "26dc725d-3d79-47ad-9972-fd3f440c6c8b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        780,
+        400
+      ],
+      "webhookId": "80e17e15-bdc7-41a9-9a7c-282270665523"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fab406f1-312c-4a73-bfba-94c98a34c240",
+              "name": "is_online",
+              "value": "={{ Date.now() - $json.online_update_time.toDateTime()>20000?\"离线\":\"在线\"}}",
+              "type": "string"
+            },
+            {
+              "id": "b056c416-4e70-416f-a042-15019fe7c92f",
+              "name": "resource_type",
+              "value": "={{ $json.resource_type ==1 ? \"终端设备\":\"普通设备\"}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "except",
+        "excludeFields": "online_update_time",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1720,
+        180
+      ],
+      "id": "62cf260a-0079-4694-aa1a-69c42ba5d309",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "88e8205d-892e-47e1-86bf-612461a66bef",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        300
+      ],
+      "id": "bfd6a781-7e88-4152-b4f8-c2aca7321500",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"查询列表为空！\"\n}",
+        "options": {}
+      },
+      "id": "1061a779-5368-4912-8fc0-16a15a1fccf7",
+      "name": "查询列表为空！",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1720,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond package List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build sql statement": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "build sql statement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询列表为空！",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.25.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "77",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "pageNo": 1,
+            "pageSize": 13,
+            "resourceName": "",
+            "isOnline": "1",
+            "resourceType": ""
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/getResourceList",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "aa49bb15-3c10-40f5-abb5-7444a958684f",
+  "activeVersionId": "aa49bb15-3c10-40f5-abb5-7444a958684f",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:44:06.571Z",
+      "createdAt": "2025-04-24T03:44:06.571Z",
+      "role": "workflow:owner",
+      "workflowId": "guBebBBOcMj5S7V9",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

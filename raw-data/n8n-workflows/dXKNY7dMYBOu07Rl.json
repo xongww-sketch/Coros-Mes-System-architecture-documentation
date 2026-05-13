@@ -1,0 +1,331 @@
+{
+  "updatedAt": "2025-02-21T07:37:31.557Z",
+  "createdAt": "2024-12-26T04:24:24.899Z",
+  "id": "dXKNY7dMYBOu07Rl",
+  "name": "searchCplc_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ad8326d0-6caf-4f3b-a801-9f7879c0c241",
+              "leftValue": "={{ $json.query.SN }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "73bff5ce-d8e0-471a-9236-d10024298a80",
+              "leftValue": "={{ $json.query.ID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "549f9a27-7fb3-410b-94d9-d2cb99981425",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请填写必填项\"\n}",
+        "options": {}
+      },
+      "id": "5590ca85-8529-4d98-bafc-23e500e44507",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cplc",
+          "mode": "list",
+          "cachedResultName": "cplc"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "sn",
+              "value": "={{ $json.query.SN }}"
+            },
+            {
+              "column": "id",
+              "value": "={{ $json.query.ID }}"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "sort": {
+          "values": [
+            {
+              "column": "create_time",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2ed84b1b-e14d-4127-9682-b4f17bc7ea63",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        700,
+        400
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "b625d1a8-539b-4751-9e7a-8e69ebd51efe",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3a294139-b828-4b2b-a14a-22f2788e6867",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        880,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"查询成功\",\n  \"result\":{{JSON.stringify($json.result)}}\n}",
+        "options": {}
+      },
+      "id": "4e4b602a-8dd3-4eb0-85b2-70dbb52f433d",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "path": "searchCplc_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "711dfe94-8c6b-4f61-ad27-602be7891b92",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        320,
+        400
+      ],
+      "webhookId": "1bd788c8-e0db-47e2-ae62-66cb1f3e7c49"
+    },
+    {
+      "parameters": {
+        "jsCode": "let inputData = $input.all();\nlet res = [];\nfor (const item of inputData) {\n    let itemJson = item.json;\n\n    // 直接处理 status 作为数字类型\n    switch (itemJson.status) {\n        case 1:\n            itemJson.status_description = \"已上传本地数据库\";\n            break;\n        case 2:\n            itemJson.status_description = \"已上传雪球平台\";\n            break;\n        case 3:\n            itemJson.status_description = \"已获取密匙\";\n            break;\n        default:\n            itemJson.status_description = \"未知类型\";\n            break;\n    }\n\n    res.push(itemJson);\n}\n\nreturn {\n    result: res\n};\n"
+      },
+      "id": "ffb62ea0-be9d-49a4-8ed3-6ece7f24c1d9",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.25.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "SN": "W92CD10011",
+            "ID": ""
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/searchCplc_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "27e27ce2-28d6-4424-a252-6aacadaf8f46",
+  "activeVersionId": "27e27ce2-28d6-4424-a252-6aacadaf8f46",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-12-26T04:24:24.899Z",
+      "createdAt": "2024-12-26T04:24:24.899Z",
+      "role": "workflow:owner",
+      "workflowId": "dXKNY7dMYBOu07Rl",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

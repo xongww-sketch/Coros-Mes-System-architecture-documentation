@@ -1,0 +1,429 @@
+{
+  "updatedAt": "2025-02-21T02:42:27.461Z",
+  "createdAt": "2024-12-25T06:18:01.387Z",
+  "id": "cfG1UZP9AXkjD3P1",
+  "name": "sync_yf_smt_repair",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "fb19a4d0-fd24-444d-98d7-9c776f90bd9d",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d46545a8-c32a-46df-893a-2007a6765cd2",
+      "name": "判断参数校验的结果",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        -300,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $('Webhook').first().json.body}}",
+        "options": {}
+      },
+      "id": "069a0fe7-9eae-44be-ac42-7c864d3ae6bf",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/sync/smtRepair",
+        "authentication": "jwtAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d51c9869-3fc7-4cff-a6fa-dc87860b3adf",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -940,
+        800
+      ],
+      "webhookId": "85fdbbe8-ef60-42fb-af27-436238aec8b1",
+      "credentials": {
+        "jwtAuth": {
+          "id": "Dtc2pVVBtgFiFKvP",
+          "name": "JWT Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 40002,\n  \"msg\":\"error\",\n  \"errors\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "52b262b6-ec9f-4a39-982f-e415169fd779",
+      "name": "数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 0,\n  \"msg\":\"success\",\n  \"data\":{\n   \"res\":\"数据同步成功！\"\n}\n}",
+        "options": {}
+      },
+      "id": "61cffb9e-19ef-49b8-ab7a-0c2ca62469f9",
+      "name": "数据同步成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 40001,\n  \"msg\":\"error\",\n  \"errors\":{{JSON.stringify($json.errors.join(\" \"))}}\n}",
+        "options": {}
+      },
+      "id": "82c238c6-15f4-4dc1-b785-621b540e5f7b",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 根据 processId 校验数据字段\n * @param {Object} data - 需要校验的数据对象\n * @returns {Object} - 校验结果，包括是否有效和错误信息\n */\nlet res = {};\nfunction validateData(data) {\n    // 初始化验证结果\n    const result = {\n        isValid: true,\n        errors: []\n    };\n\n    // 获取 processId\n    const processId = data.processId;\n\n    // 定义不同 processId 对应的必填字段\n    const requiredFieldsMap = {\n        '6': ['sn', 'componentId', 'orderNumber', 'issue', 'technician', 'repairTime'],\n    };\n\n    // 检查 processId 是否有效\n    if (!processId || !requiredFieldsMap.hasOwnProperty(processId.toString())) {\n        result.isValid = false;\n        result.errors.push('无效的 processId，必须是维修段的processId！');\n        return result;\n    }\n\n    // 获取对应的必填字段列表\n    const requiredFields = requiredFieldsMap[processId.toString()];\n\n    // 遍历必填字段，检查对应的字段是否存在且不为空\n    requiredFields.forEach(field => {\n        if (data[field] === undefined || data[field] === null || data[field] === '') {\n            result.isValid = false;\n            result.errors.push(`字段 '${field}' 对于 processId ${processId} 是必填项，且不能为空`);\n        }\n    });\n\n    // 在 validateData 函数中添加以下代码\n    // 定义需要是日期时间格式的字段\n    const dateTimeFields = ['testTime', 'repairTime'];\n\n    // 定义取值范围限定的字段\n    const valueConstraints = {\n        testResult: [1, 0]\n    };\n\n    // 定义日期时间格式的正则表达式 (YYYY-MM-DD HH:mm:ss)\n    const dateTimeRegex = /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/;\n\n    // 校验日期时间格式\n    requiredFields.forEach(field => {\n        if (dateTimeFields.includes(field)) {\n            // 使用正则表达式检查日期时间格式\n            if (!dateTimeRegex.test(data[field])) {\n                result.isValid = false;\n                result.errors.push(`字段 '${field}' 必须符合日期时间格式 YYYY-MM-DD HH:mm:ss`);\n            } else {\n                // 进一步检查日期的有效性\n                const date = new Date(data[field]);\n                if (isNaN(date.getTime())) {\n                    result.isValid = false;\n                    result.errors.push(`字段 '${field}' 包含无效的日期时间值`);\n                }\n            }\n        }\n    });\n\n    // 校验取值范围\n    Object.keys(valueConstraints).forEach(field => {\n        if (requiredFields.includes(field) && data[field]) {\n            if (!valueConstraints[field].includes(data[field])) {\n                result.isValid = false;\n                result.errors.push(`字段 '${field}' 的值必须是 ${valueConstraints[field].join(' 或 ')}`);\n            }\n        }\n    });\n\n    return result;\n}\n\nfor (const item of $input.all()) {\n    res = validateData(item.json.body);\n}\n\nreturn res;"
+      },
+      "id": "4806104d-9a4a-4762-a8f2-bb8129c69b4a",
+      "name": "参数校验，判断每个参数值是否为空",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -580,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "smt_repair",
+          "mode": "list",
+          "cachedResultName": "smt_repair"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "process_id": "={{ $json.processId }}",
+            "sn": "={{ $json.sn }}",
+            "component_id": "={{ $json.componentId }}",
+            "order_number": "={{ $json.orderNumber }}",
+            "issue": "={{ $json.issue }}",
+            "technician": "={{ $json.technician }}",
+            "repair_time": "={{ $json.repairTime }}",
+            "create_time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "component_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sn",
+              "displayName": "sn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "component_id",
+              "displayName": "component_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "process_id",
+              "displayName": "process_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "technician",
+              "displayName": "technician",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "is_deleted",
+              "displayName": "is_deleted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "repair_time",
+              "displayName": "repair_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        260,
+        680
+      ],
+      "id": "edc217d7-4269-4988-b3ea-cb5fe7cad761",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "判断参数校验的结果": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数校验，判断每个参数值是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数校验，判断每个参数值是否为空": {
+      "main": [
+        [
+          {
+            "node": "判断参数校验的结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "数据同步成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "163.142.39.64",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "201",
+            "authorization": "REDACTED",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "processId": 6,
+            "sn": "SN789012",
+            "componentId": "COMP456",
+            "orderNumber": "ORD003",
+            "issue": "电路故障",
+            "technician": "王五",
+            "repairTime": "2023-10-11 12:00:00"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/syncPcbInfo",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "7815252e-fbd3-4a21-b922-78fa8271f73e",
+  "activeVersionId": "7815252e-fbd3-4a21-b922-78fa8271f73e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-02-07T02:44:40.348Z",
+      "createdAt": "2025-02-07T02:44:40.348Z",
+      "role": "workflow:owner",
+      "workflowId": "cfG1UZP9AXkjD3P1",
+      "projectId": "Y6ZOz21cjq2fKS18",
+      "project": {
+        "updatedAt": "2025-08-07T02:20:43.893Z",
+        "createdAt": "2025-02-07T02:43:11.522Z",
+        "id": "Y6ZOz21cjq2fKS18",
+        "name": "5.YF_MES_SYNC",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "exchange-alt"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

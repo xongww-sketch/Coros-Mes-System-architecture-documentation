@@ -1,0 +1,1848 @@
+{
+  "updatedAt": "2026-03-12T10:30:02.440Z",
+  "createdAt": "2025-12-26T03:19:32.431Z",
+  "id": "oorZAXhWJO5nu8br",
+  "name": "设备锁机状态",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1984,
+        -32
+      ],
+      "id": "209fdb39-79c9-4425-a80a-571728dc08dc",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "543f2e2e-ba5e-480e-bc97-bdf391ea7331",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        -16
+      ],
+      "id": "b0e8700b-f705-4e90-a2c1-0b13e57da1dc",
+      "name": "判断接口是否调用成功"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:2,\n    msg:\"设备查询接口调用失败\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        320
+      ],
+      "id": "0b495ab8-af6f-4b02-9eba-e045a083f160",
+      "name": "接口调用失败"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b34711e7-fcf1-4df8-94f2-59b4188537ca",
+              "leftValue": "={{ $json.data[0].ruleType }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9aa0a203-271c-4891-b580-96bee4f70d02",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2064,
+        -176
+      ],
+      "id": "576ef09e-068b-4c27-963f-8b1d841dd5e9",
+      "name": "判断是否锁机"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\n    msg:\"设备已锁机\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2912,
+        -64
+      ],
+      "id": "a9689138-3319-4438-aa22-0d7df362f72c",
+      "name": "设备锁机状态"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:0,\n    msg:\"锁机方式未解锁\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        -608
+      ],
+      "id": "47bf8162-0dbf-4d31-a585-396ebbb0e023",
+      "name": "设备未锁机"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid_id",
+              "value": "={{ $json.retroid_id }}"
+            },
+            {
+              "column": "procedure_detail_id",
+              "value": "39"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "machine_data_id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -848,
+        -464
+      ],
+      "id": "08c8aaa4-2506-4557-bce0-fee2d97617f0",
+      "name": "查询蓝牙id",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r\nwhere r.retroid = '{{ $json.body.retroid }}' and r.status in ('1','2')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1040,
+        -464
+      ],
+      "id": "cff3f57c-4e2a-4d4a-9467-f66e3dffb4e9",
+      "name": "查询sn状态",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "4jSeve9X8u4zjkBA",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b5b7f605-2601-4638-ab8e-53e41a38f54c",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        -464
+      ],
+      "id": "6a1fb19e-2846-4300-a833-dac9dd863a69",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\n    msg:\"设备未绑定uuid\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        304
+      ],
+      "id": "2bb8bf2a-4566-40e0-b6be-f84b792df584",
+      "name": "设备未绑定uuid"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ba5de44-b506-457f-bd22-4c482b2b7ba4",
+              "name": "=deviceld",
+              "value": "={{ $json.data.uuid.slice(0,6)}}",
+              "type": "string"
+            },
+            {
+              "id": "8bf6ae09-cf7d-468b-9fed-b212ec378fd7",
+              "name": "retroId",
+              "value": "={{ $json.data.sn }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -432,
+        -480
+      ],
+      "id": "63a539e9-96b5-4052-a99e-38741368ad88",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ef08d6af-c2cd-4fea-83f7-a466f44bf44c",
+              "leftValue": "={{ $json.body.procedure_name }}",
+              "rightValue": "=FQC测试",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1824,
+        -32
+      ],
+      "id": "cc6cac8a-e58f-42d6-a55c-57c1bcbcc0a3",
+      "name": "判断是否属于fqc测试"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ba5de44-b506-457f-bd22-4c482b2b7ba4",
+              "name": "=deviceld",
+              "value": "={{ $json.data[0].json.data.uuid.slice(0,6) }}",
+              "type": "string"
+            },
+            {
+              "id": "9811006b-eb79-48a8-afe1-9beb890a5192",
+              "name": "retroId",
+              "value": "={{ $json.data[0].json.data.sn }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -464,
+        48
+      ],
+      "id": "70749ee4-bd6b-425c-a77c-58cebd6daaa1",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://simpleadmincn.coros.com/coros/admin/device/activate/queryProductByRetroId",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"deviceId\": \"{{$json.deviceld}}\",\n    \"retroId\":\"{{$json.retroId}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1744,
+        -16
+      ],
+      "id": "067d68eb-169b-4bc4-9d1b-010abbdc72cb",
+      "name": "非样机查询状态接口"
+    },
+    {
+      "parameters": {
+        "url": "https://simpleadmincn.coros.com/coros/admin/maintenance/demoDevice/queryDemoDevice",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            },
+            {
+              "name": "deviceId",
+              "value": "={{ $json.deviceld }}"
+            },
+            {
+              "name": "retroId",
+              "value": "={{ $json.retroId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1056,
+        -192
+      ],
+      "id": "4ff7cab3-e414-48d9-a0b6-8fd40d939c74",
+      "name": "样机状态查询接口"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f4662d21-13db-4872-91ae-7d4677ca8d04",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "9b3dd72f-40cc-4eb0-b691-e1293bc22918",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        -192
+      ],
+      "id": "01441963-aa0b-41b6-b55d-afc4bf5c01a4",
+      "name": "查询接口是否调用成功"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "375b7659-58d9-4fd4-90e6-fdbb8012ef06",
+              "leftValue": "={{ $json.data[0].state }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        -208
+      ],
+      "id": "88668b8e-018b-42c6-96a1-adefcc7094f6",
+      "name": "判断样机是否锁机"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "23129d50-18bd-4f7c-97d7-2cb1af097b6c",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        0
+      ],
+      "id": "c74960df-5a1b-4447-b72e-b3eca90a73c0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 定义优先级列表：按顺序尝试获取数据\nconst nodeCandidates = [\"Edit Fields\", \"Edit Fields1\", \"旧MES数据查询\"];\nlet finalData = [];\n\nfor (const nodeName of nodeCandidates) {\n  try {\n    // 尝试获取节点数据\n    const data = $(nodeName).all();\n    \n    // 如果获取到了数据且不为空，赋值并结束循环\n    if (data && data.length > 0) {\n      finalData = data;\n      break; // 找到了数据，跳出循环，不再查询后面的节点\n    }\n  } catch (e) {\n    // 当前节点不存在或未执行，继续尝试下一个\n    continue;\n  }\n}\n\nreturn finalData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        -16
+      ],
+      "id": "deac2299-956f-492a-a619-4aa5949db575",
+      "name": "返回蓝牙id"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b34711e7-fcf1-4df8-94f2-59b4188537ca",
+              "leftValue": "={{ $json.data[0].ruleType }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2320,
+        -160
+      ],
+      "id": "7e86efe3-d3de-4ac3-b708-37f346815d76",
+      "name": "判断是否锁机1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zIsWkclkRfztC4WQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zIsWkclkRfztC4WQ",
+          "cachedResultName": "1.Mes重构 — uuidGetSn"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -1024,
+        48
+      ],
+      "id": "5c6606ff-b875-415d-b758-e2c0645564e3",
+      "name": "Call 'uuidGetSn'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bc9b7609-bf00-4ca6-9750-99eb5feb1642",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        48
+      ],
+      "id": "3b613bb7-7090-4b9e-85f0-80d6439c77d0",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\n    msg:\"规则状态未解锁\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        -320
+      ],
+      "id": "281ac31e-34d3-41cc-8814-2dd014f3faad",
+      "name": "设备未执行"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "35771842-bd69-4ce1-b663-5cdbf969f275",
+              "leftValue": "={{ $json.data[0].lockStatus }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2496,
+        -400
+      ],
+      "id": "dc6ea3a1-da51-406f-bf2f-10557caa59a5",
+      "name": "判断是否执行"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3e3ff756-0143-4d1d-9c56-4505f2d89e5a",
+              "leftValue": "={{ $json.data[0].lockStatus }}",
+              "rightValue": -1,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2720,
+        -352
+      ],
+      "id": "4e584a26-188b-45df-8471-007f213073a5",
+      "name": "判断锁机是否执行"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2b5c6dae-ba99-49ec-8005-afddefada7ba",
+              "leftValue": "={{ $json.body.job_number }}",
+              "rightValue": "={{ $json.body.order_number }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1280,
+        224
+      ],
+      "id": "9a8818cf-cb7c-499e-9b2f-ef5da52cf2df",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT cbb.retroid,cbb.uuid FROM YFConsumer.dbo.consm_barcodebindinfo as cbb  WHERE cbb.uuid_unique ='{{ $json.body.uuid.toUpperCase().slice(0, 6)+$json.body.uuid.toUpperCase().slice(16) }}';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        352
+      ],
+      "id": "74bc18a6-1ed9-422f-93be-832805ecabb5",
+      "name": "旧MES查询，通过uuid获取到sn",
+      "credentials": {
+        "microsoftSql": {
+          "id": "FNgMAIvmy5GiZUlV",
+          "name": "Microsoft SQL_mes_YFConsumer"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "99fc8aae-eae4-4d67-8e89-50242f6f0480",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -720,
+        320
+      ],
+      "id": "f0ef30a7-b681-40e8-abd7-b0d637958b0e",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ba5de44-b506-457f-bd22-4c482b2b7ba4",
+              "name": "=deviceld",
+              "value": "={{ $json.uuid.slice(0,6) }}",
+              "type": "string"
+            },
+            {
+              "id": "9811006b-eb79-48a8-afe1-9beb890a5192",
+              "name": "retroId",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        496
+      ],
+      "id": "a4d4880d-492d-49eb-8314-4b0f7784c81b",
+      "name": "旧MES数据查询"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://simpleadmincn.coros.com/coros/admin/device/info",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "retroids",
+              "value": "={{new Array($json.retroId)}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        320,
+        80
+      ],
+      "id": "fd90a7cf-e892-4039-88c6-16f018b9ecbe",
+      "name": "查询设备是否激活",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c98da980-4c6e-42e6-b34f-5b198781c675",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthEquals",
+                "rightType": "number"
+              }
+            },
+            {
+              "id": "751b89b5-d74e-44d8-a3c0-7db8f526e87b",
+              "leftValue": "={{ $json.data[0].expiresTime }}",
+              "rightValue": "-1",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        32
+      ],
+      "id": "80d472e4-9182-4a6e-b17b-2150c6102058",
+      "name": "判断是否未激活"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\n    msg:\"设备已激活\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        224
+      ],
+      "id": "e7b4e66c-344c-4409-aa9a-f7ae6554c3cd",
+      "name": "设备未锁机1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn $(\"Edit Fields1\").all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -16
+      ],
+      "id": "6d759018-2dd1-4a48-9ae6-a304e38c4d03",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://simpleadmincn.coros.com/coros/admin/device/info",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "retroids",
+              "value": "={{new Array($json.retroId)}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        176,
+        -576
+      ],
+      "id": "210c3d50-3e33-4be5-a64c-fe2a79ebdec7",
+      "name": "查询设备是否激活1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c98da980-4c6e-42e6-b34f-5b198781c675",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthEquals",
+                "rightType": "number"
+              }
+            },
+            {
+              "id": "751b89b5-d74e-44d8-a3c0-7db8f526e87b",
+              "leftValue": "={{ $json.data[0].expiresTime }}",
+              "rightValue": "-1",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        -624
+      ],
+      "id": "3eb016b3-6e09-45aa-bc86-c4f5c4e61582",
+      "name": "判断是否未激活1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\n    msg:\"设备已激活\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -432
+      ],
+      "id": "14b880c5-da4f-4ab7-bf47-e5bd50a03525",
+      "name": "设备未锁机2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn $(\"Edit Fields\").all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -352
+      ],
+      "id": "01f22d2d-c62a-42fa-be51-c8f87afc42ff",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://simpleadmincn.coros.com/coros/admin/device/info",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "retroids",
+              "value": "={{new Array($json.retroId)}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        288,
+        560
+      ],
+      "id": "65eb5508-4c07-4d84-a9fc-f882e8444b49",
+      "name": "查询设备是否激活2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c98da980-4c6e-42e6-b34f-5b198781c675",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthEquals",
+                "rightType": "number"
+              }
+            },
+            {
+              "id": "751b89b5-d74e-44d8-a3c0-7db8f526e87b",
+              "leftValue": "={{ $json.data[0].expiresTime }}",
+              "rightValue": "-1",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        512
+      ],
+      "id": "c1b6bde9-de4a-4ad1-8f48-90776338508f",
+      "name": "判断是否未激活2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1,\n    msg:\"设备已激活\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        704
+      ],
+      "id": "ba649d93-9eaf-454b-a64d-420445c4008f",
+      "name": "设备未锁机3"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn $(\"旧MES数据查询\").all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        464
+      ],
+      "id": "96686322-946d-4298-96fd-197e8cea5614",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cf66bb88-fb4d-4531-ba24-e93d9e178a94",
+              "leftValue": "={{ $('When Executed by Another Workflow').all()[0].json.body.check_active }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        -336
+      ],
+      "id": "1a4ea414-e0be-40ae-85ba-790778ab44ed",
+      "name": "判断FQC是否需要校验激活"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5a9b075f-f42f-4586-8896-278a187fc7b6",
+              "leftValue": "={{ $('When Executed by Another Workflow').all()[0].json.body.check_active }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        224
+      ],
+      "id": "bf24f079-6044-492b-be56-7f87accdfa09",
+      "name": "判断是否要校验设备是否激活"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5a9b075f-f42f-4586-8896-278a187fc7b6",
+              "leftValue": "={{ $('When Executed by Another Workflow').all()[0].json.body.check_active }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        544
+      ],
+      "id": "ce238d4f-892a-4ea0-b661-806f677ad814",
+      "name": "判断是否要校验设备是否激活1"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "判断是否属于fqc测试",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断接口是否调用成功": {
+      "main": [
+        [
+          {
+            "node": "判断是否锁机",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调用失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否锁机": {
+      "main": [
+        [
+          {
+            "node": "判断是否执行",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断是否锁机1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn状态": {
+      "main": [
+        [
+          {
+            "node": "查询蓝牙id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询蓝牙id": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备未绑定uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "判断FQC是否需要校验激活",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否属于fqc测试": {
+      "main": [
+        [
+          {
+            "node": "查询sn状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "判断是否要校验设备是否激活",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "非样机查询状态接口": {
+      "main": [
+        [
+          {
+            "node": "判断接口是否调用成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "样机状态查询接口": {
+      "main": [
+        [
+          {
+            "node": "查询接口是否调用成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询接口是否调用成功": {
+      "main": [
+        [
+          {
+            "node": "判断样机是否锁机",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断样机是否锁机": {
+      "main": [
+        [
+          {
+            "node": "设备未锁机",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备锁机状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "返回蓝牙id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调用失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "返回蓝牙id": {
+      "main": [
+        [
+          {
+            "node": "非样机查询状态接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否锁机1": {
+      "main": [
+        [
+          {
+            "node": "判断是否执行",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备锁机状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'uuidGetSn'": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备未绑定uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否执行": {
+      "main": [
+        [
+          {
+            "node": "设备未锁机",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断锁机是否执行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断锁机是否执行": {
+      "main": [
+        [
+          {
+            "node": "设备未锁机",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备未执行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Call 'uuidGetSn'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "旧MES查询，通过uuid获取到sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "旧MES查询，通过uuid获取到sn": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "旧MES数据查询",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备未绑定uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "旧MES数据查询": {
+      "main": [
+        [
+          {
+            "node": "判断是否要校验设备是否激活1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询设备是否激活": {
+      "main": [
+        [
+          {
+            "node": "判断是否未激活",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调用失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否未激活": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备未锁机1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "样机状态查询接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询设备是否激活1": {
+      "main": [
+        [
+          {
+            "node": "判断是否未激活1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调用失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否未激活1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备未锁机2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "样机状态查询接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询设备是否激活2": {
+      "main": [
+        [
+          {
+            "node": "判断是否未激活2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调用失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否未激活2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "设备未锁机3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "样机状态查询接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断FQC是否需要校验激活": {
+      "main": [
+        [
+          {
+            "node": "查询设备是否激活1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "样机状态查询接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否要校验设备是否激活": {
+      "main": [
+        [
+          {
+            "node": "查询设备是否激活",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "样机状态查询接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否要校验设备是否激活1": {
+      "main": [
+        [
+          {
+            "node": "查询设备是否激活2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "样机状态查询接口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "body": {
+            "uuid": "96a8fdcff07df83ba185e91149a4",
+            "job_number": "1000006326",
+            "order_number": "1000006326",
+            "check_active": "true"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "a4f3eb64-371e-4a89-9d80-4635fff7f6be",
+  "activeVersionId": "a4f3eb64-371e-4a89-9d80-4635fff7f6be",
+  "versionCounter": 67,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T03:19:32.431Z",
+      "createdAt": "2025-12-26T03:19:32.431Z",
+      "role": "workflow:owner",
+      "workflowId": "oorZAXhWJO5nu8br",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

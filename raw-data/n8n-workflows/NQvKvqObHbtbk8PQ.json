@@ -1,0 +1,225 @@
+{
+  "updatedAt": "2024-04-25T04:34:15.749Z",
+  "createdAt": "2024-01-30T05:59:14.182Z",
+  "id": "NQvKvqObHbtbk8PQ",
+  "name": "consm_repairrecord_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select TOP 40000* from consm_repairrecord WHERE UUID like '%{{ $json.query.UUID||\"\"}}%' and ProductType like '%{{ $json.query.ProductType||\"\"}}%' and OrderNo like '%{{ $json.query.OrderNo||\"\"}}%'and repairinfo like '%{{ $json.query.RepairInfo||\"\"}}%'AND username like '%{{ $json.query.UserName||\"\"}}%'and badinfo like '%{{ $json.query.BadInfo||\"\"}}%' and elec like '%{{ $json.query.Elec||\"\"}}%'"
+      },
+      "id": "0ffe4edf-4530-407a-b803-feb7600573d9",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        800,
+        360
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "4dec43ff-7378-4f33-9ae1-caffd223fc2b3788",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "182b6dc2-b2a7-45b3-afed-ae46edeecd9f",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        360
+      ],
+      "webhookId": "47be7a79-e4ff-4d32-a867-1d842fe3c6e9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d28728a9-3ed4-4129-aa8a-052ae27f895f",
+              "leftValue": "={{ $json.query.UUID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "56c7dca2-63ae-41c7-b403-d82f5b717682",
+              "leftValue": "={{ $json.query.ProductType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "256811ab-ca56-418d-b5dd-278a6b4e8d79",
+              "leftValue": "={{ $json.query.OrderNo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "b2973bd0-6070-4879-bb2a-77394b097b8b",
+              "leftValue": "={{ $json.query.Elec }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "d4589672-3fe9-43a2-981e-1ca7b6ca0a39",
+              "leftValue": "={{ $json.query.RepairInfo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "412457f5-6532-4fef-83a3-e9dbf1122778",
+              "leftValue": "={{ $json.query.UserName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "f55dad9b-80fb-4c84-848d-0b58f3a39cb1",
+              "leftValue": "={{ $json.query.BadInfo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "099daab7-640e-4fa8-8600-c529f12655a4",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "host": "192.168.128.8",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "UUID": "12",
+            "ProductType": "",
+            "OrderNo": "",
+            "Elec": "",
+            "RepairInfo": "",
+            "UserName": "",
+            "BadInfo": ""
+          },
+          "body": {}
+        }
+      }
+    ]
+  },
+  "versionId": "09443f22-5191-4029-9f63-fd3bee6c490c",
+  "activeVersionId": "09443f22-5191-4029-9f63-fd3bee6c490c",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:41.807Z",
+      "createdAt": "2024-01-29T03:43:19.869Z",
+      "id": "wbylAziHNIuwj3Uh",
+      "name": "MES查询应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-01-30T05:59:14.186Z",
+      "createdAt": "2024-01-30T05:59:14.186Z",
+      "role": "workflow:owner",
+      "workflowId": "NQvKvqObHbtbk8PQ",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

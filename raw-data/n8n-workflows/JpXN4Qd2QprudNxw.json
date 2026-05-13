@@ -1,0 +1,481 @@
+{
+  "updatedAt": "2025-04-17T02:13:35.846Z",
+  "createdAt": "2024-05-15T07:23:19.613Z",
+  "id": "JpXN4Qd2QprudNxw",
+  "name": "Mes_Inquire_Login_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "test",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "table": {
+          "__rl": true,
+          "value": "user",
+          "mode": "list",
+          "cachedResultName": "user"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "username",
+              "value": "={{ $json.body.username }}"
+            },
+            {
+              "column": "password",
+              "value": "={{ $json.body.password }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb0a1cdf-ed1f-48d0-a07c-73130bd8511b",
+      "name": "查询是否存在相关用户名以及密码是否正确",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        0,
+        260
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请输入正确的用户名或密码\"\n}",
+        "options": {}
+      },
+      "id": "e52bcbde-c7b5-45ac-87fa-b9a9f2fd2e33",
+      "name": "报错信息：用户名或密码错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "=POST",
+        "path": "Mes_Inquire_Login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f698203e-7438-44c6-a09d-135a8d73a9a0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        260
+      ],
+      "webhookId": "083dfdda-7147-4a63-8b15-8eee058e550b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d22522c0-045b-4102-8e7e-5196bad7be61",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d7660a84-02fe-466a-81dc-1e402aced1e9",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "248ac0ef-f1dc-441e-8e68-b96007a00f20",
+      "name": "判断用户是否存在或密码是否匹配",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        180,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从JSON中获取username和password\nconst username = $input.all()[0].json.username;\nconst password = $input.all()[0].json.password;\nconst id = $input.all()[0].json.id;\n\nfunction generateToken() {\n  // 生成随机token\n  const token = Math.random().toString(36).substr(2);\n  \n\n\n  return {\n    id: id,\n    username: username,\n    password: password,\n    token: token,\n  };\n}\n\n// 调用函数并输出结果\nconst result = generateToken();\nreturn result;\n"
+      },
+      "id": "7f4dd270-a5b2-4a44-889a-6b99458fb70a",
+      "name": "生成token以及token时效",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "test",
+          "mode": "list",
+          "cachedResultName": "test"
+        },
+        "table": {
+          "__rl": true,
+          "value": "user",
+          "mode": "list",
+          "cachedResultName": "user"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "token": "REDACTED",
+            "tokenexpire": "={{($now + 2 * 60 * 60 * 1000)}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "password",
+              "displayName": "password",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "userlevel",
+              "displayName": "userlevel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tokenexpire",
+              "displayName": "tokenexpire",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f9e53bc8-d62b-4119-a0fb-ad89e3f7f447",
+      "name": "更新数据库token和时效",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        540,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "590e69b3-4bc8-4e4c-aa52-b49a21dcb9e9",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ff6dcb10-559e-403a-8918-4e2d3ccb6322",
+      "name": "判断数据是否更新成功",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] - Mes_Inquire_Login_API接口失败",
+        "options": {}
+      },
+      "id": "def16e36-99f9-4da5-93bf-aa35cb948616",
+      "name": "数据库插入失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        920,
+        460
+      ],
+      "webhookId": "d8ce1564-ce6c-4c88-8f6d-9cf2da0bf09d",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \n    \"code\": \"200\",\n    \"token\":\"{{$json.token}}\",\n    \"tokenexpire\":\"{{$json.tokenexpire}}\",\n    \"userlevel\":\"{{$json.userlevel}}\"\n}\n  \n",
+        "options": {}
+      },
+      "id": "f4b4d948-7ca4-407c-b5d3-7ae3daa6942d",
+      "name": "成功",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "查询是否存在相关用户名以及密码是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断用户是否存在或密码是否匹配",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "查询是否存在相关用户名以及密码是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断用户是否存在或密码是否匹配": {
+      "main": [
+        [
+          {
+            "node": "生成token以及token时效",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：用户名或密码错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成token以及token时效": {
+      "main": [
+        [
+          {
+            "node": "更新数据库token和时效",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新数据库token和时效": {
+      "main": [
+        [
+          {
+            "node": "判断数据是否更新成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断数据是否更新成功": {
+      "main": [
+        [
+          {
+            "node": "成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库插入失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.25.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "71",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "username": "Technician",
+            "password": "REDACTED"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/Mes_Inquire_Login",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "f2aea34f-20ce-4aed-b27e-53aa812e0c20",
+  "activeVersionId": "f2aea34f-20ce-4aed-b27e-53aa812e0c20",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:41.807Z",
+      "createdAt": "2024-01-29T03:43:19.869Z",
+      "id": "wbylAziHNIuwj3Uh",
+      "name": "MES查询应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-05-15T07:23:19.613Z",
+      "createdAt": "2024-05-15T07:23:19.613Z",
+      "role": "workflow:owner",
+      "workflowId": "JpXN4Qd2QprudNxw",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

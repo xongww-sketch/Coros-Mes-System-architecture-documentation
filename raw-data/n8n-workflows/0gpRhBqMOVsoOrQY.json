@@ -1,0 +1,794 @@
+{
+  "updatedAt": "2026-01-15T08:52:27.862Z",
+  "createdAt": "2024-04-16T07:42:38.528Z",
+  "id": "0gpRhBqMOVsoOrQY",
+  "name": "getChannel_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nlet code=$('Webhook').all()[0].json.body.code;\nlet res={};\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.trade.deliverys.detail.get\",\n  \"express_no\":code\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nresult.push(res);\nreturn result;"
+      },
+      "id": "8e939f2f-0dd5-4841-9bc7-5cc6160968a0",
+      "name": "生成管易签名",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"2003\",\n  \"msg\":\"管易接口调用错误！\"\n}",
+        "options": {}
+      },
+      "id": "b9ddfbc0-b122-411b-9d74-c115b7139dbd",
+      "name": "管易接口调用出错",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请检查高驰订货商城中的客户名称\"\n}",
+        "options": {}
+      },
+      "id": "a93726dd-d5e2-4890-9dd7-c2b2ed24c885",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2288,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.detail.get"
+            },
+            {
+              "name": "express_no",
+              "value": "={{$('Webhook').all()[0].json.body.code}}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d8e0ea23-ca9a-4301-a164-ca9c251f81a1",
+      "name": "管易通过单据编号查询到对应订单信息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        880,
+        144
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "5bb8420b-aded-4625-813f-a531f5dd4e28",
+      "name": "Crypto",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        752,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "352557dc-18e5-43ea-9229-75ca65f3d7bc",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "有赞商城",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a47ef63b-870b-4ee7-ac9d-5a2b8a8a1666",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "高驰官方旗舰店(抖音)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "38b7b287-263b-411f-9ead-1d6526beff43",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS天猫旗舰店",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "ce96212d-a051-46c6-8b40-418d1118899d",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS小红书店",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "bbc71825-7737-446e-81dc-81c328c588a0",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS京东旗舰店",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "f5d4face-f4c1-4c53-b067-236d82344397",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS高驰得物店",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "4547bfb8-e946-44c5-8305-f6d3d6927607",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS高驰微信小店",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "ff816b08-07bc-4b0c-940f-165880f9d132",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS高驰京东（供销平台）",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "1ecaf170-1121-4c4f-af4e-8e59e9e4f0ff",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS 高驰订货商城",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "5a65edd7-a478-4793-95c8-9cf4118ea202",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS高驰智能手表旗舰店",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "980049ea-796e-4d7c-8768-13b056fff034",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cc4c28d9-677e-4f12-880a-9c8711d86e9f",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "41edfe7a-012f-475a-b709-452f26ed6aaa",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        288
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c26cc94-804e-406e-9f4c-c7da8039385d",
+              "name": "=shop_name",
+              "value": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "type": "string"
+            },
+            {
+              "id": "8fa38c3b-06e9-44d1-b896-e5610a3e9e19",
+              "name": "customer_name",
+              "value": "={{JSON.parse($json.data).delivery.vip_name}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "181b424a-9f45-4d07-8e1e-0451f56b99cf",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1376,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let shop = $input.all()[0].json.shop_name;\nlet customerName = $input.all()[0].json.customer_name;\nlet Channelid;\n\nswitch (shop) {\n  case \"高驰官方旗舰店(抖音)\":\n    Channelid = 10851;\n    break;\n  case \"COROS天猫旗舰店\":\n    Channelid = 10587;\n    break;\n  case \"COROS京东旗舰店\":\n    Channelid = 10760;\n    break;\n  case \"COROS小红书店\":\n    Channelid = 10920;\n    break;\n  case \"有赞商城\":\n    Channelid = 10764;\n    break;\n  case \"COROS高驰微信小店\":\n    Channelid = 11049;\n    break;\n  case \"COROS高驰得物店\":\n    Channelid = 11048;\n    break;\n  case \"COROS高驰京东（供销平台）\":\n    Channelid = 10760;\n    break;\n  case \"COROS 高驰订货商城\":\n    Channelid = 11064;\n    break;\n  case \"COROS高驰智能手表旗舰店\":\n    Channelid = 11064;\n    break;\n  case \"COROS线下渠道\":\n    switch (customerName) {\n      case \"飞亚达销售有限公司\":\n        Channelid = 11066;\n        break;\n      case \"上海蔚景商贸有限公司\":\n        Channelid = 11055;\n        break;\n      case \"北京京东世纪贸易有限公司\":\n        Channelid = 10931;\n        break;\n      case \"云南九机电子产品有限公司\":\n        Channelid = 11054;\n        break;\n      case \"门店经销-迪脉（上海）企业管理有限公司\":\n        Channelid = 10866;\n        break;\n      case \"深圳市顺电连锁股份有限公司\":\n        Channelid = 11090;\n        break;\n      case \"京东闪送\":\n        Channelid = 11075;\n        break;\n      default:\n        Channelid = 10470;\n    }\n    break;\n  default:\n    Channelid = null; // 其他未匹配的情况可以设置为null或者其他默认值\n}\n\nreturn { Channel: Channelid };\n"
+      },
+      "id": "5d60a5dc-4908-45bf-bc81-f4a0361d47b2",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2096,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\":\"200\",\n  \"ChannelId\":  {{ $json.Channel }}\n}",
+        "options": {}
+      },
+      "id": "3fe1d0be-a8ff-4093-b53d-702a1bc99541",
+      "name": "固定渠道订单",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2320,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"200\",\n  \"ChannelId\": \"\"\n}",
+        "options": {}
+      },
+      "id": "a1ad30c7-d158-40f2-85a5-0e7eb37322a2",
+      "name": "其他订单",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1632,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_caches",
+          "mode": "list",
+          "cachedResultName": "delivery_order_caches"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "express_no",
+              "value": "={{ $json.body.code }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "82993d91-9c8e-473c-95dd-30d77c9bda75",
+      "name": "从数据缓存中查找是否存在交货单记录",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        352,
+        288
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "GetChannel",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d41f206a-c673-475f-9ca9-29fa60088ba1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        288
+      ],
+      "webhookId": "76e16ff7-a020-4eee-9c33-647807a809c5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cb9936ee-9c96-4186-a8b9-4c3b3d658493",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "77f85593-036e-4ea3-a058-9dba3e61f788",
+      "name": "If3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let customer_name = $input.all()[0].json.customer_name\nlet result=null;\n// 尝试将`customer_name`转换为数字\nconst new_customer = Number(customer_name);\nif (isNaN(new_customer)) {\n   result={\n    msg:\"customer_name不是有效的数字字符串!\"\n  }\n  // 处理转换失败的逻辑\n} else {\n  // 如果转换成功，则赋予新的对象并且将数字类型的customer_name作为属性\n   result = {\n    Channel: new_customer\n  };\n  \n}\nreturn result;\n"
+      },
+      "id": "924b8684-a357-4e71-9d33-f3ebd1374a42",
+      "name": "判断是否为高驰订货商城渠道号",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2096,
+        32
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\":\"200\",\n  \"ChannelId\": {{ $json.Channel }}\n} ",
+        "options": {}
+      },
+      "id": "8fb6ee89-73b2-42ea-bb38-0d4a15eb20c9",
+      "name": "高驰订货商城",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2288,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  const { shop_name, customer_name } = item.json;\n  \n  // 检查customer_name是否有效：非空且非纯空格\n  const isValidCustomer = customer_name?.trim?.()?.length > 0;\n  \n  // 判断条件：有效客户名 + 指定店铺 + 非纯数字字符串\n  if (isValidCustomer && \n      (shop_name === \"COROS 高驰订货商城\") &&\n      !isNaN(Number(customer_name))) {\n    item.json.code = 1;\n  } else {\n    item.json.code = 2;\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        288
+      ],
+      "id": "931c1d86-661c-498b-bb97-594e0890e54e",
+      "name": "判断是否是COROS线下店铺或者COROS 高驰订货商城"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "352557dc-18e5-43ea-9229-75ca65f3d7bc",
+              "leftValue": "={{JSON.parse($json.data).delivery.shop_name}}",
+              "rightValue": "COROS线下渠道",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "7f9d95ab-7888-4441-8f01-afddf6966020",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        432
+      ]
+    }
+  ],
+  "connections": {
+    "生成管易签名": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "管易接口调用出错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "判断是否为高驰订货商城渠道号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "判断是否是COROS线下店铺或者COROS 高驰订货商城",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "固定渠道订单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "从数据缓存中查找是否存在交货单记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从数据缓存中查找是否存在交货单记录": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否为高驰订货商城渠道号": {
+      "main": [
+        [
+          {
+            "node": "高驰订货商城",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否是COROS线下店铺或者COROS 高驰订货商城": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "其他订单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.29.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "26",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "code": "SF3265941448122"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/GetChannel",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "a192d55f-71d1-4e8f-8a17-7d46585dff46",
+  "activeVersionId": "a192d55f-71d1-4e8f-8a17-7d46585dff46",
+  "versionCounter": 42,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:11:31.290Z",
+      "createdAt": "2024-04-24T09:11:31.290Z",
+      "id": "iWa6cFsaNCZZuvFh",
+      "name": "仓库出货API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-04-16T07:42:38.528Z",
+      "createdAt": "2024-04-16T07:42:38.528Z",
+      "role": "workflow:owner",
+      "workflowId": "0gpRhBqMOVsoOrQY",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    },
+    {
+      "updatedAt": "2025-02-14T02:47:35.642Z",
+      "createdAt": "2025-02-14T02:47:35.642Z",
+      "role": "workflow:editor",
+      "workflowId": "0gpRhBqMOVsoOrQY",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    },
+    {
+      "updatedAt": "2025-11-11T02:19:21.586Z",
+      "createdAt": "2025-11-11T02:19:21.586Z",
+      "role": "workflow:editor",
+      "workflowId": "0gpRhBqMOVsoOrQY",
+      "projectId": "6B4K3PXLcIyzwwGy",
+      "project": {
+        "updatedAt": "2025-09-01T02:48:49.931Z",
+        "createdAt": "2025-09-01T02:47:19.076Z",
+        "id": "6B4K3PXLcIyzwwGy",
+        "name": "Jiaer Wu <wujiaer@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f6b9b011-bfdb-4eec-b16b-f7c35b01b0d1"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

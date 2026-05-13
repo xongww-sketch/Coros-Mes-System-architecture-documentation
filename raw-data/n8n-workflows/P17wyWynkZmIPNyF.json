@@ -1,0 +1,1364 @@
+{
+  "updatedAt": "2025-04-16T10:01:19.395Z",
+  "createdAt": "2025-02-21T06:39:49.403Z",
+  "id": "P17wyWynkZmIPNyF",
+  "name": "MFI写入工序",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "9f867f7e-6c9a-434a-86f3-5963ab1ae72d",
+              "leftValue": "={{ $json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6b6acdd5-2785-4a18-8483-d8eb05c6a396",
+              "leftValue": "={{ $json.body.sn.length}}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6fc669d1-7a4a-4c91-97a5-32748c84c4b3",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        160,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "0449887a-dfa9-4e1f-b23f-e5cba49aa9c7",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d637281f-5a2e-42d8-9a9b-80c9ffca4290",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请检查sn是否正确\"\n}",
+        "options": {}
+      },
+      "id": "6c3eac62-e6cc-49bf-9b4d-65cf038876a3",
+      "name": "报错：sn格式不规范",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        380,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库错误\"\n}",
+        "options": {}
+      },
+      "id": "eb404e6d-98dd-4947-b1fd-302cb39ea7bd",
+      "name": "报错:数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"sn未完成cplc上传工序\"\n}",
+        "options": {}
+      },
+      "id": "4d17eb67-9d4f-47a6-b95f-d75bc8fd79bb",
+      "name": "报错：sn未完成上道工序",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1020,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "MFI_procedure",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        20,
+        -20
+      ],
+      "id": "17417d56-c4cd-4bb7-b70b-eeafd50e001f",
+      "name": "Webhook",
+      "webhookId": "1368167a-4357-4ad3-b1bf-9d5afae8e31f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5560cf70-4c0c-4ca5-ba6e-aa1f565de4cc",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d4eaa2ba-20c1-4fe8-9a20-0a945a022448",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        0
+      ],
+      "id": "d1237209-93d4-4697-9c8d-f69e92ffe50e",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// CRC16-CCITT-FALSE 实现\nfunction crc16Ccitt(str) {\n    let crc = 0xFFFF;\n    const poly = 0x1021;\n\n    for (let i = 0; i < str.length; i++) {\n        crc ^= (str.charCodeAt(i) << 8);\n        for (let j = 0; j < 8; j++) {\n            if (crc & 0x8000) {\n                crc = (crc << 1) ^ poly;\n            } else {\n                crc <<= 1;\n            }\n            crc &= 0xFFFF; // 保持16位\n        }\n    }\n    return crc;\n}\n\n// 处理所有输入数据\nreturn $input.all().map(item => {\n    const data = item.json;\n    const uuid = data.uuid;\n    const base64Token = data[\"Base64-encoded Token\"];\n\n    // 计算CRC16\n    const uuidCrc = crc16Ccitt(uuid);\n    const tokenCrc = crc16Ccitt(base64Token);\n\n    // 返回结果，确保CRC16值是4个字符长\n    return {\n        json: {\n            uuid: uuid,\n            base64Token: base64Token,\n            uuidCrc: uuidCrc.toString(16).padStart(4, '0').toUpperCase(),\n            tokenCrc: tokenCrc.toString(16).padStart(4, '0').toUpperCase()\n        }\n    };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        0
+      ],
+      "id": "1f709cb7-d1cf-4b76-8a19-0773105a055d",
+      "name": "crc16转换"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cplc",
+          "mode": "list",
+          "cachedResultName": "cplc"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "sn",
+              "value": "={{ $json.body.sn }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ccef6c6-f00b-4906-b1f1-e70e27517d2f",
+      "name": "查询是否完成cplc",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        320,
+        -20
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "condition": "IS NULL"
+            },
+            {
+              "column": "Base64-encoded Token",
+              "condition": "IS NOT NULL"
+            },
+            {
+              "column": "ppid",
+              "value": "={{ $json.ppid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1340,
+        0
+      ],
+      "id": "75c18040-9512-46cc-9f5f-19153f5aa554",
+      "name": "查询token",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"uuid\": \"{{ $json.uuid }}\",\n  \"token\": \"{{$json['Base64-encoded Token']}}\",\n  \"uuidcrc\": \"{{ $json.uuidcrc }}\",\n  \"tokencrc\": \"{{ $json.tokencrc }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3420,
+        -20
+      ],
+      "id": "3afd3c97-5493-457d-901f-243b02020b96",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] -  MFI插入数据失败",
+        "emailFormat": "text",
+        "options": {}
+      },
+      "id": "0f9dce53-8057-4c40-a841-f92a9e796bae",
+      "name": "接口调取失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2560,
+        580
+      ],
+      "webhookId": "e7d01a7a-a66e-4c6f-b327-5125bc046449",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// CRC16-CCITT-FALSE 实现\nfunction crc16Ccitt(str) {\n    let crc = 0xFFFF;\n    const poly = 0x1021;\n\n    for (let i = 0; i < str.length; i++) {\n        crc ^= (str.charCodeAt(i) << 8);\n        for (let j = 0; j < 8; j++) {\n            if (crc & 0x8000) {\n                crc = (crc << 1) ^ poly;\n            } else {\n                crc <<= 1;\n            }\n            crc &= 0xFFFF; // 保持16位\n        }\n    }\n    return crc;\n}\n\n// 处理所有输入数据\nreturn $input.all().map(item => {\n    const data = item.json;\n    const uuid = data.uuid;\n    const base64Token = data[\"Base64-encoded Token\"];\n\n    // 计算CRC16\n    const uuidCrc = crc16Ccitt(uuid);\n    const tokenCrc = crc16Ccitt(base64Token);\n\n    // 返回结果，确保CRC16值是4个字符长\n    return {\n        json: {\n            uuid: uuid,\n            base64Token: base64Token,\n            uuidCrc: uuidCrc.toString(16).padStart(4, '0').toUpperCase(),\n            tokenCrc: tokenCrc.toString(16).padStart(4, '0').toUpperCase()\n        }\n    };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1940,
+        140
+      ],
+      "id": "fee9ad14-d643-41d1-aa30-8e9f0bb03b49",
+      "name": "crc16转换1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"401\",\n  \"uuid\": \"{{ $json.uuid }}\",\n  \"token\": \"{{ $json.token }}\",\n  \"uuidcrc\": \"{{ $json.uuidcrc }}\",\n  \"tokencrc\": \"{{ $json.tokencrc }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2100,
+        200
+      ],
+      "id": "78f4d63c-47ea-46f9-abe0-dc316a7363e1",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uuid": "={{ $json.uuid }}",
+            "uuidcrc": "={{ $json.uuidCrc }}",
+            "tokencrc": "={{ $json.tokenCrc }}",
+            "Base64-encoded Token": "={{ $json.base64Token }}"
+          },
+          "matchingColumns": [
+            "uuid",
+            "Base64-encoded Token"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ppid",
+              "displayName": "ppid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "modifytime",
+              "displayName": "modifytime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "completetime",
+              "displayName": "completetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuidcrc",
+              "displayName": "uuidcrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tokencrc",
+              "displayName": "tokencrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Base64-encoded Token",
+              "displayName": "Base64-encoded Token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1980,
+        0
+      ],
+      "id": "86a08ed8-e025-4dcb-a03d-497c05e79391",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "083ea3bb-dc74-4bf2-a8e0-268e593ffbd5",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2140,
+        0
+      ],
+      "id": "1a33c1ba-54f8-4373-95df-e341975d291a",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d5f9326a-8b20-457d-be17-b063450c68f1",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        -240
+      ],
+      "id": "153add44-32ce-48d8-b273-ce50a1bd9624",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"401\",\n  \"uuid\": \"{{ $json.uuid }}\",\n  \"token\": \"{{ $json['Base64-encoded Token'] }}\",\n  \"uuidcrc\": \"{{ $json.uuidcrc }}\",\n  \"tokencrc\": \"{{ $json.tokencrc }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        -180
+      ],
+      "id": "241bc0f4-6363-4a57-ac1f-e8b8c635a6ff",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $('Webhook').all(); // 获取所有输入项\n\n// 函数：根据 sn 前缀获取相应的 ppid\nfunction getPPID(sn) {\n    const snToPpidMap = {\n        \"W92\": \"828649-509327\",\n        \"W51\": \"828649-833829\",\n        \"W52\": \"828649-814264\"\n    };\n\n    const prefix = sn.substring(0, 3); // 提取前3个字符\n    return snToPpidMap.hasOwnProperty(prefix) ? snToPpidMap[prefix] : \"未找到对应的ppid\";\n}\n\nlet results = [];\n\n// 遍历每一个 input 项\ninputItems.forEach(item => {\n    if (item.json && item.json.body && item.json.body.sn) {\n        const sn = item.json.body.sn; // 从 json.body 中提取 sn\n        const ppid = getPPID(sn);\n\n        results.push({\n            json: {\n                sn: sn,\n                ppid: ppid\n            }\n        });\n    }\n});\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "b65900a7-fc18-4944-a941-cf921fafc95d",
+      "name": "Code",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// 你的输入数据节点\nconst originalDataNode = $input.all();\n\n// 检查输入数据的有效性\nif (!originalDataNode.length) {\n    throw new Error(\"No valid original data found in originalDataNode\");\n}\n\n// 创建一个对象，以token为键，UUID为值\nconst authEntitiesMapping = originalDataNode.reduce((acc, dataNode) => {\n    const token = dataNode.json.token;\n    const uuid = dataNode.json.uuid;\n    acc[token] = uuid;\n    return acc;\n}, {});\n\n// 提取 ppid（假设所有数据项的 ppid 相同，用第一个）\nconst resultPpid = originalDataNode[0].json.ppid;\n\n// 构建最终结果对象\nconst result = {\n    ppid: resultPpid,\n    auth_entities: [authEntitiesMapping] // 将对象放在数组中\n};\n\n// 返回结果\nreturn {\n    json: result\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        120
+      ],
+      "id": "a543f08d-9d2f-4419-a250-5efb719b627a",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://swa.apple.com/api/v1.0/external/bulk/usedAuthEntities",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "86b87ac9-590f-4428-9dcb-3601b4635b51",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2720,
+        120
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpSslAuth": {
+          "id": "ch2114Ze8WivbLJA",
+          "name": "SSL Certificates-apple apl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1bb68a60-cb4e-4847-9f44-fa358da33c5b",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 202,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2900,
+        120
+      ],
+      "id": "60d6cde6-f762-4b64-999b-dadc9d80b8d0",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.sn }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        -20
+      ],
+      "id": "ae6f26a5-06e3-4e90-95da-fa6171218be4",
+      "name": "查询sn是否重复获取token",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"苹果token注册失败\"\n}",
+        "options": {}
+      },
+      "id": "66d21479-3833-4bc4-92d9-de560879bff7",
+      "name": "绑定失败1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uuid": "={{ $('Postgres').item.json.uuid }}",
+            "Base64-encoded Token": "={{ $('Postgres').item.json['Base64-encoded Token'] }}",
+            "retroid": "={{ $('Webhook').item.json.body.sn }}",
+            "status": 2,
+            "modifytime": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "uuid",
+            "Base64-encoded Token"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ppid",
+              "displayName": "ppid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "modifytime",
+              "displayName": "modifytime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "completetime",
+              "displayName": "completetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuidcrc",
+              "displayName": "uuidcrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tokencrc",
+              "displayName": "tokencrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Base64-encoded Token",
+              "displayName": "Base64-encoded Token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3180,
+        0
+      ],
+      "id": "5c328c6a-0687-49bb-ad1e-58f27805504f",
+      "name": "更改设备状态",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83088473-3900-4795-9073-482e129f6cff",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2340,
+        0
+      ],
+      "id": "e9364285-6ffc-4ad3-b923-c58f8189707a",
+      "name": "If5"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "查询是否完成cplc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错：sn格式不规范",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否重复获取token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错：sn未完成上道工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "crc16转换",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "crc16转换1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询是否完成cplc": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询token": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crc16转换": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "报错:数据库错误": {
+      "main": [
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crc16转换1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "查询token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "更改设备状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "绑定失败1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否重复获取token": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更改设备状态": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "更改设备状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.32.129",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "13",
+            "user-agent": "python-requests/2.32.3",
+            "accept-encoding": "gzip, deflate",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W92AD10021"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/MFI_procedure",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "05ab82ad-013c-4a34-a7a0-64c23fd8c665",
+  "activeVersionId": "05ab82ad-013c-4a34-a7a0-64c23fd8c665",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2025-01-15T03:32:29.525Z",
+      "createdAt": "2025-01-15T03:32:29.525Z",
+      "id": "1hUZvBcNYoIuabfp",
+      "name": "Apple"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-02-21T06:39:49.403Z",
+      "createdAt": "2025-02-21T06:39:49.403Z",
+      "role": "workflow:owner",
+      "workflowId": "P17wyWynkZmIPNyF",
+      "projectId": "0d97Lvjp068I3AuE",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:35.314Z",
+        "createdAt": "2025-01-28T17:01:01.194Z",
+        "id": "0d97Lvjp068I3AuE",
+        "name": "3.Apple",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🍎"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

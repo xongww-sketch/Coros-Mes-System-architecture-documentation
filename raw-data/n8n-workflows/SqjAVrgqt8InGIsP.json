@@ -1,0 +1,282 @@
+{
+  "updatedAt": "2024-07-04T05:54:23.948Z",
+  "createdAt": "2024-07-04T02:16:35.796Z",
+  "id": "SqjAVrgqt8InGIsP",
+  "name": "post_weight_config_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "temp_config",
+          "mode": "list",
+          "cachedResultName": "temp_config"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "config": "={{ $json.body }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "config",
+              "displayName": "config",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3a3185a8-8a7f-47ef-8a3f-b71410240eca",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1540,
+        420
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"configId\":\"{{ $json.id }}\"\n} ",
+        "options": {}
+      },
+      "id": "72b45132-0bd1-45c1-a9da-f19ddc0ee106",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "weightConfig",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "40da09ac-d158-4569-9dbf-a730bef4b6ac",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        820,
+        440
+      ],
+      "webhookId": "31ce8cf0-6780-4194-a5d0-8bf00c000507"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nfor (const item of $input.all()) {\n  const nullProperties = Object.keys(item.json.body).filter(key => !item.json.body[key]);\n\nif (nullProperties.length > 0) {\n  const errMsg = nullProperties.join(', ');\n  item.json.errMsg=errMsg;\n}\n\n  \n}\n\nreturn $input.all();"
+      },
+      "id": "1407efd0-866e-4e76-a9bd-8f4678fb4a30",
+      "name": "check parameter is not null",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "bce9ce3b-88a3-4147-9228-f17aa86206c8",
+              "leftValue": "={{ $json.errMsg }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "423fd838-2271-4d8f-8f71-7bcb0eddde71",
+      "name": "check parameter",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"201\",\n  \"msg\":\"{{$json.errMsg}}不能为null\"\n} ",
+        "options": {}
+      },
+      "id": "2c4723d3-c38c-4052-8052-5786ea9fbd52",
+      "name": "Respond :exist null parameter",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        640
+      ]
+    }
+  ],
+  "connections": {
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check parameter is not null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check parameter is not null": {
+      "main": [
+        [
+          {
+            "node": "check parameter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check parameter": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond :exist null parameter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "121",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "type": "手表",
+            "limitMax": "90",
+            "limitMin": "15",
+            "orderNumber": "PEIJIBZDD",
+            "jobNumber": ""
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/weightConfig",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "97e4c2cf-284e-4b21-95d4-bb587fa73a0f",
+  "activeVersionId": "97e4c2cf-284e-4b21-95d4-bb587fa73a0f",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2024-07-04T02:16:35.796Z",
+      "createdAt": "2024-07-04T02:16:35.796Z",
+      "role": "workflow:owner",
+      "workflowId": "SqjAVrgqt8InGIsP",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

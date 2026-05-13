@@ -1,0 +1,839 @@
+{
+  "updatedAt": "2025-04-25T03:05:21.929Z",
+  "createdAt": "2024-07-25T03:31:02.468Z",
+  "id": "1khxtygbJCpg08r4",
+  "name": "checkSNIsLock",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fc373226-60cb-4592-893d-7445c7caf3f5",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        780,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n// 获取今天的开始时间（00:00:00）\nfunction getStartOfDay() {\n    const now = new Date();\n    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);\n}\n\n// 获取今天的结束时间（23:59:59）\nfunction getEndOfDay() {\n    const now = new Date();\n    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);\n}\nconst date=new Date();\nconst year = date.getFullYear();\nconst month = ('0' + (date.getMonth() + 1)).slice(-2);\nconst day = ('0' + date.getDate()).slice(-2);\nconst currentDate=`${year}-${month}-${day}`;\n\nreturn {\n  json: {\n    beginDate:currentDate+\" 00:00:00\",\n    endDate:currentDate+\" 23:59:59\",\n  }\n};\n"
+      },
+      "id": "e4d2cfa1-0ef4-46fe-a0e9-3a65b7656bd4",
+      "name": "get current date",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select retroid from public.mes_delivery_order_details WHERE create_time > '{{ $json.beginDate }}' and create_time < '{{ $json.endDate }}';",
+        "options": {}
+      },
+      "id": "e3632f81-fff1-4a3f-8a13-8ba9430ab170",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1260,
+        200
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "ba348fcf-4079-444c-9507-c0cc6a412b86",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid",
+              "renameField": true,
+              "outputFieldName": "snList"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f56bcd38-3ae3-440f-a87b-176c04b36586",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "4f23667b-fdd9-4593-974b-6b2b0f394bf6",
+              "leftValue": "={{ $json.snList }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "97d997d7-5edc-48f0-83ee-474fa41ab8dd",
+      "name": "check SNList is not null",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = [];\nfor (const item of $input.all()) {\n  const snList = item.json.snList;\n  const length = snList.length;\n\n  // 每 100 项分为一组\n  for (let j = 0; j < length; j += 100) {\n    // slice 方法用于获取子数组\n    let temp = snList.slice(j, j + 100);\n    result.push(temp);\n  }\n}\n\nreturn {\n  snList:result\n};"
+      },
+      "id": "bd2172bc-3168-4c2a-965f-9a91910144ae",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2040,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "b5fe8f30-d23c-48b9-a5f9-16eace0d3720",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4d3f07d2-bf67-4cac-a01a-dddbe98aae15",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2620,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst lockDeviceList = $input.all().flatMap(item => \n  item.json.data\n              .filter(e =>e.ruleType !== undefined && e.ruleType !== 0)\n            .map(e => e.retroId)\n);\n\nreturn {\n  lockDeviceList:lockDeviceList,\n};"
+      },
+      "id": "6743b910-bde6-4cdd-a3e5-37a893c79fcd",
+      "name": "check device is Lock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2840,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://simpleadmincn.coros.com/coros/admin/device/info",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "retroIds",
+              "value": "={{ $json.snList }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ae4569a2-ac0d-4555-b639-f95aa744409e",
+      "name": "getDeviceInfo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2440,
+        100
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0bb61691-664e-400d-9cbf-2284e535ee36",
+              "leftValue": "={{ $json.lockDeviceList }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a2d03c15-99b9-4957-b809-49103bc1f6cd",
+      "name": "check locked List is empty",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3060,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://simpleadmincn.coros.com/coros/admin/device/reset",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accessToken",
+              "value": "REDACTED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "retroIds",
+              "value": "={{ $json.lockDeviceList }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d17b32f-c73f-4a78-ab10-65c19ada480c",
+      "name": "unlock device",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  出库设备是否锁机接口查询失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "d3724262-374c-49f1-902a-19c9fe5d3d69",
+      "name": "Send Warn Email1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2640,
+        260
+      ],
+      "retryOnFail": false,
+      "webhookId": "94213588-b735-4508-8e3b-c8408126e65d",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  出库商品解锁失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "03b78969-649a-4f09-a82e-6af56c64fdbd",
+      "name": "Send Warn Email2",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3480,
+        160
+      ],
+      "retryOnFail": false,
+      "webhookId": "8180a65d-1deb-4b53-bdcf-6618706daf66",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  样机出库锁机数据库查询失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ccEmail": "wangxiaohu@coros.com"
+        }
+      },
+      "id": "69616d74-b0fa-424f-8a27-659731c7e072",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1560,
+        340
+      ],
+      "retryOnFail": false,
+      "webhookId": "d603741a-cbfc-4151-ac77-beac4f19ec75",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst errSNList=[];\nfor (const item of $input.all()) {\n  const updateList=item.json.data;\n  updateList.forEach(e=>{\n    if(e.ruleType!==0){\n      errSNList.push(e.retroId);\n    }\n  })\n  \n}\n\nreturn {\n  errSNList:errSNList\n};"
+      },
+      "id": "08405788-42e1-450d-8572-972acb85d4c4",
+      "name": "check update result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3680,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  出库商品是否锁机接口查询存在异常",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "960c036a-c74b-41de-b1a5-932624b9102f",
+      "name": "Send Warn Email3",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2840,
+        180
+      ],
+      "retryOnFail": false,
+      "webhookId": "11c0a9a0-6488-407a-a563-fe4ccad0ec49",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  设备重置SN锁机状态失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "f2c778e0-f12f-4fac-9b54-f8596293b33d",
+      "name": "Send Warn Email4",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3680,
+        80
+      ],
+      "retryOnFail": false,
+      "webhookId": "c1fc6861-d255-4086-ba3b-7eeac147266f",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1c5f5061-4846-482e-ace3-04ee4e67457e",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "0000",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8b2865c1-44a4-47bd-861a-872a6414f51e",
+      "name": "judge the result is success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "303abb8a-4c1f-4e68-bb3a-3e87e4898b64",
+              "leftValue": "={{ $json.errSNList }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "120c31ea-df47-4883-b708-dd2381d02470",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3900,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  出库解锁机器失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "932c8a61-6c56-46fd-83d5-637a8958ae68",
+      "name": "update fail",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4080,
+        40
+      ],
+      "retryOnFail": false,
+      "webhookId": "5414c2ce-a9dd-4731-906a-12c8e1ea9596",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "id": "e7e7d4d2-f88e-4baa-81e1-f07f7fce0ff3",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "snList",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "af524b73-965b-48dd-8a00-7d7700eaebb2",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2220,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "get current date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get current date": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "check SNList is not null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check SNList is not null": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "check device is Lock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check device is Lock": {
+      "main": [
+        [
+          {
+            "node": "check locked List is empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getDeviceInfo": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check locked List is empty": {
+      "main": [
+        [
+          {
+            "node": "unlock device",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "unlock device": {
+      "main": [
+        [
+          {
+            "node": "judge the result is success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "judge the result is success": {
+      "main": [
+        [
+          {
+            "node": "check update result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check update result": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "update fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "get current date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "getDeviceInfo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When clicking ‘Test workflow’": [
+      {
+        "json": {}
+      }
+    ],
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-04-23T00:00:26.019+08:00",
+          "Readable date": "April 23rd 2025, 12:00:26 am",
+          "Readable time": "12:00:26 am",
+          "Day of week": "Wednesday",
+          "Year": "2025",
+          "Month": "April",
+          "Day of month": "23",
+          "Hour": "00",
+          "Minute": "00",
+          "Second": "26",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ]
+  },
+  "versionId": "c77d3b89-6be0-4e92-b48c-544b2029c32f",
+  "activeVersionId": "c77d3b89-6be0-4e92-b48c-544b2029c32f",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:11:31.290Z",
+      "createdAt": "2024-04-24T09:11:31.290Z",
+      "id": "iWa6cFsaNCZZuvFh",
+      "name": "仓库出货API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-07-25T03:31:02.468Z",
+      "createdAt": "2024-07-25T03:31:02.468Z",
+      "role": "workflow:owner",
+      "workflowId": "1khxtygbJCpg08r4",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

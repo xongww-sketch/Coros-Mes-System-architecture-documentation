@@ -1,0 +1,366 @@
+{
+  "updatedAt": "2026-01-05T11:39:38.469Z",
+  "createdAt": "2025-11-13T02:29:51.323Z",
+  "id": "VZAbxQlCTbbZ0o33",
+  "name": "定时上传温度数据",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "device/report-envirment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -720,
+        176
+      ],
+      "id": "babc32a6-a830-4bdc-b3d5-9fd6910f028d",
+      "name": "Webhook",
+      "webhookId": "d4959adb-8695-4f3f-b30e-12fcf9e4a607"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "696b59fa-a347-4cfd-9ac5-45840eef1673",
+              "leftValue": "={{ $json.body.env.eCO2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "88400364-4a0a-4f2c-b6d4-effba84414c5",
+              "leftValue": "={{ $json.body.env.temperature }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3e128774-c387-4f5a-957b-ea21aa40cbb7",
+              "leftValue": "={{ $json.body.env.humidity }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        176
+      ],
+      "id": "0a3f7365-5140-4052-a6b9-01c8ed452741",
+      "name": "判断参数是否存在"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "device_environment",
+          "mode": "list",
+          "cachedResultName": "device_environment"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "co2": "={{ $json.body.env.eCO2 }}",
+            "humidity": "={{ $json.body.env.humidity*100 }}",
+            "temperature": "={{ $json.body.env.temperature*100 }}",
+            "deviceId": "={{ $json.body.deviceId }}",
+            "createTime": "={{ $now.toLocal() }}",
+            "deviceName": "={{ $json.body.deviceName }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "temperature",
+              "displayName": "temperature",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "humidity",
+              "displayName": "humidity",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "co2",
+              "displayName": "co2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deviceId",
+              "displayName": "deviceId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deviceName",
+              "displayName": "deviceName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createTime",
+              "displayName": "createTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -272,
+        80
+      ],
+      "id": "8594e59d-e8b6-4375-94a9-e6a1d3760800",
+      "name": "Insert rows in a table",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"202\",\n  \"errMsg\":\"数据库错误！\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        160
+      ],
+      "id": "212a89b3-d1c6-4b66-b1c3-e893af15a62c",
+      "name": "错误：数据库错误"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"errMsg\":\"数据上传成功！\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8445cb2b-e023-4f11-97ab-1add1bd075dc",
+      "name": "成功：数据上传成功"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"201\",\n  \"errMsg\":\"存在字段不存在！\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        304
+      ],
+      "id": "d9f32d8a-3c4c-4c14-b5bd-a1c19e5b2886",
+      "name": "错误：存在字段为空"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断参数是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数是否存在": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：存在字段为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "成功：数据上传成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.188",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "205",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "deviceId": "3",
+            "deviceName": "six",
+            "env": {
+              "eCO2": 3594,
+              "temperature": 24.8,
+              "humidity": 46.4,
+              "unit": {
+                "eCO2": "ppm",
+                "temperature": "°C",
+                "humidity": "%"
+              },
+              "timestamp": 1767613047.285876
+            },
+            "processedAt": 1767613048610
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/device/report-envirment",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "8cec036c-2ad6-4f0f-9efb-b78d201752dd",
+  "activeVersionId": "8cec036c-2ad6-4f0f-9efb-b78d201752dd",
+  "versionCounter": 39,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-13T02:29:51.323Z",
+      "createdAt": "2025-11-13T02:29:51.323Z",
+      "role": "workflow:owner",
+      "workflowId": "VZAbxQlCTbbZ0o33",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

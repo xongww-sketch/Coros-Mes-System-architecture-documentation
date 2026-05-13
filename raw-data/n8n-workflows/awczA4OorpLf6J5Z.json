@@ -1,0 +1,757 @@
+{
+  "updatedAt": "2026-03-12T10:43:29.804Z",
+  "createdAt": "2025-08-12T05:44:29.599Z",
+  "id": "awczA4OorpLf6J5Z",
+  "name": "checkFQC",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "checkFQC",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -64
+      ],
+      "id": "c9c757a7-be3d-4025-a51d-37268b976589",
+      "name": "Webhook",
+      "webhookId": "f36a7098-e0d7-4447-aad2-019744731054"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.body = {\n    sn:\"W92C001016\",\n    uuid:\"EC28FFDC1484F84F31044173882283\",\n   \nprocedure_name: \n\"信息备注\"\n  }\n\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -208
+      ],
+      "id": "c7229ca8-6109-4b1b-bd53-b1effbe3109c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "r9luD4UCXwa2jCAp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/r9luD4UCXwa2jCAp",
+          "cachedResultName": "1.Mes重构 — 前置工序校验通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        -256
+      ],
+      "id": "052d00a3-1ddd-4248-bb2e-11634679bf11",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1200,
+        -176
+      ],
+      "id": "a8b42fa4-9901-4adf-a746-b5d73ad74c17",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0e74f769-ea60-4726-ab5a-7587b89439d6",
+              "leftValue": "={{ $json.body.job_number }}",
+              "rightValue": "={{ $json.body.order_number }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        -64
+      ],
+      "id": "55129970-95bf-4c43-89ba-3dd29e418678",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "\n[\n   {\n    \"tag\": 0\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        256
+      ],
+      "id": "33d76e03-41a6-4180-ab87-05981ad97097",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "video_info",
+          "mode": "list",
+          "cachedResultName": "video_info"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.body.sn }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "create_time",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1616,
+        -464
+      ],
+      "id": "7b8d8aef-2e70-46a3-b718-1748ecd3c347",
+      "name": "Select rows from a table",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8f7c7aec-cdf0-4f98-903c-b49580ccfc25",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        -464
+      ],
+      "id": "c6da2c78-0e83-4ef9-ae97-aee46de4ab0b",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "Boolean\nreturn $('If').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -464
+      ],
+      "id": "a6925431-3e85-45be-b035-32e01421c5ae",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "[\n  {\n    \"tag\": 2\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2032,
+        -400
+      ],
+      "id": "361b58dd-24de-4ceb-8810-1dac88083ee4",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1e3e136b-1514-4d23-87bf-9afb16bd9c5a",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        -256
+      ],
+      "id": "760a814a-bda8-4f35-8e2f-e8390fec656b",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "[\n  {\n    \"tag\": 0\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2896,
+        -192
+      ],
+      "id": "654488fd-830e-4220-a138-5bf0d53eb5f3",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "59995977-3001-4766-9bf8-21e7381a4652",
+              "leftValue": "={{$('Webhook').item.json.body.checkVideo }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        -384
+      ],
+      "id": "6f3cb2db-68e7-4b21-82d6-184b16b6c130",
+      "name": "判断是否需要校验Video"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "[\n  {\n    \"tag\": 0\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1616,
+        224
+      ],
+      "id": "48415c8b-f855-4786-a726-2893cc5c52bb",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0ad8f4f-f817-477d-a033-7f18f2575772",
+              "name": "body.uuid",
+              "value": "={{ $json.uuid_unique }}",
+              "type": "string"
+            },
+            {
+              "id": "3d1c0bf5-6d4c-4dc5-9113-23fce11ef0be",
+              "name": "body.check_active",
+              "value": "={{ Boolean($('Webhook').all()[0].json.body.checkActive==1) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2032,
+        -576
+      ],
+      "id": "9c4b5b6b-4e36-4797-a9a0-ac1aee77aed9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "02e58248-dab0-467b-bdc6-85b2c3126b33",
+              "leftValue": "={{ $json.tag }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2624,
+        -64
+      ],
+      "id": "d10ee326-1aca-4788-891e-ecb65befce23",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "[\n  {\n    \"tag\": 3\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2912,
+        48
+      ],
+      "id": "2287f567-6589-42a0-b20a-61f3a536c655",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0ad8f4f-f817-477d-a033-7f18f2575772",
+              "name": "body.uuid",
+              "value": "={{ $json.uuid_unique }}",
+              "type": "string"
+            },
+            {
+              "id": "956bb299-5c29-4d04-9005-9b57f193ef91",
+              "name": "body.job_number",
+              "value": "={{ $json.job_number }}",
+              "type": "string"
+            },
+            {
+              "id": "9cc11336-2f52-47f4-9a61-9a4534d3a0bf",
+              "name": "body.order_number",
+              "value": "={{ $json.order_number }}",
+              "type": "string"
+            },
+            {
+              "id": "64cbd509-3f4d-4f09-bb6a-f968dc1a106e",
+              "name": "body.check_active",
+              "value": "={{ Boolean($('Webhook').all()[0].json.body.checkActive==1) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1856,
+        -64
+      ],
+      "id": "eaf4226d-21af-46d1-8089-f3021e124080",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let inputArray = $(\"Webhook\").all();\n\n\nlet result = null;\n\n// 检查输入是否为非空数组且至少有一个元素\nif (Array.isArray(inputArray) && inputArray.length > 0) {\n    let firstItem = inputArray[0];\n\n\n    if (firstItem && firstItem.json && firstItem.json.body) {\n        let body = firstItem.json.body;\n  \n\n        if (body && body.uuid) {\n            let url = body.uuid;\n  \n\n            // 正则表达式调整：捕获所有包含数字和字母的部分\n            const regex = /a=[\\w\\s]+?([A-Fa-f\\d]+)&b=([A-Fa-f\\d]+)&c=([A-Fa-f\\d]+)/;\n            const match = url.match(regex);\n        \n\n            if (match && match.length === 4) { // 如果成功匹配\n                // 用 a 参数末尾、b 和 c 生成 uuidId\n                body.uuidId = [match[1], match[2], match[3]].join('').toLocaleLowerCase();\n \n\n                // 用 a 参数末尾和 c 生成 uuid_unique\n                body.uuid_unique = body.uuidId.slice(0, 16) + body.uuidId.slice(18).toLocaleLowerCase();\n              \n    \n            }\n            \n            result = body; // 设置最终结果体\n            console.log(\"Result: \", result); // 调试输出\n        } else {\n            console.log(\"UUID not found in body.\"); // 当UUID属性不存在时的输出\n        }\n\n        // 转换 retroid 为大写\n        if (body.retroid) {\n            body.retroid = body.retroid;\n            console.log(\"Retroid: \", body.retroid); // 调试输出\n        }\n    } else {\n        console.log(\"Body not found in first item.\"); // 当body属性不存在时的输出\n    }\n} else {\n    console.log(\"Input array is empty or not an array.\"); // 当输入不是有效数组时的输出\n}\n\n// 返回最终处理的 JSON 对象\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -64
+      ],
+      "id": "034a979b-289d-45b6-8f0e-8fd847d224b1",
+      "name": "获取到uuid"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "oorZAXhWJO5nu8br",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/oorZAXhWJO5nu8br",
+          "cachedResultName": "设备锁机状态"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2384,
+        -64
+      ],
+      "id": "8cc3a3c5-90ba-4c31-bff6-486cc7fda364",
+      "name": "校验设备是否锁机"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        []
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取到uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "判断是否需要校验Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否需要校验Video": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取到uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "校验设备是否锁机",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "校验设备是否锁机",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到uuid": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验设备是否锁机": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Respond to Webhook": [
+      {
+        "json": {
+          "tag": 0
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.92",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "242",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W52B010712",
+            "uuid": "https://r.coros.com/6?a=COROS APEX 4 42mm D26CE7&b=FC51a14BADED&c=84C1406E078B&d=0&e=0&f=0\r",
+            "procedure_name": "信息备注",
+            "job_number": "1000006307",
+            "order_number": "1000006307",
+            "checkVideo": "1",
+            "checkActive": "1"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/checkFQC",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "f1e9cfd4-199c-4345-9cff-ba5b1fe0c1b4",
+  "activeVersionId": "f1e9cfd4-199c-4345-9cff-ba5b1fe0c1b4",
+  "versionCounter": 76,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-08-12T05:44:29.599Z",
+      "createdAt": "2025-08-12T05:44:29.599Z",
+      "role": "workflow:owner",
+      "workflowId": "awczA4OorpLf6J5Z",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

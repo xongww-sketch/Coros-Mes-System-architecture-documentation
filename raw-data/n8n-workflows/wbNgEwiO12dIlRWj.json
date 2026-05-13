@@ -1,0 +1,596 @@
+{
+  "updatedAt": "2026-03-16T03:17:31.058Z",
+  "createdAt": "2025-05-14T06:00:33.028Z",
+  "id": "wbNgEwiO12dIlRWj",
+  "name": "Api_getblinddata",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Api_getblinddata",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        -48
+      ],
+      "id": "a3a19cad-1f91-4db2-a373-8591ca33eef0",
+      "name": "Webhook",
+      "webhookId": "042a2e46-5c29-43a7-a748-15eb9cdb5c2d"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        -336
+      ],
+      "id": "f10a9526-c1ee-4744-ac8c-1d6779615276",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请选择对应工序和填写绑定信息。\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "5e9e1e6c-1eb0-4a11-b114-d2e63d7681b6",
+      "name": "请选择对应工序和填写绑定信息"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取用户输入的模糊查询值并转为小写\nconst blindData = ($('Webhook').first().json.body.blind_data || '')\n  .toString()\n  .trim()\n  .toLowerCase(); \n\nconst matchedItems = [];\n\n$input.all().forEach((item) => {\n  // 确保能拿到 item.json，防止某些节点输出结构不同\n  const row = item.json ? item.json : item; \n  // 获取内部 data 对象，防空处理\n  const itemData = row.data || {}; \n\n  const finalSn = itemData.sn || itemData.SN || row.retroid || row.sn ||itemData.retroid || '未知设备';\n\n  // 4. 获取 createtime\n  // 优先取外层的时间戳，没有的话取 data 里面的字符串时间\n  const finalCreateTime = row.createtime || itemData.createtime;\n\n  // --- 核心修改结束 ---\n\n  // 5. 获取用于搜索的 id (bind_id)\n  // 兼容 itemData.bind_id 和 itemData.Detail\n  const rawBindId = itemData.bind_id || itemData.Detail || '';\n  const bindIdForSearch = rawBindId.toString().trim().toLowerCase();\n  \n  // 6. 模糊匹配逻辑\n  // 判断 bind_id 是否包含搜索词\n  if (bindIdForSearch.includes(blindData)) {\n    \n    // 7. 构造新的数据结构\n    const newData = {\n      ...itemData,              // 保留 data 里的 uuid, procedure_name 等原字段\n      createtime: finalCreateTime, // 统一时间字段\n      sn: finalSn               // 强制赋值为我们找到的 SN，确保结果里一定有 sn\n    };\n\n    matchedItems.push({ data: newData });\n  }\n});\n\nreturn matchedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -336
+      ],
+      "id": "4f1b3271-59d7-4908-ac9e-fc9ba6f694ea",
+      "name": "查询对应信息"
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateResponse(inputData) {\n  const bindingdata = inputData.map((item) => {\n    // 1. 锁定数据源行对象（兼容 n8n 不同节点输出）\n    const row = item.json ? item.json : item;\n\n    // 2. 获取 data 对象（你的 jsonb data）\n    const jsonData = row.data || {};\n\n    // 3. 获取 SN（兼容多种字段位置）\n    const serialNo =\n      jsonData.sn ||\n      jsonData.SN ||\n      row.retroid ||\n      jsonData.retroid;\n\n    // 4. 获取 binding_data（你要优先取 unbind_id）\n    // 兼容：unbind_id / bind_id / Detail / data_old.bind_id\n    const bindId =\n      jsonData.unbind_id ??\n      jsonData.bind_id ??\n      jsonData.Detail ??\n      jsonData.data_old?.bind_id;\n\n    // 5. 获取 createtime（外层优先，其次 data 内）\n    const createTime = row.createtime || jsonData.createtime;\n\n    return {\n      // 注意：unbind_id/bind_id 可能是数字（例如 1/58/59），trim 前要转字符串\n      binding_data: (bindId !== undefined && bindId !== null)\n        ? String(bindId).trim()\n        : JSON.stringify(jsonData),\n\n      // 注意：同样做字符串兜底，避免非字符串时报错\n      sn: serialNo\n        ? String(serialNo).trim()\n        : '未知设备',\n\n      createtime: createTime,\n    };\n  });\n\n  return {\n    code: \"200\",\n    binding_data: bindingdata,\n  };\n}\n\n// 执行（n8n）\nconst inputData = $input.all();\nreturn generateResponse(inputData);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -336
+      ],
+      "id": "fb5a85ba-6703-41e5-a402-aeedbedd8a6b",
+      "name": "整合数据结构"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select \n  md.data,\n  md.createtime,\n  r.retroid\n  from mes.machine_data md \njoin mes.retroid r on r.retroid_id = md.retroid_id::INTEGER \nwhere r.joborder_id ='{{ $json.body.joborder_id }}' and md.procedure_detail_id ='{{ $json.body.procedure_detail_id }}'\norder by md.createtime desc",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        176
+      ],
+      "id": "4cabd369-d4e4-49da-a228-1719b4c2b567",
+      "name": "查询对应工序数据1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        160
+      ],
+      "id": "f195e7ae-4ae9-4bc1-b8af-3d63325bd0bd",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取用户输入的模糊查询值并转为小写\nconst blindData = ($('Webhook').item.json.body.blind_data || '')\n  .toString()\n  .trim()\n  .toLowerCase(); // 新增 toLowerCase()\n\nconst matchedItems = [];\n\n$input.all().forEach((item) => {\n  const itemData = item.json.data;\n  const createTime = item.json.createtime;\n  const sn = item.json.retroid\n\n  // 构造新的数据结构（保持不变）\n  const newData = {\n    ...itemData,\n    createtime: createTime,\n    sn:sn\n  };\n\n  // 获取小写的 bind_id 并保持核心逻辑\n  const bindId = ((itemData.bind_id || '').toString().trim()).toLowerCase(); // 新增 toLowerCase()\n  \n  // 现在比较时会忽略大小写\n  if (bindId.includes(blindData)) {\n    matchedItems.push({ data: newData });\n  }\n});\n\nreturn matchedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        176
+      ],
+      "id": "b52ef8da-3beb-46a4-b874-d24454710038",
+      "name": "查询对应信息1"
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateResponse(inputData) {\n  const bindingdata = inputData.map(item => {\n    // 1. 锁定数据源行对象\n    // n8n 中，如果你是从 SQL 节点出来的，数据通常在 item.json 下\n    const row = item.json ? item.json : item;\n\n    // 2. 获取 jsonb \"data\" 字段的内容 (即你的入参结构)\n    const jsonData = row.data || {};\n\n    // 3. 获取 SN 的逻辑 (修改点)\n    // 优先级 1: jsonData.sn (小写) -> 你提到的入参中最下面的 sn\n    // 优先级 2: jsonData.SN (大写) -> 入参中可能为空的 SN\n    // 优先级 3: row.retroid -> SQL 联表查询出来的 retroid 字段 (通常在 data 外面)\n    // 优先级 4: jsonData.retroid -> 兼容旧数据，防止 retroid 记在 jsonb 里面\n    const serialNo = jsonData.sn || jsonData.SN || row.retroid || jsonData.retroid;\n\n    // 4. 获取 bind_id\n    const bindId = jsonData.bind_id || jsonData.Detail;\n\n    return {\n      // 如果 bind_id 为空或不存在，返回 N/A\n      binding_data: bindId ? bindId.trim() : 'N/A', \n      \n      // 如果找不到任何 SN 或 Retroid，返回 未知设备\n      sn: serialNo ? serialNo.trim() : '未知设备', \n      \n      // 时间优先取 SQL 查询出的主字段时间，其次取 jsonb 里的记录时间\n      createtime: row.createtime || jsonData.createtime\n    };\n  });\n\n  return {\n    code: \"200\",\n    binding_data: bindingdata\n  };\n}\n\n// 执行\nconst inputData = $input.all();\nreturn generateResponse(inputData);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        176
+      ],
+      "id": "2f9003da-9869-431c-81f7-8198dd560183",
+      "name": "整合数据结构1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9cf4b6cd-b4c8-4be0-9007-48243aea985a",
+              "leftValue": "={{ $json.body.procedure_detail_id }}",
+              "rightValue": "=58",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        64
+      ],
+      "id": "4c5a83c7-1efe-491f-afb3-96cf1f5eaa3f",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"只有FQC工序可以通过工单号查询，请删除工单号再重新查询\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        304
+      ],
+      "id": "fccddc2b-f4f0-4aea-b713-59ceeb6b83e2",
+      "name": "请选择对应工序和填写绑定信息1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1660e2f9-b1db-4ed2-9729-8cf6191c2b8c",
+              "leftValue": "={{ $('Webhook').item.json.body.blind_data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -208
+      ],
+      "id": "7edadc75-1847-4ea1-a34e-36fd1dc43424",
+      "name": "判断是时间维度还是绑定数据"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d4674252-c9bf-4906-8774-83cb65f9b445",
+              "leftValue": "={{ $('Webhook').item.json.body.procedure_detail_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        -112
+      ],
+      "id": "9dccc452-c8d8-4e55-9a3d-82f0c51479db",
+      "name": "判断是否选择工序"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5557cb14-3d07-4799-bee3-36b7e63bab88",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        -48
+      ],
+      "id": "c9313101-00e9-432f-8f16-cb0d17392dd4",
+      "name": "判断是否选择工单"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    md.\"data\", \n    md.createtime,\n    r.retroid\nFROM mes.machine_data md\nLEFT JOIN mes.retroid r ON md.retroid_id = r.retroid_id\nWHERE md.createtime BETWEEN '{{ $json.body.date_start }} 00:00:00.000' \n                        AND '{{ $json.body.date_end }} 23:59:00.000'\nAND md.procedure_detail_id = {{ $json.body.procedure_detail_id }}\nLIMIT 10000;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "cf19c2d7-386d-4ef3-bcf9-4fa409690f89",
+      "name": "查询对应工序数据-时间维度",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "limit": 10000,
+        "where": {
+          "values": [
+            {
+              "column": "procedure_detail_id",
+              "value": "={{ $json.body.procedure_detail_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "data",
+            "createtime"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        -336
+      ],
+      "id": "0bc3a282-f495-428f-a89c-afda06fa40a4",
+      "name": "查询对应工序数据-绑定数据维度",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否选择工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应信息": {
+      "main": [
+        [
+          {
+            "node": "整合数据结构",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据结构": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应信息1": {
+      "main": [
+        [
+          {
+            "node": "整合数据结构1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合数据结构1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应工序数据1": {
+      "main": [
+        [
+          {
+            "node": "查询对应信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "查询对应工序数据1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请选择对应工序和填写绑定信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是时间维度还是绑定数据": {
+      "main": [
+        [
+          {
+            "node": "查询对应工序数据-绑定数据维度",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询对应工序数据-时间维度",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否选择工序": {
+      "main": [
+        [
+          {
+            "node": "判断是时间维度还是绑定数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "请选择对应工序和填写绑定信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否选择工单": {
+      "main": [
+        [
+          {
+            "node": "判断是否选择工序",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应工序数据-绑定数据维度": {
+      "main": [
+        [
+          {
+            "node": "查询对应信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应工序数据-时间维度": {
+      "main": [
+        [
+          {
+            "node": "查询对应信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "90",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "procedure_detail_id": "157",
+            "blind_data": "",
+            "joborder_id": "",
+            "date_start": "2026-02-03",
+            "date_end": "2026-02-04"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/Api_getblinddata",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "bed3ddfa-36c3-44d9-9bc1-76f53a700591",
+  "activeVersionId": "bed3ddfa-36c3-44d9-9bc1-76f53a700591",
+  "versionCounter": 64,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-14T06:00:33.028Z",
+      "createdAt": "2025-05-14T06:00:33.028Z",
+      "role": "workflow:owner",
+      "workflowId": "wbNgEwiO12dIlRWj",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version bed3ddfa",
+    "description": "加了一个limit"
+  }
+}

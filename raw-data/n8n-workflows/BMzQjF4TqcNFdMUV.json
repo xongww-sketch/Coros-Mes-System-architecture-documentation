@@ -1,0 +1,239 @@
+{
+  "updatedAt": "2025-08-11T07:45:57.827Z",
+  "createdAt": "2024-11-06T06:18:18.936Z",
+  "id": "BMzQjF4TqcNFdMUV",
+  "name": "getVideoList",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "7a425607-a797-4134-9799-43a572985235",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{\n    \"resourceList\":{{ JSON.stringify($json.data) }},\n\"total_count\":{{ $('Postgres1').first().json.total_count ? $('Postgres1').first().json.total_count :0}}\n  }\n}",
+        "options": {}
+      },
+      "id": "867b58b6-4099-4511-8172-f57a351a79aa",
+      "name": "Respond package List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "allFieldsExcept",
+        "fieldsToExclude": "total_count",
+        "options": {}
+      },
+      "id": "afd19aa3-e0ba-439e-a25a-76c5c4a79350",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  v.id, \n  v.retroid,\n  v.procedure,\n  v.path,\n  v.create_time,\n  v.uuid_unique,\n  COUNT(*) OVER() AS total_count \nFROM \n  mes.video_info v \nWHERE \n  v.is_delete = 0 {{ $json.sqlStr }} order by v.create_time DESC limit {{$json.pageSize}} OFFSET {{ $json.offset }};",
+        "options": {}
+      },
+      "id": "badc193a-1eb3-4627-aa71-9f3eaff0e0b8",
+      "name": "Postgres1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1100,
+        420
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//判断查询的条件是否存在\n//构建查询的SQL语句\nconst sqlParams={};\nfor (const item of $input.all()) {\n  const retroid = item.json.query.retroid; //序列号\n  const procedure = item.json.query.procedure; //工序\n  const beginTime = item.json.query.beginTime; //开始时间\n  const endTime=item.json.query.endTime;\n   const ID=item.json.query.ID;\n  // 结束时间\nlet conditions = [];\n\nif (procedure) {\n  conditions.push(`v.procedure='${procedure}'`);\n}\n   if (ID) {\n  conditions.push(`v.uuid_unique like '${ID}%'`);\n}\nif (retroid) {\n  conditions.push(`v.retroid like '%${retroid}%'`);\n}\n  if (beginTime) {\n  conditions.push(`v.create_time>=${beginTime}`);\n}\n  if (endTime) {\n  conditions.push(`v.create_time<=${endTime}`);\n}\n\nsqlParams.sqlStr = conditions.length ? `and ${conditions.join(' and ')}` : '';\nconst offset=(item.json.query.pageNo-1)*item.json.query.pageSize;\nsqlParams.offset=offset;\nsqlParams.pageSize=item.json.query.pageSize;\n}\n\nreturn sqlParams;"
+      },
+      "id": "59ccb51c-de7f-4abf-9114-b0f50303aab7",
+      "name": "build sql statement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "path": "/video/getVideoList",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a2925174-4f76-47a7-a50e-f1e8c8b17f73",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        580,
+        420
+      ],
+      "webhookId": "80e17e15-bdc7-41a9-9a7c-282270665523"
+    }
+  ],
+  "connections": {
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond package List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build sql statement": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "build sql statement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*"
+          },
+          "params": {},
+          "query": {
+            "retroid": "",
+            "procedure": "",
+            "beginTime": "",
+            "endTime": "",
+            "pageSize": "12",
+            "pageNo": "1",
+            "ID": "",
+            "token": "REDACTED",
+            "tokenexpire": "2024-12-20T06:28:00.364Z",
+            "userId": "3"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/video/getVideoList",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "f370f6bf-7fbb-4cf4-a397-efc9c728bde7",
+  "activeVersionId": "f370f6bf-7fbb-4cf4-a397-efc9c728bde7",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:32.105Z",
+      "createdAt": "2024-01-26T07:50:15.258Z",
+      "id": "Sagrd0CJUl5QtuS4",
+      "name": "MES相关应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-08-11T07:45:57.676Z",
+      "createdAt": "2025-08-11T07:45:57.676Z",
+      "role": "workflow:owner",
+      "workflowId": "BMzQjF4TqcNFdMUV",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

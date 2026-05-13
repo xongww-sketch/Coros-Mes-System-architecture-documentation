@@ -1,0 +1,6183 @@
+{
+  "updatedAt": "2025-12-25T09:07:24.304Z",
+  "createdAt": "2025-04-17T06:51:58.940Z",
+  "id": "VrU6qtxPMawVpJ13",
+  "name": "get_jobmessage",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\":\"200\",\n    \"msg\":\"ok\",\n  \"jihe\":{{ JSON.stringify($input.all().map(item => item.json)) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2544,
+        -2848
+      ],
+      "id": "dfbe5d60-ded6-4b80-893c-85d0649270b3",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"请输入sn和工单号\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2160,
+        -2976
+      ],
+      "id": "fe621f40-39b3-4aed-bef6-08cc0ec2eb4f",
+      "name": "工单号和sn号为空"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"数据库错误\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2160,
+        -3600
+      ],
+      "id": "61a2d29d-0a02-4b7f-8e3b-e22f3b49ef06",
+      "name": "数据库错误"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, j.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id \nwhere r.retroid ='{{ $('Webhook').item.json.body.sn }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2160,
+        -3600
+      ],
+      "id": "3e5d3f7c-7b90-41f7-8f6c-4c7eccd881fe",
+      "name": "查询条件：sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, j.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere j.joborder_number ='{{ $('Webhook').item.json.body.joborder_number}}' and r.retroid ='{{ $('Webhook').item.json.body.sn }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1968,
+        -3376
+      ],
+      "id": "1a6f95b9-c06b-44a6-a8b2-ead90c5fc8e6",
+      "name": "查询条件：sn和工单号",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    j.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    j.joborder_number = '{{ $('Webhook').item.json.body.joborder_number}}' \n    AND rg.status = 0;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2144,
+        -3424
+      ],
+      "id": "c178c691-5dd3-4727-9292-4532447aa3f0",
+      "name": "查询条件：工单号",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4711b376-544b-4ea4-a1d0-614ca3edfe14",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1968,
+        -3200
+      ],
+      "id": "11a3621b-e4a8-4435-b734-acaca81fff5c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r \nwhere r.retroid ='{{ $('Webhook').item.json.body.sn }}'and r.status !='3'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2288,
+        -3504
+      ],
+      "id": "a55ce831-3536-40e7-99b7-a5d9d388c546",
+      "name": "查询sn是否存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae87a738-1e9f-438b-8800-ab2a08b30c24",
+              "leftValue": "={{ $json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1872,
+        -3376
+      ],
+      "id": "85406167-7d9a-4d89-bf0a-bffff9f06b36",
+      "name": "判断sn是否有传"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"sn不存在\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        -3104
+      ],
+      "id": "21e9c1d1-16fd-425e-91be-b5fa5b1a13f4",
+      "name": "sn不存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "898b29d8-9d88-4875-ab21-88042c3855d3",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        -3120
+      ],
+      "id": "a38ef6f9-fa91-440a-b141-36386c01e49c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "898b29d8-9d88-4875-ab21-88042c3855d3",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2208,
+        -2896
+      ],
+      "id": "56a7f8ea-7b7b-42ca-83d3-425674e2bd3a",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"joborder_number不存在\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2208,
+        -2976
+      ],
+      "id": "29fc0de8-1105-45e4-9277-44fa54105ec9",
+      "name": "joborder_number不存在"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.joborder j\nwhere j.joborder_number ='{{ $('Webhook').item.json.body.joborder_number }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2400,
+        -3264
+      ],
+      "id": "c35f7575-0a0f-44ed-bd9b-1b9ab5b78833",
+      "name": "查询joborder_number是否存在1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.joborder j\nwhere j.joborder_number ='{{ $('Webhook').item.json.body.joborder_number }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2032,
+        -2976
+      ],
+      "id": "e77cd4cd-a0c4-4ee4-82f4-e68eb24f92d2",
+      "name": "查询joborder_number是否存在2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cd31cf01-83ae-4c59-bf19-b159124f2900",
+              "leftValue": "={{ $('Webhook').item.json.body.joborder_number }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1872,
+        -3680
+      ],
+      "id": "a35faa55-320a-46cb-9e4e-a93785595dd3",
+      "name": "判断工单号是否有传3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cd31cf01-83ae-4c59-bf19-b159124f2900",
+              "leftValue": "={{ $('Webhook').item.json.body.joborder_number }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        -3184
+      ],
+      "id": "6f07543a-588b-41f5-aac5-260655ecf7ac",
+      "name": "判断工单号是否有传4"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_jobmessage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4064,
+        -48
+      ],
+      "id": "9cef857c-ce9b-4bc3-9045-0a7bb7ab66d8",
+      "name": "Webhook",
+      "webhookId": "8e187079-a4f1-4b9a-87ae-832c5ac83d55"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae87a738-1e9f-438b-8800-ab2a08b30c24",
+              "leftValue": "={{ $json.body.joborder_number }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3376,
+        -48
+      ],
+      "id": "1fda8276-d81b-4dfc-86f7-f95ab1e6fe72",
+      "name": "判断工单号是否有传"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae87a738-1e9f-438b-8800-ab2a08b30c24",
+              "leftValue": "={{ $('Webhook').item.json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2944,
+        -1216
+      ],
+      "id": "38b5700d-fb51-4872-8997-2e8ee105f8f6",
+      "name": "判断sn号是否有传"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"工单号不存在\",\n  \"jihe\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -2944,
+        -480
+      ],
+      "id": "721e00d8-3b35-4e5c-b57c-1e9889f67805",
+      "name": "工单号不存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae87a738-1e9f-438b-8800-ab2a08b30c24",
+              "leftValue": "={{ $('Webhook').item.json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2896,
+        432
+      ],
+      "id": "cc308f07-d2d8-4ebe-8db8-07aff5c2c4a6",
+      "name": "判断sn号是否有传2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r \nwhere r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'and r.status !='3'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2720,
+        -1344
+      ],
+      "id": "355b7552-28c3-4b5d-947b-3a566a729bc2",
+      "name": "查询sn是否存在1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid r \nwhere r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'and r.status !='3'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2768,
+        0
+      ],
+      "id": "0b5c0c9f-8b86-4fda-b00c-8e9a7563883f",
+      "name": "查询sn是否存在2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2576,
+        -128
+      ],
+      "id": "7a99ccf6-03e9-4a72-a546-7fe4c68ed124",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2528,
+        -1424
+      ],
+      "id": "5c6a343f-576b-4402-9846-04877da5499d",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\":\"400\",\n  \"msg\":\"sn不存在\",\n  \"jihe\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1088,
+        1488
+      ],
+      "id": "d1f086ad-7a00-4f00-ae96-382ec65ec8f8",
+      "name": "sn不存在1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "df2dedf5-3f7c-422f-b612-7bcf61df1759",
+              "leftValue": "={{ $('Webhook').item.json.body.product_phase }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2320,
+        -976
+      ],
+      "id": "224d8af1-989d-4c49-aead-ac2d79787b58",
+      "name": "判断产品线段是否有传1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "df2dedf5-3f7c-422f-b612-7bcf61df1759",
+              "leftValue": "={{ $('Webhook').item.json.body.product_phase }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2384,
+        -240
+      ],
+      "id": "b9bda25d-297d-4174-a8ea-cd1e21936fcf",
+      "name": "判断产品线段是否有传2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "df2dedf5-3f7c-422f-b612-7bcf61df1759",
+              "leftValue": "={{ $('Webhook').item.json.body.product_phase }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2400,
+        720
+      ],
+      "id": "87ac748f-a28c-4c04-94fa-f97e5af5e1be",
+      "name": "判断产品线段是否有传3"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_phase ='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2096,
+        -1568
+      ],
+      "id": "6c90b332-c1a2-41a4-9170-b35f7cea74d9",
+      "name": "查询product_phase是否存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1904,
+        -1600
+      ],
+      "id": "ae8aad3b-f13e-45a7-9228-d2bd3636dae1",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_phase ='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2064,
+        -1104
+      ],
+      "id": "36e17370-15cf-44e4-babf-31de2a798701",
+      "name": "查询product_phase是否存在1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1888,
+        -1120
+      ],
+      "id": "f1985c19-bf10-4967-9c62-7aadca2b1d41",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_phase ='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2176,
+        -384
+      ],
+      "id": "b97327cb-4ee5-4e4e-9ca4-b2836559e9a4",
+      "name": "查询product_phase是否存在2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1968,
+        -384
+      ],
+      "id": "0f546288-34b1-41ac-904b-999712ba6ffb",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_phase ='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2144,
+        400
+      ],
+      "id": "154c1b3d-84a3-4121-b18b-191801552082",
+      "name": "查询product_phase是否存在3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1968,
+        400
+      ],
+      "id": "7122f878-5cfe-407f-8465-d9bffd7fd098",
+      "name": "If8"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"产品线段（阶段）不存在\",\n  \"jihe\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        1424
+      ],
+      "id": "79cf30c3-1e22-4553-94ac-d2a716c0cb9b",
+      "name": "产品线段（阶段）不存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "df2dedf5-3f7c-422f-b612-7bcf61df1759",
+              "leftValue": "={{ $('Webhook').item.json.body.product_phase }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2320,
+        -1520
+      ],
+      "id": "ab8c6f74-be11-4866-8253-0626a5a51aac",
+      "name": "判断产品线段（阶段）是否有传"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1680,
+        -1824
+      ],
+      "id": "c9b65c90-3289-4aba-85cb-7982f6e29154",
+      "name": "判断产品型号是否存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        -1168
+      ],
+      "id": "59ee02a1-e522-4361-b631-95c16b01a44f",
+      "name": "判断产品型号是否存在1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1728,
+        -784
+      ],
+      "id": "df33ac5d-bce3-4717-8614-940dc7673b0a",
+      "name": "判断产品型号是否存在2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1680,
+        32
+      ],
+      "id": "b8f0dd6e-e20e-44b1-bbb9-4c4ef6054702",
+      "name": "判断产品型号是否存在3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        288
+      ],
+      "id": "8ccead65-bb47-451c-9b2d-31173df43661",
+      "name": "判断产品型号是否存在4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        720
+      ],
+      "id": "8a9c2b6e-551c-4b0e-9437-bf8195bc95c3",
+      "name": "判断产品型号是否存在5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1264,
+        -2064
+      ],
+      "id": "bd3b26e3-d9fe-4dab-b333-c31ccbb25d9d",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1456,
+        -2000
+      ],
+      "id": "2b24349c-c6de-426c-ac8b-c0b55907e141",
+      "name": "查询product_series是否存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        -1248
+      ],
+      "id": "6c4aad6f-fea7-4693-a9d7-b8d690279625",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1408,
+        -1216
+      ],
+      "id": "04e33ffa-34d4-4cf8-a5e0-27c5666f932b",
+      "name": "查询product_series是否存在1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        -464
+      ],
+      "id": "b6721120-f21b-4846-9984-9b71970e94d9",
+      "name": "If11"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1344,
+        -448
+      ],
+      "id": "d6f71e36-6559-47ed-be71-70e9a79b941d",
+      "name": "查询product_series是否存在2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        -80
+      ],
+      "id": "8e1f8cf4-4d5f-4e10-a3b1-8592ddc5ebda",
+      "name": "If12"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1360,
+        -80
+      ],
+      "id": "f0b9ab54-3d15-48e6-9e79-56fa94a0de69",
+      "name": "查询product_series是否存在3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1024,
+        224
+      ],
+      "id": "8082b30a-2a7f-487e-8581-a7ea3d9d8640",
+      "name": "If13"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1344,
+        224
+      ],
+      "id": "6e39e00b-18ce-489e-b508-487a154691c7",
+      "name": "查询product_series是否存在4",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1136,
+        672
+      ],
+      "id": "9209ccfc-43aa-4817-9362-01fcd2bd0f82",
+      "name": "If14"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1296,
+        672
+      ],
+      "id": "a419afc5-115f-4036-b0d3-26c2693152b1",
+      "name": "查询product_series是否存在5",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"产品型号（系列）不存在\",\n  \"jihe\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -368,
+        1360
+      ],
+      "id": "138e989d-15f3-4f8f-b06e-575c85fc5163",
+      "name": "产品型号（系列）不存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -720,
+        -2144
+      ],
+      "id": "8e7a011e-c4a4-4e00-86c4-b25445d37930",
+      "name": "判断产品机型是否存在（product_model）"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        -1344
+      ],
+      "id": "877d1792-d253-43d8-8f26-c86eeaf4029d",
+      "name": "判断产品机型是否存在（product_model）2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        -1088
+      ],
+      "id": "50a19dec-761a-4dba-9b25-ff9d9322a7e6",
+      "name": "判断产品机型是否存在（product_model）3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        -480
+      ],
+      "id": "901f20d0-4923-471e-b8f0-a48294c3dc9e",
+      "name": "判断产品机型是否存在（product_model）4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -496,
+        -80
+      ],
+      "id": "1ddbce25-ace2-47c9-ae7e-91355fc304d5",
+      "name": "判断产品机型是否存在（product_model）5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -496,
+        112
+      ],
+      "id": "72a4fa39-2f8c-499a-aae0-94f29cfacf8d",
+      "name": "判断产品机型是否存在（product_model）6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        480
+      ],
+      "id": "4e7ce718-c6e9-4835-84ad-f14ca273fd26",
+      "name": "判断产品机型是否存在（product_model）7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -336,
+        672
+      ],
+      "id": "3fb654f9-2e3c-477a-b29c-716351107430",
+      "name": "判断产品机型是否存在（product_model）8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        880
+      ],
+      "id": "3de31944-80bc-4e9c-963f-b0ac3393805a",
+      "name": "判断产品机型是否存在（product_model）9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1664,
+        -1456
+      ],
+      "id": "1abc72b8-fae5-4e57-9a92-3fdbb99e755f",
+      "name": "判断产品型号是否存在6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1456,
+        -1536
+      ],
+      "id": "ed97fa41-b840-4127-9d75-8805f19e26f5",
+      "name": "查询product_series是否存在6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1264,
+        -1648
+      ],
+      "id": "ad018e54-63c0-445c-9921-2e9eef9b615a",
+      "name": "If15"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        -1760
+      ],
+      "id": "a6e5bb70-d25e-4dd0-ac26-1fd03791d3e7",
+      "name": "判断产品机型是否存在（product_model）1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        -1568
+      ],
+      "id": "c78ac753-2e15-4824-a835-ed97b4a69153",
+      "name": "判断产品机型是否存在（product_model）10"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b10b63-6d30-4d08-95e7-63ce3c384e6b",
+              "leftValue": "={{ $('Webhook').item.json.body.product_series }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1696,
+        -384
+      ],
+      "id": "53b4cb2d-413c-4853-8192-1ebe08cf9a50",
+      "name": "判断产品型号是否存在7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        -864
+      ],
+      "id": "1f989937-ea5f-4639-9d58-2c79e3217419",
+      "name": "If16"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_series ='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1408,
+        -848
+      ],
+      "id": "9e30dfe7-b8d3-46e3-a0f2-3b2939fae7db",
+      "name": "查询product_series是否存在7",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        -880
+      ],
+      "id": "26ce9476-0660-487f-8224-f329c7789592",
+      "name": "判断产品机型是否存在（product_model）11"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -560,
+        -688
+      ],
+      "id": "26a1f456-4b0c-4578-a95c-ded84b356934",
+      "name": "判断产品机型是否存在（product_model）12"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        -288
+      ],
+      "id": "3c34eea4-b06f-4485-b97e-db63c2104cbb",
+      "name": "判断产品机型是否存在（product_model）13"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        288
+      ],
+      "id": "db2c4b27-b046-413b-b79b-a7a7657869e2",
+      "name": "判断产品机型是否存在（product_model）14"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66f136c9-36c4-4bd2-8282-b8cb42ea4336",
+              "leftValue": "={{ $('Webhook').item.json.body.product_model }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -704,
+        -1936
+      ],
+      "id": "cc72e7eb-9efe-4ebd-98d6-1b1280c33dae",
+      "name": "判断产品机型是否存在（product_model）15"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        352,
+        -2960
+      ],
+      "id": "9dc79491-8c4c-431e-b6a6-1457fa503d7e",
+      "name": "传参齐全",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        352,
+        -2800
+      ],
+      "id": "df3c9478-82d6-4bbe-abf0-8e1de1005890",
+      "name": "传参缺product_model",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        368,
+        -2624
+      ],
+      "id": "abd96f76-775b-41a6-a34e-c9711f244794",
+      "name": "传参缺product_series",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        -2480
+      ],
+      "id": "64dbe765-0695-46a2-ac06-dfddbf625711",
+      "name": "传参缺product_series,product_model",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        -2240
+      ],
+      "id": "e5679ba3-8211-492b-9881-dd2ea622be2a",
+      "name": "传参缺product_phase",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        -1920
+      ],
+      "id": "66fda246-133d-4589-89b1-51633a885326",
+      "name": "传参缺product_phase,product_series",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        -1616
+      ],
+      "id": "f2524e7b-3867-41d3-bd3b-363f8cb9a99b",
+      "name": "传参缺sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n  rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}' \n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        -1504
+      ],
+      "id": "f29a5dfd-d5ab-4fc3-a127-09a6ec6f1031",
+      "name": "传参缺product_model、sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n      rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        -1344
+      ],
+      "id": "50a093fd-982b-49b4-9619-294f7b0e5814",
+      "name": "传参缺product_series,sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        528,
+        -1088
+      ],
+      "id": "e7cc597b-88d7-4992-8c3b-5980957ad661",
+      "name": "传参缺product_phase,sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        -960
+      ],
+      "id": "7f635653-2a84-419b-9a5d-756331a0faab",
+      "name": "传参缺product_phase,product_model,sn",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        -608
+      ],
+      "id": "8810f935-a2a5-4b8d-afb1-4bf42dea9c4c",
+      "name": "传参缺job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sn = $('Webhook').first().json.body.sn;\nconst joborder_number = $input.first().json.body.joborder_number;\nconst product_phase = $input.first().json.body.product_phase;\nconst product_series = $input.first().json.body.product_series;\nconst product_model = $input.first().json.body.product_model;\n\n// 使用正则替换所有换行符（\\n、\\r）为空字符串\nconst cleansn = sn.replace(/\\s|\\/n/g, '');\nconst cleanjoborder_number = joborder_number.replace(/\\s|\\/n/g, '');\nconst cleanproduct_phase = product_phase.replace(/\\s|\\/n/g, '');\nconst cleanproduct_series = product_series.replace(/\\s|\\/n/g, '');\nconst cleanproduct_model = product_model.replace(/\\s|\\/n/g, '');\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n      sn: cleansn,\n      joborder_number:cleanjoborder_number,\n      product_phase:cleanproduct_phase,\n      product_series:cleanproduct_series,\n      product_model:cleanproduct_model\n      \n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3808,
+        -48
+      ],
+      "id": "0916dce7-4514-4503-8b5c-176de6b2019f",
+      "name": "去除空格和换行符"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        -1216
+      ],
+      "id": "d0f4734f-ad3d-4c75-ba62-b7982d7a7452",
+      "name": "传参缺product_series,product_model1,sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        464,
+        -384
+      ],
+      "id": "301f6d78-60d2-4e4a-8635-42db96d5c909",
+      "name": "传参缺product_series,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        592,
+        -304
+      ],
+      "id": "efdca108-1e41-4d92-b364-df9391b74ad7",
+      "name": "传参缺product_series,product_model,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        432,
+        -208
+      ],
+      "id": "2d61bbdd-74f8-4f0f-b905-7511cfc14b78",
+      "name": "传参缺product_phase,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        368,
+        -64
+      ],
+      "id": "97bc18f9-a422-411d-b13b-ad8f2031157d",
+      "name": "传参缺product_phase,product_model,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}' and r.status in ('1','2')\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        592,
+        -64
+      ],
+      "id": "fc8c9395-9a9b-43bf-9be2-ae508ac9a741",
+      "name": "传参缺product_phase,product_series,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n   rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        608,
+        272
+      ],
+      "id": "5e4764d1-0090-4668-a8ce-12c7e61247dc",
+      "name": "传参缺sn,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        544,
+        448
+      ],
+      "id": "b91ccae9-49ea-404c-b10b-6bb4b974bb39",
+      "name": "传参缺product_model、sn,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        624
+      ],
+      "id": "37c82127-49c8-4348-a65d-decd66c55e54",
+      "name": "传参缺product_series,sn,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        608,
+        768
+      ],
+      "id": "3c26009b-7a56-40de-91ea-d71597a4064b",
+      "name": "传参缺product_series,product_model,sn,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    j.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}' \n  and\n  rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}' \n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        608,
+        928
+      ],
+      "id": "11f845fc-3d0d-4ec5-aa6b-585bed5dc6f4",
+      "name": "传参缺product_phase,sn,jon_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        608,
+        1088
+      ],
+      "id": "0fa28636-3a2f-45bf-80f6-cb0f08de0a11",
+      "name": "传参缺product_phase,product_model,sn,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        624,
+        1280
+      ],
+      "id": "7d2fdb7a-ac93-43e9-8654-3b090206dc0d",
+      "name": "传参缺product_phase,product_series,sn,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\":\"200\",\n    \"msg\":\"ok\",\n  \"jihe\":{{ JSON.stringify($input.all().map(item => item.json)) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        -1360
+      ],
+      "id": "1cfeb617-dc91-4779-9d45-f837a4f2e253",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"未输入任意参数\",\n  \"jihe\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        1488
+      ],
+      "id": "7931633d-1428-45ed-8148-00c0540dd592",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        -2496
+      ],
+      "id": "c21ae350-419b-4947-aa3d-cf73a5d89fda",
+      "name": "If17"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -544,
+        -2384
+      ],
+      "id": "d7365e93-cc06-4ec6-9136-59ebc0c74d04",
+      "name": "查询product_model是否存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        -2208
+      ],
+      "id": "6889a9f6-b7ec-464e-aa81-a96620d8d198",
+      "name": "If18"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -416,
+        -2080
+      ],
+      "id": "04fe3f61-d9cb-4c36-b280-1b0a660f45a6",
+      "name": "查询product_model是否存在1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        -1936
+      ],
+      "id": "ccf407f7-1edf-4e54-93aa-13e296aa7741",
+      "name": "If19"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -416,
+        -1856
+      ],
+      "id": "5869f7fb-a6c6-4e08-b7a0-e9be35d65528",
+      "name": "查询product_model是否存在2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -1760
+      ],
+      "id": "044830a2-f26a-451b-964f-2c0c4b9a7819",
+      "name": "If20"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -368,
+        -1680
+      ],
+      "id": "81222ed6-a1f9-47f2-bd79-1759728254a0",
+      "name": "查询product_model是否存在3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        -1536
+      ],
+      "id": "c19095ec-12f8-4d9f-ae1f-b20834ea7be5",
+      "name": "If21"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -368,
+        -1424
+      ],
+      "id": "440f3ec7-b344-470e-bc01-8ee1d766575a",
+      "name": "查询product_model是否存在4",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -1328
+      ],
+      "id": "4e022038-6993-4a7e-89f9-6bac3be86784",
+      "name": "If22"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -336,
+        -1200
+      ],
+      "id": "73dcd2fe-4919-40f2-b96a-8bf9d37de522",
+      "name": "查询product_model是否存在5",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        -1008
+      ],
+      "id": "b08362de-8712-4ce7-8542-a774b436f166",
+      "name": "If23"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -288,
+        -960
+      ],
+      "id": "857e23d2-8818-434d-b80b-23000de1f1f4",
+      "name": "查询product_model是否存在6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -800
+      ],
+      "id": "6d07780f-ff7b-48e7-a7af-5052baecb307",
+      "name": "If24"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -320,
+        -736
+      ],
+      "id": "6b6ca06d-65f4-49ca-8870-1d1fed0db5d4",
+      "name": "查询product_model是否存在7",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        -576
+      ],
+      "id": "c9490db1-016b-4af8-bc29-0463986f7514",
+      "name": "If25"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -160,
+        -544
+      ],
+      "id": "4b08512a-26ed-4535-96cc-37e98dc2d111",
+      "name": "查询product_model是否存在8",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        -384
+      ],
+      "id": "3283a2eb-a412-4f89-a923-b4e1c1e97918",
+      "name": "If26"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -208,
+        -368
+      ],
+      "id": "01fea527-2787-409d-b836-e2be4b281b89",
+      "name": "查询product_model是否存在9",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        -176
+      ],
+      "id": "983c7dd9-a915-424d-96b6-42cd9133eef5",
+      "name": "If27"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -256,
+        -144
+      ],
+      "id": "ebbdae55-1909-49f8-87c5-64990015a529",
+      "name": "查询product_model是否存在10",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        64,
+        32
+      ],
+      "id": "6320f99a-c1c5-4786-85cc-14ca7032d386",
+      "name": "If28"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -160,
+        64
+      ],
+      "id": "e623a3c6-bc01-41b1-8a05-9da30500b44c",
+      "name": "查询product_model是否存在11",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        224
+      ],
+      "id": "43afa801-bd78-4336-b3f2-d4dfff3dde8f",
+      "name": "If29"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -96,
+        240
+      ],
+      "id": "abf70b69-909b-4145-b672-fba2957f9843",
+      "name": "查询product_model是否存在12",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        480
+      ],
+      "id": "26e7dbf1-e584-4bbc-8eaa-1e5b21dddca1",
+      "name": "If30"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -64,
+        464
+      ],
+      "id": "cc771d52-2c54-4b09-a5b5-88646bea4a4e",
+      "name": "查询product_model是否存在13",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        832
+      ],
+      "id": "fc281296-b06c-4d31-9454-1a1eb3272e6d",
+      "name": "If31"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -16,
+        672
+      ],
+      "id": "5f838f67-9106-401f-a7fb-85e845154b33",
+      "name": "查询product_model是否存在14",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        1168
+      ],
+      "id": "df40ca1f-5260-47da-ab98-75cf4e9c45ec",
+      "name": "If32"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.retroid_generate rg \nwhere rg.product_model ='{{ $('去除空格和换行符').item.json.body.product_model }}'\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        960
+      ],
+      "id": "d9078905-9c42-49be-8a9b-01a23bfce81e",
+      "name": "查询product_model是否存在15",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"产品机型不存在\",\n  \"jihe\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        1632
+      ],
+      "id": "06d225f7-30c3-4971-8fa6-7084636c8159",
+      "name": "产品机型不存在"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        -2064
+      ],
+      "id": "ac2d66a9-fd8f-46be-93a6-b124f6a6e054",
+      "name": "传参缺product_phase,product_model",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        -1776
+      ],
+      "id": "b335e8fe-f671-4ef9-844e-391a07ce7103",
+      "name": "传参缺product_phase,product_series,product_model",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n   rg.product_model='{{ $('去除空格和换行符').item.json.body.product_model }}'\nand j.joborder_number='{{ $('去除空格和换行符').item.json.body.joborder_number }}'\n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        352,
+        -816
+      ],
+      "id": "66d079b5-b615-4707-adba-082f96002b81",
+      "name": "传参缺product_phase,product_series,sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    j.joborder_number, \n    rg.product_model, \n    rg.product_phase, \n    rg.product_series, \n    rg.createtime,\n    rg.beginseries,\n    rg.endseries,\n    pm.product_model_name  \nFROM \n    mes.retroid_generate rg \nJOIN \n    mes.joborder j ON j.joborder_id = rg.joborder_id\nJOIN \n    mes.product_info pi2 ON pi2.product_id = j.product_id\nJOIN \n    mes.product_model pm ON pm.product_model_id = pi2.product_model_id   \nWHERE \n    j.joborder_number = '{{ $('Webhook').item.json.body.joborder_number}}' \n    AND rg.status = 0;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        -736
+      ],
+      "id": "fd0f9ddb-c03e-4feb-820a-6669dc3e73de",
+      "name": "传参缺product_phase,product_series,sn1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}'\nand rg.product_phase='{{ $('去除空格和换行符').item.json.body.product_phase }}'\nand rg.product_series='{{ $('去除空格和换行符').item.json.body.product_series }}'\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        -480
+      ],
+      "id": "dbfaf07c-0dad-4fb3-9a16-173d1064fe2a",
+      "name": "传参缺product_model,job_num",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select j.joborder_number , r.retroid as sn, rg.product_model, \nrg.product_phase, rg.product_series, rg.createtime,\nrg.beginseries,\nrg.endseries,\npm.product_model_name\nfrom mes.retroid_generate rg \njoin mes.retroid r on rg.retroid_generate_id = r.retroid_generate_id\njoin mes.joborder j on j.joborder_id =r.joborder_id\njoin mes.product_info pi2 on pi2.product_id =j.product_id\njoin mes.product_model pm on pm.product_model_id =pi2.product_model_id  \nwhere  r.retroid ='{{ $('去除空格和换行符').item.json.body.sn }}' and r.status in ('1','2')\nlimit 40000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        608,
+        80
+      ],
+      "id": "ba6556c9-9922-4bfa-8473-029caf7902af",
+      "name": "传参缺product_phase,product_series,job_num,product_model",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.joborder j\nwhere j.joborder_number ='{{ $('去除空格和换行符').item.json.body.joborder_number }}' and j.status = 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3248,
+        -944
+      ],
+      "id": "a4f0b693-d8a0-43f4-b242-db717ca24605",
+      "name": "查询joborder_number是否存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c5faf84-41d3-403b-a994-a9aaa27eab8b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3088,
+        -1088
+      ],
+      "id": "5e80b5f4-6450-407d-8672-fd430232a5d2",
+      "name": "If33"
+    }
+  ],
+  "connections": {
+    "查询条件：sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询条件：sn和工单号": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询条件：工单号": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "查询joborder_number是否存在1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否存在": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否有传": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询joborder_number是否存在2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "查询条件：sn和工单号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断工单号是否有传4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "查询条件：工单号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断工单号是否有传3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询joborder_number是否存在1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "查询joborder_number是否存在2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工单号是否有传3": {
+      "main": [
+        [
+          {
+            "node": "工单号和sn号为空",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "joborder_number不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工单号是否有传4": {
+      "main": [
+        [
+          {
+            "node": "查询条件：sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "joborder_number不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "去除空格和换行符",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工单号是否有传": {
+      "main": [
+        [
+          {
+            "node": "查询joborder_number是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断sn号是否有传2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn号是否有传": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否存在1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品线段是否有传1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn号是否有传2": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否存在2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品线段是否有传3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否存在1": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否存在2": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "判断产品线段是否有传2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn不存在1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "判断产品线段（阶段）是否有传",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sn不存在1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品线段是否有传1": {
+      "main": [
+        [
+          {
+            "node": "查询product_phase是否存在1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品型号是否存在2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品线段是否有传2": {
+      "main": [
+        [
+          {
+            "node": "查询product_phase是否存在2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品型号是否存在3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品线段是否有传3": {
+      "main": [
+        [
+          {
+            "node": "查询product_phase是否存在3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品型号是否存在5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_phase是否存在": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "判断产品型号是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品线段（阶段）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_phase是否存在1": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "判断产品型号是否存在1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品线段（阶段）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_phase是否存在2": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "判断产品型号是否存在7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品线段（阶段）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_phase是否存在3": {
+      "main": [
+        [
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "判断产品型号是否存在4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品线段（阶段）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品线段（阶段）是否有传": {
+      "main": [
+        [
+          {
+            "node": "查询product_phase是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品型号是否存在6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在1": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在2": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在3": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在4": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在5": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品型号（系列）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品型号（系列）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在1": {
+      "main": [
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If11": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品型号（系列）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在2": {
+      "main": [
+        [
+          {
+            "node": "If11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If12": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品型号（系列）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在3": {
+      "main": [
+        [
+          {
+            "node": "If12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If13": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）14",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品型号（系列）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在4": {
+      "main": [
+        [
+          {
+            "node": "If13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If14": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品型号（系列）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在5": {
+      "main": [
+        [
+          {
+            "node": "If14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）2": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_model、sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）3": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_series,product_model1,sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）4": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_model,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）5": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_phase,product_model,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）6": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_phase,product_series,job_num,product_model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）7": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_series,product_model,sn,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）8": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在14",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_phase,product_model,sn,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）9": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在15",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在6": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在6": {
+      "main": [
+        [
+          {
+            "node": "If15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If15": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品型号（系列）不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）1": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_phase,product_model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）10": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_phase,product_series,product_model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品型号是否存在7": {
+      "main": [
+        [
+          {
+            "node": "查询product_series是否存在2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If16": {
+      "main": [
+        [
+          {
+            "node": "判断产品机型是否存在（product_model）11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_series是否存在7": {
+      "main": [
+        [
+          {
+            "node": "If16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）11": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_phase,product_model,sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）12": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_phase,product_series,sn1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）13": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_series,product_model,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）14": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_model、sn,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断产品机型是否存在（product_model）15": {
+      "main": [
+        [
+          {
+            "node": "查询product_model是否存在1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "传参缺product_series,product_model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参齐全": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_model": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series,product_model": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_series": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_model、sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series,sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_model,sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "去除空格和换行符": {
+      "main": [
+        [
+          {
+            "node": "判断工单号是否有传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series,product_model1,sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series,product_model,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_model,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_series,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺sn,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_model、sn,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series,sn,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_series,product_model,sn,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,sn,jon_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_model,sn,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_series,sn,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If17": {
+      "main": [
+        [
+          {
+            "node": "传参齐全",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在": {
+      "main": [
+        [
+          {
+            "node": "If17",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If18": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_series",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在1": {
+      "main": [
+        [
+          {
+            "node": "If18",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If19": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在2": {
+      "main": [
+        [
+          {
+            "node": "If19",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If20": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase,product_series",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在3": {
+      "main": [
+        [
+          {
+            "node": "If20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If21": {
+      "main": [
+        [
+          {
+            "node": "传参缺sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在4": {
+      "main": [
+        [
+          {
+            "node": "If21",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If22": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_series,sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在5": {
+      "main": [
+        [
+          {
+            "node": "If22",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If23": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase,sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在6": {
+      "main": [
+        [
+          {
+            "node": "If23",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If24": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase,product_series,sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在7": {
+      "main": [
+        [
+          {
+            "node": "If24",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If25": {
+      "main": [
+        [
+          {
+            "node": "传参缺job_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在8": {
+      "main": [
+        [
+          {
+            "node": "If25",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If26": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_series,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在9": {
+      "main": [
+        [
+          {
+            "node": "If26",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If27": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在10": {
+      "main": [
+        [
+          {
+            "node": "If27",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If28": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase,product_series,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在11": {
+      "main": [
+        [
+          {
+            "node": "If28",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If29": {
+      "main": [
+        [
+          {
+            "node": "传参缺sn,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在12": {
+      "main": [
+        [
+          {
+            "node": "If29",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If30": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_series,sn,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在13": {
+      "main": [
+        [
+          {
+            "node": "If30",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If31": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase,sn,jon_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在14": {
+      "main": [
+        [
+          {
+            "node": "If31",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If32": {
+      "main": [
+        [
+          {
+            "node": "传参缺product_phase,product_series,sn,job_num",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "产品机型不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询product_model是否存在15": {
+      "main": [
+        [
+          {
+            "node": "If32",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_model": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_series,product_model": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_series,sn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_series,sn1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_model,job_num": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "传参缺product_phase,product_series,job_num,product_model": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询joborder_number是否存在": {
+      "main": [
+        [
+          {
+            "node": "If33",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If33": {
+      "main": [
+        [
+          {
+            "node": "判断sn号是否有传",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工单号不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "98",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W35B034271",
+            "joborder_number": "",
+            "product_phase": "",
+            "product_series": "",
+            "product_model": ""
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/get_jobmessage",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "90f8a97d-0982-4ff3-b1b6-05dc828629fd",
+  "activeVersionId": "90f8a97d-0982-4ff3-b1b6-05dc828629fd",
+  "versionCounter": 36,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:18:42.876Z",
+      "createdAt": "2025-04-24T03:18:42.876Z",
+      "role": "workflow:owner",
+      "workflowId": "VrU6qtxPMawVpJ13",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

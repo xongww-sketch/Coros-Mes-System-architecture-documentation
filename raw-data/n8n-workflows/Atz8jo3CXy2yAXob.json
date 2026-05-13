@@ -1,0 +1,1332 @@
+{
+  "updatedAt": "2025-04-29T01:34:44.508Z",
+  "createdAt": "2025-04-28T03:02:14.805Z",
+  "id": "Atz8jo3CXy2yAXob",
+  "name": "syncWeightVideo",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/sync/weightVideo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        360
+      ],
+      "id": "b7208759-78e4-41de-a5a3-fd177f3a46cf",
+      "name": "Webhook",
+      "webhookId": "060607f9-e4d2-4081-aa60-1dae62c5fcbb"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nlet validationResult={};\nfor (const item of $input.all()) {\n  validationResult = validateParams(item.json.body);\n}\nfunction validateParams(params) {\n  const errors = [];\n\n  // 校验 retroid\n  if (!params.hasOwnProperty('retroid')) {\n    errors.push('缺少必要字段: retroid');\n  } else {\n    if (typeof params.retroid !== 'string') {\n      errors.push('retroid 必须为字符串类型');\n    } else if (![10, 16].includes(params.retroid.length)) {\n      errors.push('retroid 必须是16位字符串或者10位字符串');\n    } \n  }\n\n  // 校验 procedure_id\n  if (!params.hasOwnProperty('procedure_id')) {\n    errors.push('缺少必要字段: procedure_id');\n  } else {\n    if (!Number.isInteger(params.procedure_id)) {\n      errors.push('procedure_id 必须为整数');\n    } else if (params.procedure_id < 1) {\n      errors.push('procedure_id 必须大于0');\n    }\n  }\n\n  // 校验 type\n  if (!params.hasOwnProperty('type')) {\n    errors.push('缺少必要字段: type');\n  } else {\n    if (!Number.isInteger(params.type)) {\n      errors.push('type 必须为整数');\n    } else if (![1, 2, 3].includes(params.type)) { // 假设合法类型为1,2,3\n      errors.push('type 必须是1,2,3中的一个');\n    }\n  }\n\n  return {\n    isValid: errors.length === 0,\n    errors: errors\n  };\n}\n\n\nreturn validationResult;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        360
+      ],
+      "id": "3c0ce6a1-b38a-4420-8ff7-dbe1a0e4308c",
+      "name": "参数校验"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4a064342-3a64-4235-a33d-dae9153a9a69",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        360
+      ],
+      "id": "49792c36-8f1f-44df-a22b-6f1038643b93",
+      "name": "判断参数是否为空"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8812c8f-830c-4c1b-85f5-f93920219927",
+              "name": "=retroid",
+              "value": "={{ $('Webhook').all()[0].json.body.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "cec6fb40-e593-474a-96c0-b7834a6db9e4",
+              "name": "procedure_id",
+              "value": "={{ $('Webhook').all()[0].json.body.procedure_id }}",
+              "type": "number"
+            },
+            {
+              "id": "6a6988ff-2f36-4d75-bc49-d60fd5e152b1",
+              "name": "type",
+              "value": "={{ $('Webhook').all()[0].json.body.type }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        220
+      ],
+      "id": "7bb2a780-27a7-4220-a354-521d5d5d8b3c",
+      "name": "获取到请求数据"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1ce8ed56-379c-4657-809f-ad5aaf492d68",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        580,
+        220
+      ],
+      "id": "8b08032d-0c6f-4eb6-9a82-130660ae02bc",
+      "name": "判断是配件还是成品"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.mes.machine_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        820,
+        100
+      ],
+      "id": "3ec62d3a-60ba-42cd-b264-10aef1c0d580",
+      "name": "成品获取到该工序对应的数据信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select dd.create_time,r.resource_info::jsonb->'ip' as ip FROM mes.mes.deviceparts_data AS dd join mes.mes.resources as r on dd.matchine_id=r.id where dd.retroid='{{ $json.retroid }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        820,
+        340
+      ],
+      "id": "dd7a8d0f-52b8-4982-bfd5-61c3baf4a1fe",
+      "name": "配件获取到该工序对应的称重数据",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1160,
+        80
+      ],
+      "id": "ab23be7e-dfa4-442f-a560-7a118b89e901",
+      "name": "获取到SN和对应的视频记录创建时间"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "70b63d8c-d436-41d3-974d-a1308144015d",
+              "name": "create_time",
+              "value": "={{ $json.create_time }}",
+              "type": "string"
+            },
+            {
+              "id": "3961c566-1e52-4013-a8af-2e9b54a81bc9",
+              "name": "ip",
+              "value": "={{ $json.ip }}",
+              "type": "string"
+            },
+            {
+              "id": "12eb3e26-15ff-4ccb-839e-72ee39fc9130",
+              "name": "retroid",
+              "value": "={{ $('Webhook').all()[0].json.body.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1160,
+        320
+      ],
+      "id": "cb0b3ab1-40f5-4e93-9216-5dec44a804ab",
+      "name": "获取到SN和对应的视频记录创建时间1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        500
+      ],
+      "id": "3e6359f7-5655-4a64-9654-d0748221cc50",
+      "name": "参数错误"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        6560,
+        660
+      ],
+      "id": "f3f32994-0269-4f4d-ba4f-8ae65583666c",
+      "name": "数据库错误"
+    },
+    {
+      "parameters": {
+        "jsCode": "let boundData = [];\nfor (const item of $input.all()) {\n    const SNList = item.json.SNList;\n    const videoNameList = item.json.videoList;\n    boundData = bindBarcodesWithTimestamps(videoNameList, SNList);\n}\n\nfunction findFirstGreater(timestamps, target) {\n    let left = 0;\n    let right = timestamps.length - 1;\n    let result = -1;\n\n    while (left <= right) {\n        const mid = Math.floor((left + right) / 2);\n        if (timestamps[mid] > target) {\n            result = timestamps[mid];\n            right = mid - 1;\n        } else {\n            left = mid + 1;\n        }\n    }\n\n    return result;\n}\n\nfunction findLastLessOrEqual(timestamps, target) {\n    let left = 0;\n    let right = timestamps.length - 1;\n    let result = -1;\n\n    while (left <= right) {\n        const mid = Math.floor((left + right) / 2);\n        if (timestamps[mid] <= target) {\n            result = timestamps[mid];\n            left = mid + 1;\n        } else {\n            right = mid - 1;\n        }\n    }\n\n    return result;\n}\n\nfunction bindBarcodesWithTimestamps(videoList, dataArray) {\n    const videoTimestampsArray = videoList\n        .map(e => Number(e.timestamp))\n        .sort((a, b) => a - b);\n\n    const timeMap = new Map();\n    const durationMap = new Map();\n    for (const video of videoList) {\n        const timestamp = Number(video.timestamp);\n        timeMap.set(timestamp, video.name);\n        // 修正：视频实际时长为10秒，默认值设为10\n        durationMap.set(timestamp, video.duration || 10);\n    }\n\n    const result = [];\n\n    for (const item of dataArray) {\n        const formattedDate = parseInt(item.formattedDate, 10);\n        const barcode = item.barcode;\n\n        const currentTimestamp = findLastLessOrEqual(videoTimestampsArray, formattedDate);\n\n        if (currentTimestamp === -1) {\n            result.push({ barcode, err: \"未找到对应的视频文件！\" });\n            continue;\n        }\n\n        const currentVideoLength = durationMap.get(currentTimestamp) || 10;\n\n        // 计算当前视频中可用的时间\n        let availableTimeInCurrent = formattedDate - currentTimestamp;\n        // 确保不超过实际视频时长\n        if (availableTimeInCurrent > currentVideoLength) {\n            availableTimeInCurrent = currentVideoLength;\n        }\n\n        // 需要从当前视频截取的时长（最多10秒）\n        const clipFromCurrent = Math.min(availableTimeInCurrent, 10);\n        const needFromPrevious = 10 - clipFromCurrent;\n\n        const entry = {\n            barcode: barcode,\n            firstVideo: timeMap.get(currentTimestamp),\n            firstDuration: clipFromCurrent,\n        };\n\n        if (needFromPrevious > 0) {\n            const currentIndex = videoTimestampsArray.indexOf(currentTimestamp);\n            if (currentIndex > 0) {\n                const previousTimestamp = videoTimestampsArray[currentIndex - 1];\n                const previousVideoLength = durationMap.get(previousTimestamp) || 10;\n\n                // 从前一个视频截取需要的时长\n                const clipFromPrevious = Math.min(previousVideoLength, needFromPrevious);\n                entry.secondVideo = timeMap.get(previousTimestamp);\n                entry.secondDuration = clipFromPrevious;\n\n                if (clipFromPrevious < needFromPrevious) {\n                    entry.err = \"前一个视频时长不足\";\n                }\n            } else {\n                entry.err = \"没有前一个视频\";\n            }\n        }\n\n        result.push(entry);\n    }\n\n    return result;\n}\n\nreturn boundData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4340,
+        -300
+      ],
+      "id": "8f02aed8-d39e-4df8-b6cd-97866b2d1f75",
+      "name": "处理数据需要截取的时间"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "504946c2-4402-48e6-a2a3-4e1c5676a3e4",
+              "leftValue": "={{ $json.err }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4740,
+        -140
+      ],
+      "id": "bbdb0221-9fae-42d4-b481-86eb4d528e35",
+      "name": "判断视频处理过程中是否存在错误"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        5220,
+        -320
+      ],
+      "id": "b4d085bf-cd6e-4ab7-aba0-78dc6bc0570b",
+      "name": "视频处理错误"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "video_info",
+          "mode": "list",
+          "cachedResultName": "video_info"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $json.retroid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1760,
+        60
+      ],
+      "id": "dca3b293-4a25-41f3-8801-71cbfa32db38",
+      "name": "查询是否存在对应的视频文件",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b2986ea5-4ca9-4f19-afc9-9e2f750adf72",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2120,
+        -20
+      ],
+      "id": "107b025d-1fbe-4401-a3de-6bace56e4967",
+      "name": "判断输出是否为空"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        2660,
+        80
+      ],
+      "id": "b619dc61-3bf2-4e4c-8998-098dcb8a0fd6",
+      "name": "存在对应的视频文件"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e3b00817-7d0d-4bf3-ad1f-006e10483db5",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5540,
+        -140
+      ],
+      "id": "056f4a4c-32be-4f10-92ce-7ba15207e433",
+      "name": "判断脚本的执行结果"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        5660,
+        0
+      ],
+      "id": "77b1d0fb-9a11-4c60-8d99-ea374cddc754",
+      "name": "脚本执行失败"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52a31aa3-b821-4ef1-a093-2b737471a5d2",
+              "name": "path",
+              "value": "={{ $json.stdout.replace(\"/mnt/nas\",\"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "aa27c0ab-1f87-40ce-a695-bb1546f67279",
+              "name": "retroid",
+              "value": "={{ $json.stdout.split(\"/\").last().split(\".\")[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b9b1a8b-8c94-4b78-bf2a-2766466b0a24",
+      "name": "获取到执行成功的数据",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5800,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\":\"视频文件生成成功！\"\n}",
+        "options": {}
+      },
+      "id": "bc6f7d41-5580-47f3-a7c3-864cf1448bf4",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        6460,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "video_info",
+          "mode": "list",
+          "cachedResultName": "video_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.retroid }}",
+            "path": "={{ $json.path }}",
+            "create_time": "={{ $now.toMillis() }}",
+            "procedure": 1
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure",
+              "displayName": "procedure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "path",
+              "displayName": "path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9284cb5c-6968-4620-8d49-85ba2fef78e9",
+      "name": "存储到视频文件记录表中",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        6120,
+        -200
+      ],
+      "retryOnFail": false,
+      "executeOnce": false,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "path": "=/mes/weightVideo/{{ $json.ip }}/{{$json.date}}"
+      },
+      "id": "5ca5f59a-4814-497f-bc91-030b44007bee",
+      "name": "FTP",
+      "type": "n8n-nodes-base.ftp",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        -580
+      ],
+      "credentials": {
+        "ftp": {
+          "id": "punCostTgqdQg7Z0",
+          "name": "MES-NAS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "904786ce-2fff-4e3b-bbf0-2dfe2ef072d8",
+              "name": "name",
+              "value": "={{ $json.name.split(\".\")[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "57e9070a-eb04-4e19-8922-668f3b8d4900",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3280,
+        -580
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "videoList",
+        "options": {}
+      },
+      "id": "93291942-4f1e-4857-ae64-93f8be3b184b",
+      "name": "Aggregate1",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        -580
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  const dateObj = parseDateString(item.json.name);\n  item.json.timestamp=Math.floor(dateObj.getTime()/1000);\n}\n// 辅助函数：将 YYYYMMDDHHMMSS 字符串解析为 Date 对象\nfunction parseDateString(dateString) {\n    const year = parseInt(dateString.substring(0, 4), 10);       // 年份\n    const month = parseInt(dateString.substring(4, 6), 10) - 1;  // 月份（0-11），所以减 1\n    const day = parseInt(dateString.substring(6, 8), 10);        // 日期\n    const hour = parseInt(dateString.substring(8, 10), 10);      // 小时\n    const minute = parseInt(dateString.substring(10, 12), 10);   // 分钟\n    const second = parseInt(dateString.substring(12, 14), 10);   // 秒\n\n    // 创建 Date 对象（本地时间）\n    return new Date(year, month, day, hour, minute, second);\n}\nreturn $input.all();"
+      },
+      "id": "697641eb-1e49-4665-a153-4feec767b446",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3500,
+        -580
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efc79484-a598-457f-8814-74fd50459bee",
+              "name": "date",
+              "value": "={{$json.date.split(\"-\").join(\"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "b0dd6d84-c69a-425b-bd90-d2887eec93fe",
+              "name": "barcode",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            },
+            {
+              "id": "49179865-6284-4bef-965c-18cc4692bcb7",
+              "name": "createtime",
+              "value": "={{ $json.create_time }}",
+              "type": "string"
+            },
+            {
+              "id": "478a0b77-b692-461f-9303-fb6d26548bd6",
+              "name": "ip",
+              "value": "={{ $json.ip }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5e093669-a336-4efd-b564-577d31a15af5",
+      "name": "Edit Fields5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2820,
+        -580
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.create_time }}",
+        "format": "yyyy-MM-dd",
+        "outputFieldName": "date",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "id": "970e4f31-d9f1-4759-a97e-94cebe8881ac",
+      "name": "Date & Time2",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        2580,
+        -580
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $('转换创建时间').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2380,
+        -240
+      ],
+      "id": "7bc1e5ea-d55f-4c65-b670-122388467016",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.create_time }}",
+        "format": "X",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        180
+      ],
+      "id": "dd256293-142a-4b51-bf12-e76f25ec9b1b",
+      "name": "转换创建时间"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cffe894b-1f91-4c5c-bdf6-c2fd64fd6678",
+              "name": "formattedDate",
+              "value": "={{$json.formattedDate.split(\"/\").join(\"\") }}",
+              "type": "number"
+            },
+            {
+              "id": "8e8928e0-9f68-4445-a444-e90b7e5323f9",
+              "name": "barcode",
+              "value": "={{ $json.retroid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "926523c5-70ab-4085-9950-e600e01d9edd",
+      "name": "Edit Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2660,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "SNList",
+        "options": {}
+      },
+      "id": "e0c7a740-c849-490b-94b8-3deb12c521f2",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "6a2fbe0e-403a-4e49-8a7a-cf90bb64820f",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        4040,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "=python3 /home/video_processor.py  '{{JSON.stringify($json)}}'"
+      },
+      "id": "26e8369d-8939-4a0b-b6a9-b14eb549ac7e",
+      "name": "执行视频合成脚本",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        5320,
+        -140
+      ],
+      "notesInFlow": false,
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "Q7v8IjunkfcNBrdw",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "239917e5-11af-42bb-813d-fbbccd6f07c8",
+              "name": "barcode",
+              "value": "={{ $json.barcode }}",
+              "type": "string"
+            },
+            {
+              "id": "65eb9d38-b44f-4e4a-a963-056a70941e76",
+              "name": "firstVideo",
+              "value": "={{ $json.firstVideo }}",
+              "type": "string"
+            },
+            {
+              "id": "d2910b2e-252a-4bc6-ae56-7dc34cea4428",
+              "name": "firstDuration",
+              "value": "={{ $json.firstDuration }}",
+              "type": "number"
+            },
+            {
+              "id": "0cf9bb9f-846e-4c0c-a7f7-98fcc3c6000d",
+              "name": "ip",
+              "value": "={{ $('转换创建时间').all()[0].json.ip }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4960,
+        -40
+      ],
+      "id": "b8c702d5-2e08-4612-bfbc-c190c0951a23",
+      "name": "获取到请求参数"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数校验",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数校验": {
+      "main": [
+        [
+          {
+            "node": "判断参数是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数是否为空": {
+      "main": [
+        [
+          {
+            "node": "获取到请求数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "参数错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到请求数据": {
+      "main": [
+        [
+          {
+            "node": "判断是配件还是成品",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是配件还是成品": {
+      "main": [
+        [
+          {
+            "node": "成品获取到该工序对应的数据信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "配件获取到该工序对应的称重数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "成品获取到该工序对应的数据信息": {
+      "main": [
+        [
+          {
+            "node": "获取到SN和对应的视频记录创建时间",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "配件获取到该工序对应的称重数据": {
+      "main": [
+        [
+          {
+            "node": "获取到SN和对应的视频记录创建时间1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到SN和对应的视频记录创建时间": {
+      "main": [
+        [
+          {
+            "node": "转换创建时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到SN和对应的视频记录创建时间1": {
+      "main": [
+        [
+          {
+            "node": "转换创建时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理数据需要截取的时间": {
+      "main": [
+        [
+          {
+            "node": "判断视频处理过程中是否存在错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断视频处理过程中是否存在错误": {
+      "main": [
+        [
+          {
+            "node": "视频处理错误",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取到请求参数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询是否存在对应的视频文件": {
+      "main": [
+        [
+          {
+            "node": "判断输出是否为空",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断输出是否为空": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "存在对应的视频文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断脚本的执行结果": {
+      "main": [
+        [
+          {
+            "node": "获取到执行成功的数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "脚本执行失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到执行成功的数据": {
+      "main": [
+        [
+          {
+            "node": "存储到视频文件记录表中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存储到视频文件记录表中": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FTP": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "FTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "转换创建时间": {
+      "main": [
+        [
+          {
+            "node": "查询是否存在对应的视频文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Date & Time2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "处理数据需要截取的时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "执行视频合成脚本": {
+      "main": [
+        [
+          {
+            "node": "判断脚本的执行结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取到请求参数": {
+      "main": [
+        [
+          {
+            "node": "执行视频合成脚本",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "67",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "retroid": "5000000265A74607",
+            "procedure_id": 87,
+            "type": 2
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/sync/weightVideo",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "37098f00-5307-420d-9c65-5b9c9c3665cc",
+  "activeVersionId": "37098f00-5307-420d-9c65-5b9c9c3665cc",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-28T03:02:14.805Z",
+      "createdAt": "2025-04-28T03:02:14.805Z",
+      "role": "workflow:owner",
+      "workflowId": "Atz8jo3CXy2yAXob",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,1309 @@
+{
+  "updatedAt": "2025-06-03T05:42:05.834Z",
+  "createdAt": "2025-05-28T09:34:53.488Z",
+  "id": "peOz3CDieuh3zMDD",
+  "name": "sn上传到国库 copy",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prodInfoHub-zszy.mofcom.gov.cn/mobile/mobileCreate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "secretId ",
+              "value": "={{ $json.secretId }}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body_str }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2960,
+        100
+      ],
+      "id": "31fc419c-41f7-419d-aa23-725cde0e713e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nlet jsonstr = JSON.stringify($json.body);\n\n//const timestamp = ($now.toMillis()/100).toFixed();\n//const timestamp = $now.toMillis();\n\n// POST 为 时间+Data\n// GET 为 Data+时间\n//const dataToEncrypt = timestamp + jsonstr;\n\n$input.item.json.jsonstr=jsonstr;\n//$input.item.json.timestamp=timestamp;\n\nreturn $input.item;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        120
+      ],
+      "id": "08bf04d7-e2a9-46a7-873c-ba3606e857cd",
+      "name": "SignContentSort_POST2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc654730-52b8-4461-b8f8-59ffe6d6c4de",
+              "name": "secretId",
+              "value": "={{ $json.keyid }}",
+              "type": "string"
+            },
+            {
+              "id": "522bea91-0a38-4f38-a975-75e60a5b3ef5",
+              "name": "sign",
+              "value": "={{ $json.sign }}",
+              "type": "string"
+            },
+            {
+              "id": "9cacb17b-5307-4a00-8a80-08478c96089e",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "505d726f-3240-4686-ba97-2924797b1627",
+              "name": "body",
+              "value": "={{ JSON.stringify($json.body) }}",
+              "type": "array"
+            },
+            {
+              "id": "ede0ec21-6bfe-42b9-80f8-f59bde678f4b",
+              "name": "body_str",
+              "value": "={{ $json.jsonstr }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2780,
+        100
+      ],
+      "id": "bc44e0a8-9480-486d-a745-2a42672f60a0",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const crypto = require('crypto');\nconst { Buffer } = require('buffer');\n\n// 返回包含两种格式的对象\nfunction hmac256Both(key, msg) {\n  const hmac = crypto.createHmac('sha256', Buffer.from(key));\n  hmac.update(msg, 'utf8');\n  const buffer = hmac.digest();\n  return {\n    raw: buffer,          // 二进制 Buffer\n    base64: buffer.toString('base64')  // Base64 字符串\n  };\n}\n\n$input.item.json.sign=hmac256Both($json.key,$json.sha256Hex).base64;\n\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        100
+      ],
+      "id": "7d413bfd-a963-42bd-9d50-c2bf67146245",
+      "name": "hmac1"
+    },
+    {
+      "parameters": {
+        "type": "SHA256",
+        "value": "={{ $json.timestamp+$json.jsonstr}}",
+        "dataPropertyName": "sha256Hex"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        2460,
+        100
+      ],
+      "id": "eb37c94f-a761-4752-9a9c-87525f174ddb",
+      "name": "sha256hex2"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com,yanzhihao@coros.com,tanhuan@coros.com",
+        "subject": "国补接口调用",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "85bb8432-c624-46f9-af34-436e9c180906",
+      "name": "重复激活设备2",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3140,
+        100
+      ],
+      "webhookId": "58464395-4f76-4d69-adc7-729b5a823dd3",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all(); // 确保从输入正确获取数据\n\n\n// 确保数据是一个数组\nif (!Array.isArray(data)) {\n  throw new Error('Data is not an array');\n}\n\nconst transformedData = data.map((item, index) => {\n  if (!item.json || typeof item.json !== 'object') {\n    throw new Error('Invalid json object');\n  }\n\n  const r = item.json;\n  // 计算 seqId，从1到50重复\n  const seqId = (index % 50) + 1;\n\n  return {\n    seqId: seqId.toString(),\n    mfrInfo: \"广东高驰运动科技有限公司\",\n    brand: \"高驰\",\n    barcode: r.code,\n    cateCode: \"B03\",\n    retailPrice: r.retailPrice,\n    region: \"44\",\n    isAiProduct: \"0\",\n    snCode: r.sn,\n    saleStatus: \"0\",\n    mfgTime: r.createTime,\n    specModel: r.model || '',    \n  };\n});\n\n\n// 根据需求返回或进一步处理 transformedData\nreturn transformedData;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        100
+      ],
+      "id": "7fe1451a-4c2b-4df7-be84-4f93cb485bec",
+      "name": "组装参数"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从输入中获取所有数据\nconst allInputData = $input.all();\n\n// 构建目标对象，处理输入数据\nconst outputData = {\n  body: allInputData.map(item => ({\n    seqId: item.json.seqId,\n    mfrInfo: item.json.mfrInfo,\n    brand: item.json.brand,\n    barcode: item.json.barcode,\n    retailPrice: item.json.retailPrice,\n    region: item.json.region,\n    isAIProduct: item.json.isAiProduct,\n    snCode: item.json.snCode,\n    saleStatus: item.json.saleStatus,\n    mfgTime: item.json.mfgTime,\n    cateCode: item.json.cateCode,\n    specModel: item.json.specModel\n  })),\n  keyid: \"REDACTED\",\n  key: \"REDACTED\",\n  timestamp: Date.now() // 获取当前时间戳\n};\n\n// 返回结果\nreturn {\n    json: outputData\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        100
+      ],
+      "id": "2aaebd29-485b-4146-b299-7216aafaf972",
+      "name": "组装签名"
+    },
+    {
+      "parameters": {
+        "formTitle": "国补SN手动录入",
+        "formDescription": "仅支持公司内部访问，请勿将链接外传。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "SN",
+              "placeholder": "请在此输入SN",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        100
+      ],
+      "id": "531b42f3-887f-4c1d-bbc2-129b973d18b4",
+      "name": "On form submission",
+      "webhookId": "6e67a237-4638-410e-ae18-2e88ab33c467",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "QLNsu4lLIetfiM2Q",
+          "mode": "list",
+          "cachedResultName": "SAP_JOB_CACHE — get_matialCode_by_sn"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        100
+      ],
+      "id": "3af388f8-01c1-464d-8ebe-2c0a751231d5",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst itemsWithoutSkuCode = [];\n\n// 格式化日期函数\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\n// 提取没有 sku_code 的项目\nfor (const itemSet of items) {\n  if (itemSet && itemSet.json && itemSet.json.snList) {\n    for (const item of itemSet.json.snList) {\n      const serialNumber = item.retroid;\n      const skuCode = item.material_code;\n\n      if (!skuCode || skuCode.trim() === '') {\n        // 如果没有 sku_code，添加到结果列表中\n        const createDate = formatDate(new Date().toISOString()); // 假设创建日期是当前时间\n        itemsWithoutSkuCode.push({\n          json: {\n            sn: serialNumber,\n            error: '没有对应的 sku_code',\n            createTime: createDate\n          }\n        });\n      }\n    }\n  }\n}\n\n// 返回只有没有 sku_code 的项目\nreturn itemsWithoutSkuCode;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        300
+      ],
+      "id": "000b8168-9ac2-468a-95f8-a080265809ad",
+      "name": "筛选没有sku_code的产品"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com,tanhuan@coros.com",
+        "subject": "过补接口调用",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "b38221ec-8441-4082-9b68-a4f8ac05e3a5",
+      "name": "重复激活设备1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2100,
+        280
+      ],
+      "webhookId": "e39017a5-2522-470c-90a7-7ec94f2cf71c",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "error_sku",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        280
+      ],
+      "id": "3cb3ef1b-fd64-4949-aae9-98f764096d52",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假设你的输入包含一项，其中 \"SN\" 是需要处理的字段\nconst inputItem = $input.first();\n\n// 初始化输出对象\nlet result = {\n    body: {\n        snList: []\n    }\n};\n\n// 检查 \"SN\" 字段是否存在并处理\nif (inputItem.json.SN) {\n    result.body.snList = inputItem.json.SN.split(' ');\n}\n\n// 返回结果\nreturn [result];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        100
+      ],
+      "id": "392ce043-44f3-4a1a-a7cd-ba4c088fecdb",
+      "name": "拆分SN"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\nconst itemsWithoutSkuCode = [];\nconst itemsWithSkuCode = [];\n\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\n\nfor (const itemSet of data) {\n  console.log(\"Processing itemSet:\", itemSet);\n  if (itemSet.json && itemSet.json.snList && itemSet.json.snList.length > 0) {  // 访问json.snList\n    for (const item of itemSet.json.snList) {  // 正确访问到snList\n      const serialNumber = item.retroid;\n      const skuCode = item.material_code;\n      const createDate = formatDate(new Date().toISOString());\n\n      if (!skuCode || skuCode.trim() === '') {\n        console.log(`No sku_code for retroid: ${serialNumber}`);\n        itemsWithoutSkuCode.push({\n          json: {\n            sn: serialNumber,\n            error: '没有对应的 sku_code',\n            createTime: createDate\n          }\n        });\n      } else {\n        console.log(`Serial Number with sku_code: ${serialNumber}, sku_code: ${skuCode}`);\n        itemsWithSkuCode.push({\n          json: {\n            retroid: serialNumber,\n            sku_code: skuCode,\n            createTime: createDate\n          }\n        });\n      }\n    }\n  } else {\n    console.log(\"No snList or snList is empty\");\n  }\n}\n\n\n\nreturn itemsWithSkuCode;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        100
+      ],
+      "id": "ea41e19b-8472-4559-8ede-ab7e8406aa72",
+      "name": "剔除没有sku_code的数据"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nconst materialToProductMap = {\n  'GSW331000015': { code: '6972991921821', name: 'PACE 3白色硅胶', price: '1699' },\n  'GSW331000041': { code: '6972991921821', name: 'PACE 3白色硅胶', price: '1699' },\n  'GSW331000013': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000001': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000043': { code: '6972991921845', name: 'PACE 3黑灰色硅胶', price: '1699' },\n  'GSW331000037': { code: '6972991922293', name: 'PACE 3白色织物', price: '1699' },\n  'GSW331000030': { code: '6972991922293', name: 'PACE 3白色织物', price: '1699' },\n  'GSW331000032': { code: '6972991922286', name: 'PACE 3黑灰色织物', price: '1699' },\n  'GSW331000039': { code: '6972991922286', name: 'PACE 3黑灰色织物', price: '1699' },\n  'GSW332000014': { code: '6972991922491', name: 'PACE Pro黑色', price: '2499' },\n  'GSW332000013': { code: '6972991922507', name: 'PACE Pro灰色', price: '2499' },\n  'GSW332000012': { code: '6972991922514', name: 'PACE Pro蓝色', price: '2499' },\n  'GSW332000022': { code: '6972991922682', name: 'PACE Pro大迫杰联名款', price: '2599' },\n  'GSW332000021': { code: '6972991922644', name: 'PACE Pro锡马限定款', price: '2499' },\n  'GSB210000009': { code: '6972991921487', name: 'APEX 2黑色', price: '2499' },\n  'GSB210000011': { code: '6972991921494', name: 'APEX 2灰色', price: '2499' },\n  'GSB210000013': { code: '6972991921500', name: 'APEX 2珊瑚金', price: '2499' },\n  'GSB210000015': { code: '6972991921968', name: 'APEX 2藕粉色', price: '2499' },\n  'GSWL20B20001': { code: '6972991921449', name: 'APEX 2 Pro黑色', price: '3299' },\n  'GSB200000017': { code: '6972991922453', name: 'APEX 2 Pro黑色', price: '3299' },\n  'GSB200000019': { code: '6972991922460', name: 'APEX 2 Pro灰色', price: '3299' },\n  'GSWL20B20005': { code: '6972991922460', name: 'APEX 2 Pro灰色', price: '3299' },\n  'GSB19S000003': { code: '6972991922194', name: 'VERTIX 2S地球蓝', price: '5099' },\n  'GSB19S000001': { code: '6972991922200', name: 'VERTIX 2S月球银', price: '5099' },\n  'GSB19S000005': { code: '6972991922217', name: 'VERTIX 2S太空黑', price: '5099' },\n  'GSBY01000004': { code: '6972991922255', name: '码表', price: '1799' }\n};\n\nconst ex_sn = [\n  'M18L', 'W31K', 'W31J', 'W31C', 'B20G',\n  'W31F', 'V16B', 'H31A', 'V19A', 'W31H',\n  'M18J', 'F01A', 'M18E', 'V19B', 'W31G',\n  'M18B', 'B17A'\n];\n\nfunction formatDate(isoString) {\n  const date = new Date(isoString);\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\nfunction resolveModelBasedOnSn(serialNumber) {\n  if (serialNumber.startsWith('W32')) {\n    return 'W332';\n  } else if (serialNumber.startsWith('W31')) {\n    return 'W331';\n  } else if (serialNumber.startsWith('B21')) {\n    return 'B21';\n  } else if (serialNumber.startsWith('V09')) {\n    return 'V09';\n  } else if (serialNumber.startsWith('B20')) {\n    return 'B20';\n  }\n  return null;\n}\n\nfor (const item of items) {\n  if (item && item.json && typeof item.json.retroid === 'string') {\n    const serialNumber = item.json.retroid;\n    const skuCode = item.json.sku_code;\n    const model = resolveModelBasedOnSn(serialNumber);\n\n    if (ex_sn.includes(serialNumber.substr(0, 4))) {\n      // 如果前缀在排除列表中，继续下一个\n      continue;\n    }\n\n    const productInfo = materialToProductMap[skuCode];\n    if (!productInfo) {\n      // 如果skuCode不在materialToProductMap中，跳过当前项\n      continue;\n    }\n\n    if (model !== null && model !== 'FD05' && model !== 'HR01' && model !== 'FD03' && model !== 'FD02') {\n      const createTime = item.json.createTime;\n      const formattedCreateTime = formatDate(createTime);\n\n      const price = productInfo.price ? productInfo.price.toString() : '未定义';\n\n      results.push({\n        json: {\n          sn: serialNumber,\n          code: productInfo.code,\n          name: productInfo.name,\n          model: model,\n          retailPrice: price,\n          createTime: formattedCreateTime\n        }\n      });\n    }\n  } else {\n    results.push({ json: { error: '输入数据无效或缺少retroid属性' } });\n  }\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        100
+      ],
+      "id": "80646847-b859-4902-8a5e-fb6bb7ae7ea9",
+      "name": "根据sku_code找到对应的69码",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.newDate }}",
+        "format": "=yyyy-MM-dd",
+        "options": {}
+      },
+      "id": "46df2db4-644f-41bf-9b15-502a33675d89",
+      "name": "Date & Time",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d6628ea-fd35-4e42-a8eb-35de96febbb3",
+              "name": "startdate",
+              "value": "={{ $json.formattedDate }} 00:00:00.000",
+              "type": "string"
+            },
+            {
+              "id": "a3e988b1-3a1b-4e72-b364-7c36db94fc51",
+              "name": "enddate",
+              "value": "={{ $json.formattedDate }} 23:59:59.999",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8236a196-238c-47c7-a861-c58460ebda7c",
+      "name": "日期格式转换-中国",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        420,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "duration": -1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "id": "9786f83b-d157-4391-86dd-31bbc2e959f9",
+      "name": "日期调整",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        100,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "id": "fbfe4920-1cff-4021-ac6e-2c1de92137d6",
+      "name": "定时触发-中国",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT barcode from YFConsumer.dbo.consm_deviceweight where createtime BETWEEN '{{ $json.startdate }}'and '{{ $json.enddate }}';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        -80
+      ],
+      "id": "a5c2fd71-1955-4e33-9fd3-b46991de56a1",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6e19246-9cef-4c73-a20b-44ca08f38365",
+              "leftValue": "={{ $json.barcode.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        -80
+      ],
+      "id": "03593132-1567-4b8c-bf92-fd2a8c57440b",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "SN",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        840,
+        -80
+      ],
+      "id": "d89796fc-5cdf-4df7-9ea0-28a5c3b0fe50",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取输入数据，第一个输入项的 SN 数组\nconst snArray = items[0].json.SN;\n\n// 将条码提取为一个简单的数组\nconst snList = snArray.map(item => item.barcode);\n\n// 构建输出格式\nconst result = {\n  \"body\": {\n    \"snList\": snList\n  }\n};\n\n// 返回结果，使其为 n8n 可识别的格式\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        -80
+      ],
+      "id": "94b9b8bb-4bb2-46f0-adff-ecd3b71d130b",
+      "name": "拆分sn"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TrKGqsfjFN77lvu3",
+          "mode": "list",
+          "cachedResultName": "get_materialcode"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1140,
+        -80
+      ],
+      "id": "b8d47111-948b-4d33-acea-b57b6029c9f6",
+      "name": "Execute Workflow1"
+    }
+  ],
+  "connections": {
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hmac1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sha256hex2": {
+      "main": [
+        [
+          {
+            "node": "hmac1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SignContentSort_POST2": {
+      "main": [
+        [
+          {
+            "node": "sha256hex2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "重复激活设备2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装参数": {
+      "main": [
+        [
+          {
+            "node": "组装签名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装签名": {
+      "main": [
+        [
+          {
+            "node": "SignContentSort_POST2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "拆分SN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "剔除没有sku_code的数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "筛选没有sku_code的产品",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "筛选没有sku_code的产品": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "重复激活设备1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分SN": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "剔除没有sku_code的数据": {
+      "main": [
+        [
+          {
+            "node": "根据sku_code找到对应的69码",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据sku_code找到对应的69码": {
+      "main": [
+        [
+          {
+            "node": "组装参数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "日期格式转换-中国",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期调整": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定时触发-中国": {
+      "main": [
+        [
+          {
+            "node": "日期调整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "日期格式转换-中国": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "拆分sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分sn": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow1": {
+      "main": [
+        [
+          {
+            "node": "筛选没有sku_code的产品",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "剔除没有sku_code的数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "SN": "W32CA08365 W31AY87537  W31AY90222  W31AY82724  W31BY30766   W31BY31108  W32CA09417 W32B028370  W32B028550  W31BY30530  W32B028555    W31AY89116     W31BY30257  W32CA09313  W32BA04014   W31AY89138   W31AY89210 W31BY31145  W31AY89103   W31AY90148  W31BY30349  W31BY30691 W31AY88833  W32B028559  W31AY89075   W31BY31246  W31AY89013  W31AY82360 W31AY89135    W31BY32495  W31BY31449  W32CA09394   W31AY88977  W31AY89112  W31BY31155  W32CA04816  W32CA09285  W31BY32420 W31BY19335   W31AY90130  W31BY31244 W32BA03910   W31BY31012  W32B028573 W31BY30759   W32B028577         W32CA04183    W32B028542  W32B028611   W31AY88980 W32CA09324  W31BY30663   W31AY92287",
+          "submittedAt": "2025-05-27T19:22:56.490+08:00",
+          "formMode": "production"
+        }
+      }
+    ],
+    "拆分sn": [
+      {
+        "json": {
+          "body": {
+            "snList": [
+              "W31AY92420",
+              "W31AY95093",
+              "W31AY94645",
+              "W31AY95373",
+              "W31AY95149",
+              "W31AY95665",
+              "W31AY94790",
+              "W31AY95300",
+              "W31AY96983",
+              "W31AY95639",
+              "W31AY97217",
+              "W31AY94922",
+              "W31AY94804",
+              "W31AY97177",
+              "W31AY95628",
+              "W31AY95047",
+              "W31AY95127",
+              "W31AY94932",
+              "W31AY95281",
+              "W31AY94580",
+              "W31AY94901",
+              "W31AY97179",
+              "W31AY95019",
+              "W31AY95042",
+              "W31AY95037",
+              "W31AY94566",
+              "W31AY94704",
+              "W31AY95277",
+              "W31AY95249",
+              "W31AY95060",
+              "W31AY95671",
+              "W31AY95140",
+              "W31AY94860",
+              "W31AY95529",
+              "W31AY94977",
+              "W31AY94808",
+              "W31AY95582",
+              "W31AY94617",
+              "W31AY97190",
+              "W31AY95658",
+              "W31AY95618",
+              "W31AY97208",
+              "W31AY94595",
+              "W31AY95084",
+              "W31AY85264",
+              "W31AY85183",
+              "W31AY94910",
+              "W31AY94731",
+              "W31AY93372",
+              "W31AY92960",
+              "W31AY94208",
+              "W31AY94393",
+              "W31AY87313",
+              "W31AY95897",
+              "W31AY95850",
+              "W31AY93482",
+              "W31AY93231",
+              "W31AY95949",
+              "W31AY94814",
+              "W31AY94080",
+              "W31AY95443",
+              "W31AY95522",
+              "F05AA06044",
+              "W31AY94637",
+              "W31AY95197",
+              "F05AA06024",
+              "F05AA05887",
+              "W31AY95433",
+              "F05AA06023",
+              "F05AA05926",
+              "W31AY89937",
+              "F05AA06042",
+              "W31AY94597",
+              "W31AY94962",
+              "F05AA06031",
+              "W31AY95202",
+              "F05AA05998",
+              "W31AY94548",
+              "F05AA06037",
+              "F05AA06043",
+              "W31AY95254",
+              "F05AA05956",
+              "W31AY95162",
+              "F05AA06021",
+              "W31AY95276",
+              "F05AA06015",
+              "W31AY94999",
+              "F05AA05929",
+              "F05AA06004",
+              "W31AY94540",
+              "F05AA06006",
+              "W31AY95934",
+              "F05AA05999",
+              "W31AY97188",
+              "W31AY94636",
+              "F05AA05949",
+              "W31AY95549",
+              "F05AA05963",
+              "F05AA05951",
+              "W31AY95398",
+              "F05AA05966",
+              "F05AA05954",
+              "W31AY95228",
+              "F05AA05965",
+              "F05AA05942",
+              "W31AY95492",
+              "F05AA05941",
+              "W31AY95473",
+              "F05AA05822",
+              "W31AY94931",
+              "W31AY94538",
+              "W31AY95385",
+              "F05AA05953",
+              "F05AA05838",
+              "W31AY94830",
+              "F05AA05831",
+              "W31AY94982",
+              "F05AA05946",
+              "W31AY94751",
+              "F05AA05863",
+              "F05AA05819",
+              "W31AY94994",
+              "F05AA05968",
+              "W31AY95312",
+              "F05AA05828",
+              "F05AA05818",
+              "W31AY95185",
+              "F05AA05860",
+              "W31AY95239",
+              "F05AA05830",
+              "W31AY94794",
+              "F05AA05823",
+              "F05AA05843",
+              "W31AY97211",
+              "W31AY94971",
+              "W31AY95653",
+              "F05AA05835",
+              "W31AY94604",
+              "W31AY95167",
+              "F05AA05827",
+              "W31AY97175",
+              "F05AA05855",
+              "W31AY95620",
+              "F05AA05837",
+              "W31AY95064",
+              "F05AA05844",
+              "W31AY94705",
+              "F05AA05875",
+              "W31AY95244",
+              "F05AA05886",
+              "W31AY95518",
+              "F05AA05848",
+              "W31AY95066",
+              "F05AA05871",
+              "W31AY95004",
+              "F05AA05880",
+              "W31AY94906",
+              "W31AY95346",
+              "F05AA05851",
+              "W31AY95579",
+              "F05AA05865",
+              "W31AY95454",
+              "F05AA05906",
+              "W31AY95386",
+              "F05AA05821",
+              "W31AY95187",
+              "W31AY94110",
+              "W31AY97229",
+              "F05AA05853",
+              "W31AY95070",
+              "W31AY95554",
+              "F05AA05868",
+              "W31AY95085",
+              "F05AA05832",
+              "W31AY92482",
+              "F05AA05834",
+              "W31AY95135",
+              "F05AA05845",
+              "W31AY95091",
+              "F05AA05836",
+              "W31AY95174",
+              "W31AY95268",
+              "F05AA05889",
+              "W31AY94603",
+              "F05AA05955",
+              "W31AY95069",
+              "W31AY95002",
+              "F05AA05905",
+              "W31AY97220",
+              "F05AA05849",
+              "W31AY94833",
+              "W31AY95267",
+              "F05AA05786",
+              "W31AY95467",
+              "F05AA05737",
+              "F05AA05841",
+              "W31AY95577",
+              "W31AY95574",
+              "W31AY94726",
+              "F05AA05892",
+              "W31AY94084",
+              "F05AA05740",
+              "W31AY94531",
+              "W31AY95656",
+              "W31AY95641",
+              "F05AA05753",
+              "W31AY94886",
+              "F05AA05752",
+              "W31AY95349",
+              "F05AA05738",
+              "F05AA05901",
+              "W31AY94571",
+              "W31AY94633",
+              "F05AA06026",
+              "F05AA05811",
+              "W31AY94905",
+              "W31AY94841",
+              "F05AA05895",
+              "F05AA05897",
+              "W31AY95241",
+              "F05AA05798",
+              "W31AY95537",
+              "F05AA05890",
+              "W31AY94854",
+              "F05AA05761",
+              "W31AY95670",
+              "F05AA05867",
+              "W31AY94978",
+              "F05AA05741",
+              "W31AY94857",
+              "F05AA05746",
+              "F05AA05870",
+              "W31AY94559",
+              "F05AA05948",
+              "W31AY95321",
+              "F05AA05804",
+              "W31AY94715",
+              "W31AY94899",
+              "F05AA05750",
+              "W31AY95275",
+              "F05AA05924",
+              "W31AY94555",
+              "F05AA05917",
+              "W31AY94091",
+              "F05AA05817",
+              "W31AY94759",
+              "W31AY94842",
+              "F05AA05923",
+              "W31AY95581",
+              "F05AA05820",
+              "W31AY94657",
+              "W31AY94832",
+              "F05AA05912",
+              "W31AY95295",
+              "W31AY95667",
+              "F05AA06000",
+              "W31AY94995",
+              "W31AY95266",
+              "F05AA06051",
+              "W31AY94776",
+              "W31AY95426",
+              "F05AA05908",
+              "W31AY94793",
+              "F05AA05803",
+              "W31AY95113",
+              "F05AA05921",
+              "W31AY94787",
+              "F05AA05751",
+              "W31AY94744",
+              "F05AA05809",
+              "F05AA05907",
+              "W31AY95511",
+              "W31AY95299",
+              "F05AA05802",
+              "W31AY94575",
+              "W31AY95520",
+              "W31AY95374",
+              "W31AY95674",
+              "W31AY95041",
+              "W31AY95427",
+              "W31AY94544",
+              "F05AA05899",
+              "W31AY95635",
+              "W31AY95278",
+              "F05AA05739",
+              "W31AY95411",
+              "F05AA05788",
+              "F05AA05815",
+              "W31AY94570",
+              "W31AY97212",
+              "W31AY94908",
+              "F05AA05800",
+              "W31AY94925",
+              "F05AA05810",
+              "W31AY94630",
+              "F05AA05797",
+              "W31AY97205",
+              "W31AY95087",
+              "F05AA05814",
+              "W31AY95307",
+              "W31AY78641",
+              "F05AA05816",
+              "W31AY94819",
+              "W31AY94880",
+              "W31AY95051",
+              "F05AA05812",
+              "W31AY95026",
+              "W31AY95445",
+              "F05AA05794",
+              "W31AY95025",
+              "F05AA05808",
+              "W31AY95431",
+              "F05AA05805",
+              "W31AY94546",
+              "F05AA05736",
+              "W31AY94391",
+              "F05AA05784",
+              "W31AY94474",
+              "W31AY95598",
+              "W31AY95257",
+              "W31AY94048",
+              "W31AY94065",
+              "W31AY93876",
+              "W31AY94326",
+              "W31AY93298",
+              "W31AY93163",
+              "W31AY92817",
+              "W31AY93025",
+              "W31AY93730",
+              "W31AY94304",
+              "W31AY93423",
+              "W31AY91218",
+              "F05AA05745",
+              "F05AA05767",
+              "W31AY90461",
+              "F05AA05961",
+              "W31AY90768",
+              "F05AA05813",
+              "W31AY93602",
+              "F05AA05826",
+              "W31AY92889",
+              "W31AY93218",
+              "W31AY93362",
+              "W31AY93563",
+              "W31AY92479",
+              "F05AA05801",
+              "F05AA05806",
+              "W31AY93773",
+              "F05AA05952",
+              "W31AY93696",
+              "W31AY97163",
+              "F05AA05927",
+              "F05AA05937",
+              "F05AA05950",
+              "W31AY95003",
+              "F05AA05934",
+              "F05AA05943",
+              "W31AY94812",
+              "F05AA05940",
+              "W31AY91537",
+              "W31AY91987",
+              "F05AA05796",
+              "F05AA05933",
+              "W31AY92876",
+              "F05AA05984",
+              "F05AA05992",
+              "W31AY90777",
+              "F05AA05989",
+              "W31AY93088",
+              "F05AA05983",
+              "W31AY92995",
+              "F05AA05991",
+              "W31AY93010",
+              "F05AA05799",
+              "W31AY93070",
+              "W31AY95017",
+              "W31AY95256",
+              "W31AY85024",
+              "W31AY92845",
+              "F05AA06178",
+              "W31AY99494",
+              "W31AY93017",
+              "W31AY95250",
+              "F05AA06156",
+              "W31AY95415",
+              "F05AA06175",
+              "W31AY92647",
+              "F05AA05792",
+              "W31AY92430",
+              "W31AY92615",
+              "F05AA06181",
+              "W31AY93631",
+              "F05AA05939",
+              "W31AY94344",
+              "F05AA06165",
+              "W31AY93255",
+              "F05AA06180",
+              "W31AY94383",
+              "F05AA06187",
+              "F05AA06161",
+              "W31AY94388",
+              "F05AA06055",
+              "F05AA06182",
+              "W31AY94330",
+              "F05AA05928",
+              "W31AY94421",
+              "F05AA06047",
+              "F05AA06158",
+              "W31AY95191",
+              "F05AA06167",
+              "F05AA04079",
+              "W31AY94349",
+              "F05AA06164",
+              "W31AY93891",
+              "F05AP22301",
+              "W31AY94356",
+              "F05AA03859",
+              "W31AY93854",
+              "F05AA04095",
+              "F05AA03937",
+              "W31AY94041",
+              "F05AA02789",
+              "F05AA03834",
+              "W31AY93985",
+              "F05AA04025",
+              "F05AA03868",
+              "W31AY94386",
+              "F05AA03853",
+              "F05AA03246",
+              "W31AY94362",
+              "F05AP22363",
+              "F05AA04060",
+              "W31AY94438",
+              "F05AA03991",
+              "F05AA03921",
+              "W31AY94069",
+              "F05AP21568",
+              "W31AY94640",
+              "F05AA04142",
+              "F05AA05958",
+              "W31AY94445",
+              "F05AP21623",
+              "W31AY93888",
+              "F05AA05959",
+              "W31AY94826",
+              "F05AA05670",
+              "W31AY95242",
+              "F05AA05307",
+              "W31AY95429",
+              "F05AA05680",
+              "W31AY94691",
+              "W31AY94003"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "d3d34437-d76b-4517-8b6f-f59743e9559e",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-28T09:34:53.488Z",
+      "createdAt": "2025-05-28T09:34:53.488Z",
+      "role": "workflow:owner",
+      "workflowId": "peOz3CDieuh3zMDD",
+      "projectId": "3aQnrVmrPM3uNcK5",
+      "project": {
+        "updatedAt": "2025-09-08T04:25:23.564Z",
+        "createdAt": "2025-02-18T02:58:48.619Z",
+        "id": "3aQnrVmrPM3uNcK5",
+        "name": "2.国补接口",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "toolbox"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

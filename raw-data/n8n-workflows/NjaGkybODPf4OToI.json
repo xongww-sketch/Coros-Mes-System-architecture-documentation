@@ -1,0 +1,291 @@
+{
+  "updatedAt": "2025-07-10T10:14:55.255Z",
+  "createdAt": "2025-07-10T09:56:53.477Z",
+  "id": "NjaGkybODPf4OToI",
+  "name": "getprintinfo_search_Pagination",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"数据已上传\",\n  \"result\":{{JSON.stringify($json.result)}},\n \"total_count\":\"{{ $json.result[0].total_count }}\"\n}",
+        "options": {}
+      },
+      "id": "35b812e2-5ff6-4f72-9e7e-9014295da399",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "d651c2bc-8c2a-4524-b594-0367ecbc493e",
+              "leftValue": "={{ $('Webhook').item.json.body.printinfo_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6e76ee84-b171-42e5-b752-d90fe360f43a",
+      "name": "判断是否需要查询明细行",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.printinfo_id,\n    p.print_name,\n    p.print_quantity,\n    p.createtime,\n    u.user_name,\n    m.product_model_name,\n    p.product_model_id,          p.printinfo_type,\n  print_version,\n   COUNT(*) OVER() AS total_count\nFROM \n    mes.printinfo p\nJOIN \n    mes.user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nwhere p.printinfo_id={{ $('Webhook').item.json.body.printinfo_id }} and p.status = 1\norder by p.createtime DESC\nlimit {{$json.pageSize}} OFFSET {{ $json.offset }};",
+        "options": {}
+      },
+      "id": "81406db6-0dd3-4fff-aa00-50bfbb4f5828",
+      "name": "查询模板明细行",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -144,
+        -112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n    // 复制项并添加包装类型\n    let itemCopy = {...item.json};\n    if (itemCopy.printinfo_type === 1) {\n        itemCopy.packaging_type = \"彩盒包装\";\n    } else if (itemCopy.printinfo_type === 2) {\n        itemCopy.packaging_type = \"整箱包装\";\n    }\n    res.push(itemCopy);\n}\n\nreturn {\n  result: res\n};\n"
+      },
+      "id": "5a2e21e9-1d82-4b26-9938-913ff0a062e1",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "getprintinfo_search_Pagination",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "bf5430ea-c7c6-4351-bf8c-92a6a3f9cbb0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -64
+      ],
+      "webhookId": "fa0c0aff-fb54-47ad-ad18-2b0724551c4a"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.printinfo_id,\n    p.print_name,\n    p.print_quantity,\n    p.createtime,\n    u.user_name,\n    m.product_model_name,\n    p.product_model_id,\n    p.printinfo_type,\n    p.file_name,\n    p.print_version,\n   COUNT(*) OVER() AS total_count\nFROM \n    mes.printinfo p\nJOIN \n    mes.user u ON p.user_id = u.user_id\nJOIN \n    mes.product_model m ON p.product_model_id = m.product_model_id\nwhere p.status = 1\norder by p.createtime DESC\nlimit {{$json.pageSize}} OFFSET {{ $json.offset }};",
+        "options": {}
+      },
+      "id": "a738fb8e-2226-48f1-9caf-963ce7955431",
+      "name": "查询模板明细行1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -144,
+        48
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n//判断查询的条件是否存在\n//构建查询的SQL语句\nconst sqlParams={};\nfor (const item of $input.all()) {\n\nconst offset=(item.json.body.pageNo-1)*item.json.body.pageSize;\nsqlParams.offset=offset;\nsqlParams.pageSize=item.json.body.pageSize;\n}\n\nreturn sqlParams;"
+      },
+      "id": "02f32ae6-3822-4a40-941f-8e0752652b24",
+      "name": "check params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -64
+      ]
+    }
+  ],
+  "connections": {
+    "判断是否需要查询明细行": {
+      "main": [
+        [
+          {
+            "node": "查询模板明细行",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "查询模板明细行1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询模板明细行": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "check params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询模板明细行1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check params": {
+      "main": [
+        [
+          {
+            "node": "判断是否需要查询明细行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.31.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "35",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "printinfo_id": "5",
+            "pageSize": "10",
+            "pageNo": "1"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/getprintinfo_search_Pagination",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "75745d00-04fd-4344-b41d-921d8d85df2e",
+  "activeVersionId": "75745d00-04fd-4344-b41d-921d8d85df2e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-07-10T09:56:53.477Z",
+      "createdAt": "2025-07-10T09:56:53.477Z",
+      "role": "workflow:owner",
+      "workflowId": "NjaGkybODPf4OToI",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

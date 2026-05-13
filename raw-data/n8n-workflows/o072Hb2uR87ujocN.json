@@ -1,0 +1,2135 @@
+{
+  "updatedAt": "2025-06-12T02:54:39.640Z",
+  "createdAt": "2025-04-16T10:01:31.856Z",
+  "id": "o072Hb2uR87ujocN",
+  "name": "MFI写入工序-新mes",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"数据库错误\"\n}",
+        "options": {}
+      },
+      "id": "e4977425-35c2-4242-b297-5b76a41dbc75",
+      "name": "报错:数据库错误",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2760,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "MFI_procedure-newmes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1460,
+        -60
+      ],
+      "id": "dee0f6cb-9c27-441d-be21-19b00da34683",
+      "name": "Webhook",
+      "webhookId": "7c3dcdfc-f1b8-4926-b575-3dc27f57ddf7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5560cf70-4c0c-4ca5-ba6e-aa1f565de4cc",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -180
+      ],
+      "id": "fb88d4a4-519b-41cf-a61e-5946da4ef750",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// CRC16-CCITT-FALSE 实现\nfunction crc16Ccitt(str) {\n    let crc = 0xFFFF;\n    const poly = 0x1021;\n\n    for (let i = 0; i < str.length; i++) {\n        crc ^= (str.charCodeAt(i) << 8);\n        for (let j = 0; j < 8; j++) {\n            if (crc & 0x8000) {\n                crc = (crc << 1) ^ poly;\n            } else {\n                crc <<= 1;\n            }\n            crc &= 0xFFFF; // 保持16位\n        }\n    }\n    return crc;\n}\n\n// 处理所有输入数据\nreturn $input.all().map(item => {\n    const data = item.json;\n    const uuid = data.uuid;\n    const base64Token = data[\"Base64-encoded Token\"];\n\n    // 计算CRC16\n    const uuidCrc = crc16Ccitt(uuid);\n    const tokenCrc = crc16Ccitt(base64Token);\n\n    // 返回结果，确保CRC16值是4个字符长\n    return {\n        json: {\n            uuid_apple: uuid,\n            base64Token: base64Token,\n            uuidCrc: uuidCrc.toString(16).padStart(4, '0').toUpperCase(),\n            tokenCrc: tokenCrc.toString(16).padStart(4, '0').toUpperCase()\n        }\n    };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        -200
+      ],
+      "id": "4d0fc42c-ac7b-4a75-b46d-5efb52a2b40e",
+      "name": "crc16转换"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "condition": "IS NULL"
+            },
+            {
+              "column": "Base64-encoded Token",
+              "condition": "IS NOT NULL"
+            },
+            {
+              "column": "ppid",
+              "value": "={{ $json.ppid }}"
+            },
+            {
+              "column": "status",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1340,
+        -180
+      ],
+      "id": "c5b17889-6231-446b-8caf-39645a69b09a",
+      "name": "查询token",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"uuid_apple\": \"{{ $json.uuid }}\",\n  \"token\": \"{{$json['Base64-encoded Token']}}\",\n  \"uuid_applecrc\": \"{{ $json.uuidcrc }}\",\n  \"tokencrc\": \"{{ $json.tokencrc }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4460,
+        -40
+      ],
+      "id": "62032dd0-80dc-4a4e-ac3d-ac316957d8e8",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] -  MFI插入数据失败",
+        "emailFormat": "text",
+        "options": {}
+      },
+      "id": "9a98c9bf-60c5-4b07-a88b-a01eedd91412",
+      "name": "接口调取失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3660,
+        580
+      ],
+      "webhookId": "ac2b4588-aab0-4ff2-aba4-9e6eb472d9ff",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// CRC16-CCITT-FALSE 实现\nfunction crc16Ccitt(str) {\n    let crc = 0xFFFF;\n    const poly = 0x1021;\n\n    for (let i = 0; i < str.length; i++) {\n        crc ^= (str.charCodeAt(i) << 8);\n        for (let j = 0; j < 8; j++) {\n            if (crc & 0x8000) {\n                crc = (crc << 1) ^ poly;\n            } else {\n                crc <<= 1;\n            }\n            crc &= 0xFFFF; // 保持16位\n        }\n    }\n    return crc;\n}\n\n// 处理所有输入数据\nreturn $input.all().map(item => {\n    const data = item.json;\n    const uuid = data.uuid;\n    const base64Token = data[\"Base64-encoded Token\"];\n\n    // 计算CRC16\n    const uuidCrc = crc16Ccitt(uuid);\n    const tokenCrc = crc16Ccitt(base64Token);\n\n    // 返回结果，确保CRC16值是4个字符长\n    return {\n        json: {\n            uuid: uuid,\n            base64Token: base64Token,\n            uuidCrc: uuidCrc.toString(16).padStart(4, '0').toUpperCase(),\n            tokenCrc: tokenCrc.toString(16).padStart(4, '0').toUpperCase()\n        }\n    };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        60
+      ],
+      "id": "2ba8dd87-207a-4004-8341-8de7efdf5ef8",
+      "name": "crc16转换1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"401\",\n  \"uuid_apple\": \"{{ $json.uuid }}\",\n  \"token\": \"{{ $json.base64Token }}\",\n  \"uuid_applecrc\": \"{{ $json.uuidCrc }}\",\n  \"tokencrc\": \"{{ $json.tokenCrc }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1940,
+        60
+      ],
+      "id": "1a12fe5b-f3cc-4b3d-bb07-4e4128ffb916",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uuid": "={{ $json.uuid_apple}}",
+            "uuidcrc": "={{ $json.uuidCrc }}",
+            "tokencrc": "={{ $json.tokenCrc }}",
+            "Base64-encoded Token": "={{ $json.base64Token }}"
+          },
+          "matchingColumns": [
+            "uuid",
+            "Base64-encoded Token"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ppid",
+              "displayName": "ppid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "modifytime",
+              "displayName": "modifytime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "completetime",
+              "displayName": "completetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuidcrc",
+              "displayName": "uuidcrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tokencrc",
+              "displayName": "tokencrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Base64-encoded Token",
+              "displayName": "Base64-encoded Token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2380,
+        -200
+      ],
+      "id": "d1c286e9-75d8-4e08-b9a5-62ca7bc7c93d",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "083ea3bb-dc74-4bf2-a8e0-268e593ffbd5",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2580,
+        -200
+      ],
+      "id": "b449f6ff-9e08-45c3-937c-033b13089dac",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d5f9326a-8b20-457d-be17-b063450c68f1",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1000,
+        -180
+      ],
+      "id": "082a5a0e-a345-4c82-9101-be988571a2c1",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"401\",\n  \"uuid_apple\": \"{{ $json.uuid }}\",\n  \"token\": \"{{ $json['Base64-encoded Token'] }}\",\n  \"uuid_applecrc\": \"{{ $json.uuidcrc }}\",\n  \"tokencrc\": \"{{ $json.tokencrc }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        160
+      ],
+      "id": "9271d31e-f558-47b9-843e-debb7ef43922",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $('Webhook').all(); // 获取所有输入项\n\n// 函数：根据 sn 前缀获取相应的 ppid\nfunction getPPID(sn) {\n    const snToPpidMap = {\n        \"W92\": \"828649-509327\",\n        \"W51\": \"828649-833829\",\n        \"W52\": \"828649-814264\"\n    };\n\n    const prefix = sn.substring(0, 3); // 提取前3个字符\n    return snToPpidMap.hasOwnProperty(prefix) ? snToPpidMap[prefix] : \"未找到对应的ppid\";\n}\n\nlet results = [];\n\n// 遍历每一个 input 项\ninputItems.forEach(item => {\n    if (item.json && item.json.body && item.json.body.sn) {\n        const sn = item.json.body.sn; // 从 json.body 中提取 sn\n        const ppid = getPPID(sn);\n\n        results.push({\n            json: {\n                sn: sn,\n                ppid: ppid\n            }\n        });\n    }\n});\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -180
+      ],
+      "id": "70b87af8-1722-4dbb-b3a5-03f8f11e3dfd",
+      "name": "Code",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// 你的输入数据节点\nconst originalDataNode = $input.all();\n\n// 检查输入数据的有效性\nif (!originalDataNode.length) {\n    throw new Error(\"No valid original data found in originalDataNode\");\n}\n\n// 创建一个对象，以token为键，UUID为值\nconst authEntitiesMapping = originalDataNode.reduce((acc, dataNode) => {\n    const token = dataNode.json.token;\n    const uuid = dataNode.json.uuid;\n    acc[token] = uuid;\n    return acc;\n}, {});\n\n// 提取 ppid（假设所有数据项的 ppid 相同，用第一个）\nconst resultPpid = originalDataNode[0].json.ppid;\n\n// 构建最终结果对象\nconst result = {\n    ppid: resultPpid,\n    auth_entities: [authEntitiesMapping] // 将对象放在数组中\n};\n\n// 返回结果\nreturn {\n    json: result\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3240,
+        100
+      ],
+      "id": "f2590e1a-4e31-45a6-88f7-176cf1a8283b",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://swa.apple.com/api/v1.0/external/bulk/usedAuthEntities",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "f25217e3-2a97-4dca-b881-ae6d547eb4e5",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3400,
+        100
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpSslAuth": {
+          "id": "ch2114Ze8WivbLJA",
+          "name": "SSL Certificates-apple apl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1bb68a60-cb4e-4847-9f44-fa358da33c5b",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 202,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3580,
+        100
+      ],
+      "id": "229802bb-ede3-403e-ba26-f5b5c83ed4a4",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.applemfi a\nwhere a.status =2 and a.retroid ='{{ $json.sn }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        840,
+        -160
+      ],
+      "id": "23625e79-40f1-4754-b2c7-794ec979c29c",
+      "name": "查询sn是否重复获取token",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"苹果token注册失败\"\n}",
+        "options": {}
+      },
+      "id": "535a20a1-91a6-49eb-8b86-fd4f818ae483",
+      "name": "绑定失败1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3800,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "applemfi",
+          "mode": "list",
+          "cachedResultName": "applemfi"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uuid": "={{ $('Postgres').item.json.uuid}}",
+            "Base64-encoded Token": "={{ $('Postgres').item.json['Base64-encoded Token'] }}",
+            "retroid": "={{ $('Merge').item.json.sn }}",
+            "status": 2,
+            "modifytime": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "uuid",
+            "Base64-encoded Token"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ppid",
+              "displayName": "ppid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuid",
+              "displayName": "uuid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "modifytime",
+              "displayName": "modifytime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "completetime",
+              "displayName": "completetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uuidcrc",
+              "displayName": "uuidcrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tokencrc",
+              "displayName": "tokencrc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Base64-encoded Token",
+              "displayName": "Base64-encoded Token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3800,
+        0
+      ],
+      "id": "71b88c8f-3bce-405d-876b-ac82416bff27",
+      "name": "更改设备状态",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83088473-3900-4795-9073-482e129f6cff",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2940,
+        -200
+      ],
+      "id": "a5dd79ad-0ca4-4fd2-91be-76775480d22a",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0243bfe2-8be6-43f1-9947-ca4bf26af6cd",
+              "leftValue": "={{ $json.body.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "38fde3ae-82d3-4d56-9918-fc9ee1ce96d0",
+              "leftValue": "={{ $json.body.uuid.length }}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1300,
+        -60
+      ],
+      "id": "d8f3b0c8-e498-46b3-8fd6-1a954057d944",
+      "name": "判断是否为uuid"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultName": "工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -460,
+        -60
+      ],
+      "id": "9005e7a0-4c41-4462-99c3-6dd52cdd932b",
+      "name": "查询工序编号"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iipMI3IDY4ryTUpO",
+          "mode": "list",
+          "cachedResultName": "工序查询通用接口"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -920,
+        180
+      ],
+      "id": "a72e73cd-450c-48f9-91be-9e8d276a365b",
+      "name": "查询工序编号1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f75f8fd-6114-402e-b3d7-ee5bffb497fe",
+              "name": "procedure_detail_id",
+              "value": "={{ $('查询工序编号1').item.json.data[1].procedure_detail_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0aaae44a-3fcf-4475-b7e3-2eeb1019bbdf",
+              "name": "history_procedure_id",
+              "value": "={{$('查询工序编号1').item.json.data[0].history_procedure_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9d8f3e99-04bd-478e-a9c4-0333be805241",
+              "name": "sn",
+              "value": "={{ $('Webhook').item.json.body.sn }}",
+              "type": "string"
+            },
+            {
+              "id": "9e8b2909-b1cf-4d6b-bfa0-a1bd4ccdb48f",
+              "name": "retroid_id",
+              "value": "={{ $json.retroid_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        540,
+        -20
+      ],
+      "id": "1834e31a-72d9-4c71-87b3-a62536a8a3b9",
+      "name": "整合"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zIsWkclkRfztC4WQ",
+          "mode": "list",
+          "cachedResultName": "uuidGetSn"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        -60
+      ],
+      "id": "08f4181b-429e-46e2-bfb4-3ba24dd3b604",
+      "name": "通过uuid查询sn",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3934be25-ec7c-432f-985b-8d0c5af410cc",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -760,
+        -60
+      ],
+      "id": "c17adee8-0184-498a-847c-b06da33712ed",
+      "name": "判断sn是否存在"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f75f8fd-6114-402e-b3d7-ee5bffb497fe",
+              "name": "procedure_detail_id",
+              "value": "={{ $json.data[1].procedure_detail_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0aaae44a-3fcf-4475-b7e3-2eeb1019bbdf",
+              "name": "history_procedure_id",
+              "value": "={{ $json.data[0].history_procedure_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9d8f3e99-04bd-478e-a9c4-0333be805241",
+              "name": "sn",
+              "value": "={{ $('通过uuid查询sn').item.json.data.sn}}",
+              "type": "string"
+            },
+            {
+              "id": "2ac70e82-74c5-46e4-88e6-1c35307951aa",
+              "name": "retroid_id",
+              "value": "={{ $('通过uuid查询sn').item.json.retroid_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        -40
+      ],
+      "id": "b5341858-6c96-4c4c-bd68-44d65233bdc3",
+      "name": "整合1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        700,
+        -140
+      ],
+      "id": "d63f75f9-29c7-4e1a-9038-f06f2010ad9e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Webhook').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        -60
+      ],
+      "id": "ca5765b6-442d-4867-9cfe-013e06a6c9f0",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"请检查sn是否正确或是否失效\"\n}",
+        "options": {}
+      },
+      "id": "cc018e16-2b24-486c-b93b-4c21c28be4fa",
+      "name": "报错：请检查sn或uuid否正确",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -300,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "16b462a8-23bd-40f2-9f70-dda0691e0437",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1160,
+        180
+      ],
+      "id": "9875d428-54ff-409b-9324-d2bb2bcc63da",
+      "name": "判断sn"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "97fcbd71-0cd9-4754-b608-fd1e4dc8e8e4",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -600,
+        180
+      ],
+      "id": "56ce48a6-6211-4a95-bc3b-9b9de1d56004",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('crc16转换').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2120,
+        -200
+      ],
+      "id": "9ae32ee3-a776-4fc4-85cf-75734a9f3e2f",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $('Merge').item.json.retroid_id }}",
+            "procedure_detail_id": "={{ $('Merge').item.json.procedure_detail_id }}",
+            "machine_id": 0,
+            "history_procedure_id": "={{ $('Merge').item.json.history_procedure_id }}",
+            "user_id": 1,
+            "createtime": "={{ $now }}",
+            "data": "={{ {...$('Webhook').all()[0].json.body, bind_id: ($json)} }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1900,
+        -200
+      ],
+      "id": "65dbbafd-5b7d-46e2-813f-075aee8aa722",
+      "name": "插入machine_data",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.machine_data\nWHERE retroid_id = '{{ $json.retroid_id}}'\nAND history_procedure_id = {{$json[\"history_procedure_id\"]}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        220,
+        180
+      ],
+      "id": "6e4cd43f-3dd9-41ec-81ff-ace193d357c6",
+      "name": "查询上一道工序是否完成",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_history AS (\n    -- 先选择最新的记录并展开数组\n    SELECT json_array_elements_text(procedure_detail_id->'procedure_detail_id')::int AS detail_id\n    FROM mes.history_procedure_list\n    WHERE history_procedure_list_id = (\n        -- 获取最新记录的 id\n        SELECT history_procedure_list_id\n        FROM mes.history_procedure_list\n        WHERE procedure_list_id = '{{ $json.procedure_list_id }}' AND status = 1\n        ORDER BY createtime DESC\n        LIMIT 1\n    )\n)\nSELECT hpd.*\nFROM mes.history_procedure_detail hpd\nWHERE hpd.procedure_detail_id IN (\n    SELECT detail_id FROM latest_history\n)\nAND hpd.procedure_dataupload = 2;\n",
+        "options": {}
+      },
+      "id": "11f73e35-d65f-4ac4-a343-61ef3e51eabf",
+      "name": "查询对应工序表",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -200,
+        180
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n       r.retroid_id,\n       jo.joborder_number,\n       pm.product_model_name,\n       pi.product_code,\n       jo.procedure_list_id\nFROM mes.retroid r\nJOIN mes.retroid_generate rg ON r.retroid_generate_id = rg.retroid_generate_id\nJOIN mes.joborder jo ON rg.joborder_id = jo.joborder_id\nJOIN mes.product_info pi ON jo.product_id = pi.product_id\nJOIN mes.product_model pm ON pi.product_model_id = pm.product_model_id\nWHERE r.retroid = '{{ $json.retroid }}';  -- 替换成你要查询的 retroid\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -360,
+        180
+      ],
+      "id": "ed32780d-0860-406f-8378-9fba177709b8",
+      "name": "查询相关信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "retroid",
+          "mode": "list",
+          "cachedResultName": "retroid"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "retroid",
+              "value": "={{ $('Webhook').item.json.body.sn }}"
+            },
+            {
+              "column": "status",
+              "condition": "!=",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -780,
+        180
+      ],
+      "id": "a5236ccf-1462-4d24-8f91-ea1bfd1024f6",
+      "name": "查询sn对应信息",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0d4630eb-05ea-4a5c-948a-cfbe81254492",
+              "leftValue": "={{ $json.procedure_name }}",
+              "rightValue": "SN与UUID绑定",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -60,
+        180
+      ],
+      "id": "81ec474d-0369-4f9a-9689-8d72961574c8",
+      "name": "筛选绑定工序"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a7ac07f-719c-412d-a541-0f557fd8a823",
+              "name": "history_procedure_id",
+              "value": "={{ $json.history_procedure_id }}",
+              "type": "string"
+            },
+            {
+              "id": "616f50b1-8d54-48ec-89a3-264ab9af6194",
+              "name": "retroid_id",
+              "value": "={{$('查询sn对应信息').item.json.retroid_id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        180
+      ],
+      "id": "2a5831b8-90d1-41e0-bcbe-1c85eebc26cf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "408aaf4b-7385-43ca-a7ba-9c9db363a4e4",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        180
+      ],
+      "id": "9c1d40b1-86c8-451f-bf51-d05f8f2a1db4",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"sn未绑定uuid\"\n}",
+        "options": {}
+      },
+      "id": "8d7042fd-b2df-4cf3-8479-63310c201b74",
+      "name": "报错：sn未绑定uuid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断是否为uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "crc16转换",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "crc16转换1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询token": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crc16转换": {
+      "main": [
+        [
+          {
+            "node": "插入machine_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "报错:数据库错误": {
+      "main": [
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crc16转换1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "查询token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "更改设备状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "绑定失败1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn是否重复获取token": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更改设备状态": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "更改设备状态",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否为uuid": {
+      "main": [
+        [
+          {
+            "node": "通过uuid查询sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "判断sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工序编号": {
+      "main": [
+        [
+          {
+            "node": "整合1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工序编号1": {
+      "main": [
+        [
+          {
+            "node": "查询sn对应信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "通过uuid查询sn": {
+      "main": [
+        [
+          {
+            "node": "判断sn是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn是否存在": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错：sn未绑定uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "查询工序编号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "查询sn是否重复获取token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断sn": {
+      "main": [
+        [
+          {
+            "node": "查询工序编号1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "查询相关信息",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错：请检查sn或uuid否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入machine_data": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询相关信息": {
+      "main": [
+        [
+          {
+            "node": "查询对应工序表",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询对应工序表": {
+      "main": [
+        [
+          {
+            "node": "筛选绑定工序",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询sn对应信息": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "筛选绑定工序": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "查询上一道工序是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询上一道工序是否完成": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错:数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "整合",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错：sn未绑定uuid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.216",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "183",
+            "user-agent": "python-requests/2.28.2",
+            "accept-encoding": "gzip, deflate",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W92CP10086",
+            "uuid": "",
+            "procedure_name": "成品功能测试-气压计校准测试/充电电流/功耗测试"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/MFI_procedure-newmes",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "bf3a6438-de53-417a-9d39-7d25b2bedbe4",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2025-01-15T03:32:29.525Z",
+      "createdAt": "2025-01-15T03:32:29.525Z",
+      "id": "1hUZvBcNYoIuabfp",
+      "name": "Apple"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-16T10:01:31.856Z",
+      "createdAt": "2025-04-16T10:01:31.856Z",
+      "role": "workflow:owner",
+      "workflowId": "o072Hb2uR87ujocN",
+      "projectId": "0d97Lvjp068I3AuE",
+      "project": {
+        "updatedAt": "2025-04-27T02:52:35.314Z",
+        "createdAt": "2025-01-28T17:01:01.194Z",
+        "id": "0d97Lvjp068I3AuE",
+        "name": "3.Apple",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🍎"
+        },
+        "description": null,
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

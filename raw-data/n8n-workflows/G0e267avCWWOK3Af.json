@@ -1,0 +1,349 @@
+{
+  "updatedAt": "2025-09-03T05:50:48.094Z",
+  "createdAt": "2025-08-27T09:02:23.039Z",
+  "id": "G0e267avCWWOK3Af",
+  "name": "get_model",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "be7c39d9-980c-47d0-a15d-90ca38afda1e",
+              "leftValue": "={{ $json.body.value }}",
+              "rightValue": "\"\"",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d969e07a-27e5-4ace-b655-5f47cac3423b",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.product_model_id }}",
+        "options": {}
+      },
+      "id": "b40e3e37-0e94-48e4-b23d-8c4342d0d0ff",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n    let itemJson = item.json;\n    let translatedType = '';  // 新增变量保存翻译后的类型\n    switch (itemJson.joborder_type) {\n        case 'ASSY':\n            translatedType = \"组装\";\n            break;\n        case 'PACK':\n            translatedType = \"包装\";\n            break;\n        case 'AfterSale':\n            translatedType = \"售后\";\n            break;\n        case 'Repair':\n            translatedType = \"维修\";\n            break;\n    }\n    itemJson.joborder_type_translated = translatedType;  // 新增列\n    res.push(itemJson);\n}\n\nreturn {\n    result: res\n};\n\n\n\n"
+      },
+      "id": "512574eb-9c4d-4efd-a6db-0f2ed98335f3",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.product_model_id }}\n",
+        "options": {}
+      },
+      "id": "e3342744-0f16-43ac-9c50-8665f3558280",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_model_real",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f1d7e63a-56cf-4b9d-8cef-68f4890752b5",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        160
+      ],
+      "webhookId": "c443fb97-9156-4305-b330-36fb25bde51b"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"400\",\n  \"msg\":\"数据库报错，请联系IT部门\"\n}",
+        "options": {}
+      },
+      "id": "e1a3e9c8-d13e-4ea8-afe4-a4d8d62207b4",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    jo.joborder_id,\n    jo.joborder_number,\n    jo.product_id,\n    jo.procedure_list_id\nFROM \n    mes.joborder jo\nLEFT JOIN \n    mes.user u ON jo.user_id = u.user_id\nLEFT JOIN \n    mes.printinfo p1 ON jo.printinfo_id = p1.printinfo_id\nLEFT JOIN \n    mes.printinfo p2 ON jo.printinfobox_id = p2.printinfo_id\nLEFT JOIN \n    mes.product_info pinfo2 ON jo.product_id = pinfo2.product_id\nLEFT JOIN \n    mes.procedure_list pl ON jo.procedure_list_id = pl.procedure_list_id\nWHERE \n     jo.status = '1';\n",
+        "options": {}
+      },
+      "id": "fe1a8978-969a-4449-862d-3cd0803bce8e",
+      "name": "Execute a SQL query",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -464,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    jo.joborder_id,\n    jo.joborder_number,\n    jo.product_id,\n    jo.procedure_list_id\nFROM \n    mes.joborder jo\nLEFT JOIN \n    mes.user u ON jo.user_id = u.user_id\nLEFT JOIN \n    mes.printinfo p1 ON jo.printinfo_id = p1.printinfo_id\nLEFT JOIN \n    mes.printinfo p2 ON jo.printinfobox_id = p2.printinfo_id\nLEFT JOIN \n    mes.product_info pinfo2 ON jo.product_id = pinfo2.product_id\nLEFT JOIN \n    mes.procedure_list pl ON jo.procedure_list_id = pl.procedure_list_id\nWHERE \n    jo.status = '1'\nand jo.joborder_number ='{{ $json.body.value }}';\n",
+        "options": {}
+      },
+      "id": "cc0b0ba7-7544-47fb-9231-cf0246043d2a",
+      "name": "Execute a SQL query1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -464,
+        80
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT product_model_id \nFROM mes.product_info m\nWHERE m.product_id = '{{ $json.product_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -176,
+        224
+      ],
+      "id": "bb0350a1-dad9-41f3-bf2d-273e9f348953",
+      "name": "Execute a SQL query2",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT product_model_id \nFROM mes.product_info m\nWHERE m.product_id = '{{ $json.product_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -224,
+        64
+      ],
+      "id": "6dc31d82-0142-4e62-bddb-b0fc26306332",
+      "name": "Execute a SQL query3",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n    let itemJson = item.json;\n    let translatedType = '';  // 新增变量保存翻译后的类型\n    switch (itemJson.joborder_type) {\n        case 'ASSY':\n            translatedType = \"组装\";\n            break;\n        case 'PACK':\n            translatedType = \"包装\";\n            break;\n        case 'AfterSale':\n            translatedType = \"售后\";\n            break;\n        case 'Repair':\n            translatedType = \"维修\";\n            break;\n        \n    }\n    itemJson.joborder_type_translated = translatedType;  // 新增列\n    res.push(itemJson);\n}\n\nreturn {\n    result: res\n};\n\n\n\n"
+      },
+      "id": "5706e730-167d-4481-b135-1b8c896f4d5b",
+      "name": "Code2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -64
+      ]
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "834f9bb2-1067-4e16-b80e-4029d4816dd8",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-08-27T09:02:23.039Z",
+      "createdAt": "2025-08-27T09:02:23.039Z",
+      "role": "workflow:owner",
+      "workflowId": "G0e267avCWWOK3Af",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

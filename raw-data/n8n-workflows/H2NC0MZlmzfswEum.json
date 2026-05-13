@@ -1,0 +1,306 @@
+{
+  "updatedAt": "2024-05-23T02:42:46.914Z",
+  "createdAt": "2024-05-16T08:11:00.945Z",
+  "id": "H2NC0MZlmzfswEum",
+  "name": "consm_barcodebindinfo_delete_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "b0258ac0-83ba-4c9a-aff0-fac27f27c0d6",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT TOP 40000 b.*, \n        (SELECT TOP 1 p.barcode\n         FROM YFConsumer.dbo.consm_deviceweight AS p\n         WHERE b.baseline = p.barcode\n         ORDER BY p.barcode DESC) AS barcode\nFROM consm_barcodebindinfo AS b\nWHERE b.baseline LIKE '%{{ $json.query.baseline||\"\" }}%'\n\n\n\n"
+      },
+      "id": "c0c863a3-52fe-4e9a-b334-3237604a68f1",
+      "name": "Microsoft SQL1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        500,
+        240
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "b9c0b39c-11b8-4944-97b4-0bc8f29e07e9",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DECLARE @CPUID VARCHAR(100);\nSET @CPUID = SUBSTRING('{{ $json.query.CPUID }}', 1, 6) + SUBSTRING('{{ $json.query.CPUID }}', 19, 12);\n\nWITH Baselines AS (\n    SELECT *\n    FROM consm_barcodebindinfo\n    WHERE uuid_unique = @CPUID\n)\nSELECT \n    b.*, \n    p.barcode\nFROM \n    Baselines AS b\nLEFT JOIN \n    YFConsumer.dbo.consm_deviceweight AS p ON p.barcode = b.baseline;\n\n\n"
+      },
+      "id": "843235fb-f6f8-4ef6-aec2-e62d5b9d6cb0",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        500,
+        380
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d857c50e-f3e7-4df7-b6d5-61585dec116a",
+              "leftValue": "={{ $json.query.CPUID }}",
+              "rightValue": "={{ null }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "eea0a2b1-64eb-406d-bac3-b318744e3a2d",
+              "leftValue": "={{ $json.query.baseline }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "9b6cb4e8-f702-46de-b412-af7cbd4f5c5e",
+      "name": "判断必填项",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c8ce881c-b619-4ef1-b543-76c554218c44",
+              "leftValue": "={{ $json.query.CPUID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "756b5a7a-c598-4b5d-9e19-d2523dcdf726",
+      "name": "判断是否通过UUID去查找",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "path": "consm_barcodebindinfo_delete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6d928982-12b7-4d18-8921-ca7691b9189a",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -120,
+        300
+      ],
+      "webhookId": "458bbc9a-2c54-4237-8c99-0a3cd5f1b718"
+    }
+  ],
+  "connections": {
+    "Microsoft SQL1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断必填项": {
+      "main": [
+        [
+          {
+            "node": "判断是否通过UUID去查找",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否通过UUID去查找": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "判断必填项",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.25.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "0",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {
+            "CPUID": "REDACTED",
+            "baseline": ""
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/consm_barcodebindinfo_delete",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "f2d76c64-ff8d-4bb8-a71a-9abd8ec01883",
+  "activeVersionId": "f2d76c64-ff8d-4bb8-a71a-9abd8ec01883",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:41.807Z",
+      "createdAt": "2024-01-29T03:43:19.869Z",
+      "id": "wbylAziHNIuwj3Uh",
+      "name": "MES查询应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-05-16T08:11:00.945Z",
+      "createdAt": "2024-05-16T08:11:00.945Z",
+      "role": "workflow:owner",
+      "workflowId": "H2NC0MZlmzfswEum",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

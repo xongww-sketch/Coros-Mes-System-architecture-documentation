@@ -1,0 +1,393 @@
+{
+  "updatedAt": "2025-11-14T05:40:35.990Z",
+  "createdAt": "2025-04-08T10:57:23.435Z",
+  "id": "khO3pmAgMkfeNZrc",
+  "name": "terminal_init",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/resource/init",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        48,
+        0
+      ],
+      "id": "bd123c23-01f0-4d1f-920b-808fd79b5087",
+      "name": "Webhook",
+      "webhookId": "717f9aae-c6a8-4a3e-b573-ca1c10eaad1d"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 初始化验证结果数组（支持批量处理）\nconst validationResults = [];\n\n// 遍历所有输入项 [[1]]\nfor (const item of $input.all()) {\n    const { ip, mac } = item.json.body;\n    const errors = [];\n     // 新增空值检查 [[5]]\n    if (!ip?.trim()) errors.push(\"IP地址不能为空\");\n    if (!mac?.trim()) errors.push(\"MAC地址不能为空\");\n    // IP地址验证 [[6]]\n    if (ip?.trim()&&!isValidIP(ip)) {\n        errors.push(\"无效的IP地址格式\");\n    }\n    \n    // MAC地址验证 [[7]]\n    if (mac?.trim()&&!isValidMAC(mac)) {\n        errors.push(\"无效的MAC地址格式\");\n    }\n\n    // 构建单个验证结果 [[3]]\n    validationResults.push({\n        code: errors.length ? 1 : 0,\n        ...ip &&{ip},\n        ...mac && {mac},\n        ...(errors.length && { errors }) // 条件添加错误信息 [[10]]\n    });\n}\n\n// 最终响应结构优化 [[8]]\nreturn {\n    results: validationResults,\n    hasErrors: validationResults.some(r => r.code === 1)\n};\n\n// IP验证函数优化（添加IPv4严格校验）[[6]]\nfunction isValidIP(ip) {\n    const ipv4Pattern = /^(25[0-5]|2[0-4]\\d|1?\\d\\d?\\.){3}(25[0-5]|2[0-4]\\d|1?\\d\\d?)$/;\n    return ipv4Pattern.test(ip);\n}\n\n// MAC验证函数优化（支持多种格式）[[7]]\nfunction isValidMAC(mac) {\n    const macPattern = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^([0-9A-Fa-f]{4}\\.){2}[0-9A-Fa-f]{4}$/;\n    return macPattern.test(mac);\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        0
+      ],
+      "id": "d2f34012-dcc8-4190-9d58-27505d2169c6",
+      "name": "检查IP地址格式是否正确"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8f21285a-276a-4cbb-94f1-c306d17fa63e",
+              "leftValue": "={{ $json.hasErrors }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "77bed1a2-234c-4acd-ac09-f1d9d6d97b81",
+      "name": "参数校验处理"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id,resource_name from mes.mes.resources where resource_mac='{{ $json.results[0].mac }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1072,
+        -96
+      ],
+      "id": "9b52f3a0-69bd-43d1-abd7-7bb4989d1eb2",
+      "name": "检查资源是否初始化过",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        112
+      ],
+      "id": "541af04f-38be-4acf-beb4-389d5234bdd5",
+      "name": "错误：IP地址错误"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "=/home/init_package/deploy.sh {{ $json.ip }}"
+      },
+      "id": "e74c20a9-ac4a-4c3b-8474-249608604d37",
+      "name": "SSH",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        -336
+      ],
+      "notesInFlow": false,
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "Q7v8IjunkfcNBrdw",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7f405d94-09b2-4287-a5f5-969e89e6b1fc",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        -224
+      ],
+      "id": "bdfc709d-d2c9-4f37-a337-ff239562e637",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        16
+      ],
+      "id": "58812d76-ed49-482e-a14d-fad9b04544ef",
+      "name": "错误：数据库错误"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        -144
+      ],
+      "id": "8ec82656-8a53-4ce1-a050-4c0323dc2c13",
+      "name": "错误：资源已经初始化"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4dde4443-49cb-4eb0-a4b8-f25219347ff4",
+              "name": "=ip",
+              "value": "={{ $('参数校验处理').all()[0].json.results[0].ip }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1472,
+        -336
+      ],
+      "id": "6ccaf426-9ac9-48c0-a08e-50c01896eb22",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        -336
+      ],
+      "id": "47a64742-c82e-41ab-8292-995942efbd30",
+      "name": "错误：资源已经初始化1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "检查IP地址格式是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查IP地址格式是否正确": {
+      "main": [
+        [
+          {
+            "node": "参数校验处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数校验处理": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：IP地址错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查资源是否初始化过": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：资源已经初始化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "SSH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SSH": {
+      "main": [
+        [
+          {
+            "node": "错误：资源已经初始化1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.33.45",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "59",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "ip": "192.168.33.40",
+            "mac": "ca:69:18:1e:8c:2a"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/init",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "5faa05bb-9ddc-422c-a11c-b558b74d27ca",
+  "activeVersionId": "5faa05bb-9ddc-422c-a11c-b558b74d27ca",
+  "versionCounter": 38,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T06:43:23.534Z",
+      "createdAt": "2025-04-24T06:43:23.534Z",
+      "role": "workflow:owner",
+      "workflowId": "khO3pmAgMkfeNZrc",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

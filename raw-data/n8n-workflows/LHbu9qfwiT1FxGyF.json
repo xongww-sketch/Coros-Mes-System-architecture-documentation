@@ -1,0 +1,1088 @@
+{
+  "updatedAt": "2025-12-17T07:20:57.445Z",
+  "createdAt": "2025-12-10T03:11:02.955Z",
+  "id": "LHbu9qfwiT1FxGyF",
+  "name": "skip_station",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "skipStation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2208,
+        416
+      ],
+      "id": "6d8d0471-29e3-4bd2-96af-70926b0ea37c",
+      "name": "Webhook",
+      "webhookId": "b7f570b9-4803-4cb9-a02e-8ccf28a34d60"
+    },
+    {
+      "parameters": {
+        "jsCode": "const newItems = [];\n\n// 定义需要校验的必填字段\nconst requiredFields = ['sn', 'data',  'user_id','machine_id'];\n\nfor (const item of $input.all()) {\n  // 1. 安全获取 body 中的参数，如果 body 不存在则给一个空对象防止报错\n  const params = item.json.body || {};\n\n  let isValid = true;\n  let missingFields = []; // 用于记录哪个字段没填（可选）\n\n  // 2. 循环校验字段\n  for (const field of requiredFields) {\n    const val = params[field];\n    \n    // 判断逻辑：未定义、Null、或者去除空格后为空字符串\n    if (val === undefined || val === null || String(val).trim() === '') {\n      isValid = false;\n      missingFields.push(field);\n    }\n  }\n\n  // 3. 构建返回对象\n  // 使用 ...params 将参数展开（扁平化），去掉 'body' 外壳\n  const outputData = {\n    ...params,        // 包含 sn, procedure_name 等原始数据\n    isValid: isValid  // 只有 true 或 false\n  };\n\n  // 如果你需要知道具体是哪个参数错了，可以取消下面这行的注释\n  // if (!isValid) outputData.errorMsg = `缺少参数: ${missingFields.join(', ')}`;\n\n  // n8n 标准返回格式需包裹在 json 属性中\n  newItems.push({ json: outputData });\n}\n\nreturn newItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2032,
+        416
+      ],
+      "id": "9d8a8b3a-cd59-4c6b-bf8a-691726693be8",
+      "name": "校验参数"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4f5862ea-fb53-44a5-82fc-81f722efd2d7",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1840,
+        416
+      ],
+      "id": "8f2cd7fd-9f39-4dfe-800a-d19c6eaa9a85",
+      "name": "判断参数是否正确"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1680,
+        528
+      ],
+      "id": "d73e14b4-4e4f-4c59-8bd7-16b392d8fd53",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2496,
+        400
+      ],
+      "id": "0cb4f6bb-a9f7-417b-b607-e862aa1142f6",
+      "name": "数据库错误"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    machine_data_id, \n    retroid_id, \n    procedure_detail_id, \n    history_procedure_id, \n    user_id, \n    machine_id, \n    data, \n    createtime, \n    data_type \nFROM \n    mes.machine_data \nWHERE \n    data->>'ticket' = '{{ $('Webhook').all()[0].json.body.data.ticket.trim() }}'\n   and\n  data->>'operationName' = '{{ $('Webhook').all()[0].json.body.data.operationName}}'\nand procedure_detail_id=153\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -192,
+        144
+      ],
+      "id": "dc38b499-63f7-4cee-9d39-1830bc21f18e",
+      "name": "查询跳站数量是否小于已跳站的数量",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "machine_data",
+          "mode": "list",
+          "cachedResultName": "machine_data"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid_id": "={{ $json.retroid_id }}",
+            "procedure_detail_id": "={{ $json.process_detail_id }}",
+            "history_procedure_id": "={{ $json.history_procedure_id }}",
+            "user_id": "={{ $json.user_id }}",
+            "machine_id": "={{ $json.machine_id }}",
+            "data": "={{ $json.data }}",
+            "createtime": "={{ $now.toUTC() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "machine_data_id",
+              "displayName": "machine_data_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid_id",
+              "displayName": "retroid_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "procedure_detail_id",
+              "displayName": "procedure_detail_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "history_procedure_id",
+              "displayName": "history_procedure_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "machine_id",
+              "displayName": "machine_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_type",
+              "displayName": "data_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2240,
+        224
+      ],
+      "id": "9da489e1-144c-4f37-be43-d936fd967ab4",
+      "name": "插入跳站数据",
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"count\":{{$('移除空对象').item.json.data.length+1 }},\n  \"msg\":\"数据上传成功！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2528,
+        48
+      ],
+      "id": "207fa5cb-9044-42f2-b9b8-af1064fc96e8",
+      "name": "跳站成功"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.machine_data where retroid_id={{ $json.retroid_id }} AND procedure_detail_id= 153 and data->>'operationName'='{{ $('Webhook').item.json.body.data.operationName }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -960,
+        176
+      ],
+      "id": "26e24289-5329-48f7-8448-31201e17fb79",
+      "name": "查询这个SN是否有跳站记录",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.retroid_id, r.joborder_id, r.retroid_generate_id, r.status, r.createtime, r.retroid, r.reamrk,j.joborder_number FROM mes.retroid as r JOIN mes.joborder as j on r.joborder_id=j.joborder_id where r.retroid='{{ $json.sn }}' and r.status in ('1','2') ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1664,
+        320
+      ],
+      "id": "f10ab204-0b61-4891-8c75-b9f1ef952700",
+      "name": "查询这个SN是否生效",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "da99b04c-d7a6-4517-ab3d-b998c8eb8286",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1456,
+        304
+      ],
+      "id": "83bbdb0e-7d2b-489e-8a0a-02ec5eb8c0e5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fa620a8a-d265-48b1-ae9a-a2ae780eebfb",
+              "leftValue": "={{ $json.joborder_number }}",
+              "rightValue": "={{ $('Webhook').all()[0].json.body.data.ticket }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1248,
+        224
+      ],
+      "id": "fca9d19f-24f1-4837-90b8-67db1e95fd93",
+      "name": "判断该工单号与生成的工单号是否一致"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0117edb7-6ad8-4f71-8f97-9299d7286cc1",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -720,
+        176
+      ],
+      "id": "34250c7b-9119-485f-9d42-fae5911d0d56",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('判断该工单号与生成的工单号是否一致').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        144
+      ],
+      "id": "80554d40-179e-4fc9-bb09-c3097f015322",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        32
+      ],
+      "id": "af8c2d54-6303-4200-9544-b545d7ec424d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 遍历所有输入项\nfor (const item of $input.all()) {\n  \n  // 1. 获取 data 数组 (假设数据在 json 节点下)\n  // 如果你的数据结构仅仅是 array 并没有包裹在 json 中，请去掉 .json\n  const dataList = item.json.data;\n\n  // 2. 确保它是一个数组，防止报错\n  if (Array.isArray(dataList)) {\n    \n    // 3. 使用 filter 过滤\n    // Object.keys(obj).length 用于获取对象属性的个数\n    // 如果个数 > 0，说明不是空对象，予以保留\n    item.json.data = dataList.filter(obj => {\n      return obj && typeof obj === 'object' && Object.keys(obj).length > 0;\n    });\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        32
+      ],
+      "id": "5571c00a-d19e-4b7b-b624-c555b643bccb",
+      "name": "移除空对象"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2067140f-39de-4ec0-bee0-8d619f41c244",
+              "leftValue": "={{ $json.data.length }}",
+              "rightValue": "={{ Number($('Webhook').item.json.body.data.number) }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        32
+      ],
+      "id": "c4ec1b3e-6200-4572-bf27-19abecb8479f",
+      "name": "判断跳站的数量是否达到到达的数量"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"202\",\n  \"msg\":\"配置工单号:{{ $('Webhook').all()[0].json.body.jobNumber }}与SN生成工单号:{{ $json.joborder_number }}不一致,请重新配置正确的工单号！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -960,
+        368
+      ],
+      "id": "9d7065a5-156d-45b4-afb6-2c26bf4bb140",
+      "name": "工单号错误"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"201\",\n  \"msg\":\"该SN已经失效:{{ $('Webhook').all()[0].json.body.sn }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1232,
+        416
+      ],
+      "id": "bd0a3005-a498-4006-b6c8-0822cff58014",
+      "name": "SN无效"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "431450f5-84df-48c8-b7b9-d3f6ecfcccc8",
+              "name": "retroid_id",
+              "value": "={{ $('Code in JavaScript').item.json.retroid_id }}",
+              "type": "string"
+            },
+            {
+              "id": "797be3ac-aad7-422e-9888-703096bd0522",
+              "name": "process_detail_id",
+              "value": 153,
+              "type": "number"
+            },
+            {
+              "id": "7cca9e08-a9a3-41f0-9c7f-b618b5481f8d",
+              "name": "history_procedure_id",
+              "value": "238",
+              "type": "string"
+            },
+            {
+              "id": "01e2df58-001d-4728-b4be-9c349c3d2030",
+              "name": "machine_id",
+              "value": "={{ $('Webhook').all()[0].json.body.machine_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3b64ec7f-8de6-4c25-9d65-b0c11eaed6fe",
+              "name": "user_id",
+              "value": "={{ $('Webhook').all()[0].json.body.user_id }}",
+              "type": "number"
+            },
+            {
+              "id": "cd138a28-2b2a-4c1e-a21a-c87238a64956",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2080,
+        224
+      ],
+      "id": "eeea19c4-6892-4b3c-af60-119e04341929",
+      "name": "上传跳站数据"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "history_procedure_detail",
+          "mode": "list",
+          "cachedResultName": "history_procedure_detail"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "procedure_name",
+              "value": "={{ $('Webhook').all()[0].json.body.data.operationName }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "createtime",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        576,
+        -128
+      ],
+      "id": "c78bfcda-1b72-4bbd-974c-47fb30d414b2",
+      "name": "通过工序名获取到指定工序ID",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        144
+      ],
+      "id": "d145d186-76ac-4886-ac80-85d0bc45e01f",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n $('Webhook').all()[0].json.body.data.procedure_id=item.json.data[0].procedure_detail_id\n  $('Webhook').all()[0].json.body.data.history_procedure_id=$input.first().json.data[0].history_procedure_id\n}\n\nreturn  $('Webhook').all()[0].json.body;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        224
+      ],
+      "id": "51efb5fa-10b7-45f0-82a6-1e5f8168403f",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "576b2cfe-79c0-4c04-9b07-47e36f009bcb",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "3386d91d-f12c-4897-ad51-933aa5db1573",
+      "name": "判断跳站工序是否存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"204\",\n  \"msg\":\"工序不存在，请确定配置中的工序名称是否正确！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1136,
+        32
+      ],
+      "id": "027d0c36-ee40-4a8d-9507-7049e7f8788d",
+      "name": "目标工序不存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"203\",\n  \"msg\":\"该工单跳站数量已达上限，禁止跳站！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        608,
+        176
+      ],
+      "id": "0339a67b-d75c-4a2c-8c67-7109c7d84a62",
+      "name": "跳站数量已满"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"202\",\n  \"msg\":\"SN已存在工序跳转记录！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -448,
+        368
+      ],
+      "id": "e919a217-e09e-4294-a83f-6206adfdbf09",
+      "name": "SN已存在工序跳转记录"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "校验参数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验参数": {
+      "main": [
+        [
+          {
+            "node": "判断参数是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断参数是否正确": {
+      "main": [
+        [
+          {
+            "node": "查询这个SN是否生效",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询跳站数量是否小于已跳站的数量": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入跳站数据": {
+      "main": [
+        [
+          {
+            "node": "跳站成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询这个SN是否生效": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "判断该工单号与生成的工单号是否一致",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SN无效",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断该工单号与生成的工单号是否一致": {
+      "main": [
+        [
+          {
+            "node": "查询这个SN是否有跳站记录",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "工单号错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询这个SN是否有跳站记录": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SN已存在工序跳转记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "查询跳站数量是否小于已跳站的数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "移除空对象",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "移除空对象": {
+      "main": [
+        [
+          {
+            "node": "判断跳站的数量是否达到到达的数量",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断跳站的数量是否达到到达的数量": {
+      "main": [
+        [
+          {
+            "node": "通过工序名获取到指定工序ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "跳站数量已满",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传跳站数据": {
+      "main": [
+        [
+          {
+            "node": "插入跳站数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "通过工序名获取到指定工序ID": {
+      "main": [
+        [
+          {
+            "node": "判断跳站工序是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "上传跳站数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断跳站工序是否存在": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "目标工序不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.53.14",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "126",
+            "user-agent": "got (https://github.com/sindresorhus/got)",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sn": "W35B035445",
+            "data": {
+              "ticket": "1000005594",
+              "operationName": "气压计校准",
+              "number": "1"
+            },
+            "machine_id": 404,
+            "user_id": 1
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/skipStation",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "1d22b2c6-6bf7-4724-935b-09d370056f69",
+  "activeVersionId": "1d22b2c6-6bf7-4724-935b-09d370056f69",
+  "versionCounter": 104,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-12-10T03:11:02.955Z",
+      "createdAt": "2025-12-10T03:11:02.955Z",
+      "role": "workflow:owner",
+      "workflowId": "LHbu9qfwiT1FxGyF",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,473 @@
+{
+  "updatedAt": "2026-02-04T02:05:35.261Z",
+  "createdAt": "2025-06-10T10:17:30.829Z",
+  "id": "OTfqbKqJ2CiDmTJ6",
+  "name": "生产数据接口_mes_info",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "mes_info",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        -48
+      ],
+      "id": "3860cce4-503a-4f13-8210-f38b947467fb",
+      "name": "Webhook",
+      "webhookId": "2a5d20c5-87f4-427e-b0e5-5cfe14237c9b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b5e157fd-d8cc-4b77-bd40-e6a1ac951a77",
+              "leftValue": "={{ $json.query.startTimestamp }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "224a3beb-b54d-43ea-89ca-8f9fc5246394",
+              "leftValue": "={{ $json.query.endTimestamp }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -496,
+        -48
+      ],
+      "id": "eaff528b-960e-45a9-8ff1-304fa317c35a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{JSON.stringify($json)}}\n\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        448,
+        -208
+      ],
+      "id": "d6f4e350-e6e6-4b1e-ad29-d4e1b361414a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"401\",\n  \"msg\":\"入参不全\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -48,
+        224
+      ],
+      "id": "bc9739c9-1c3d-4d11-b9ab-b0ca8981303a",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e947506-2488-44c7-84bf-43c948f4265f",
+              "name": "startTime",
+              "value": "={{ $json.query.startTimestamp.toDateTime('s')}}",
+              "type": "string"
+            },
+            {
+              "id": "2f715e06-9eb3-4eef-baa5-fb8f6b447a29",
+              "name": "endTime",
+              "value": "={{ $json.query.endTimestamp.toDateTime('s') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        -192
+      ],
+      "id": "3b764986-865a-4d1a-ba34-6cf2d133a537",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"402\",\n  \"msg\":\"数据库报错\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        432,
+        352
+      ],
+      "id": "f3476679-fa98-40c1-837d-6115522e22c5",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "xiongwang@coros.com",
+        "subject": "查询生产数据接口报错-生产数据接口",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        368
+      ],
+      "id": "104d458e-d8c2-4a3c-b3b7-9dcedea29bdc",
+      "name": "成功",
+      "webhookId": "4b2d5afe-f9d1-406f-8912-c51a7f0e4148",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -224
+      ],
+      "id": "c49f1593-e132-4603-80a5-b1bb717ba796",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = items[0].json.data;  // 获取入参中的 data 数组\n\nconst result = {\n  code: \"200\",\n  msg: inputData.map(item => {\n    return {\n      id: item.id,\n      retroid: item.retroid,\n      production_id: item.production_id,\n      delivery_id: item.delivery_id,\n      machine_type: item.machine_type,\n      job_number: item.job_number,\n      uuid: item.uuid,\n      phase: item.phase,\n      wifi_mac: item.wifi_mac,\n      battery: item.battery,\n      screen: item.screen,\n      remark: item.remark,\n      channel: item.channel, \n      createtime: item.createtime,   production_createtime:item.production_createtime,\ndelivery_createtime:item.delivery_createtime,\npacking_creatime:item.packing_createtime\n    };\n  })\n};\n\nreturn [\n  {\n    json: result\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -224
+      ],
+      "id": "9d938bf4-9bcd-4ed5-bb04-12c8c9956ee9",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a91eadec-16f8-46f8-a68a-daa02b3ce679",
+              "leftValue": "={{ $json.query.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        80
+      ],
+      "id": "3b2421db-d2a1-415d-84b0-55708e52a353",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    di.*, \n    pd.createtime AS production_createtime,\n    dd.createtime AS delivery_createtime,\n    ee.createtime AS packing_createtime\nFROM \n    mes_daily_data.daily_info di\nLEFT JOIN \n    mes_daily_data.production_detail pd ON di.production_id = pd.id\nLEFT JOIN \n    mes_daily_data.pack_detail ee ON di.pack_id = ee.id\nLEFT JOIN \n    mes_daily_data.delivery_detail dd ON di.delivery_id = dd.id\nWHERE  di.retroid = '{{ $json.query.sn}}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -48,
+        80
+      ],
+      "id": "043da062-b9e1-4eb2-846c-c5499a182198",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    di.*, \n    pd.createtime AS production_createtime,\n    dd.createtime AS delivery_createtime,\n    ee.createtime AS packing_createtime\nFROM \n    mes_daily_data.daily_info di\nLEFT JOIN \n    mes_daily_data.production_detail pd ON di.production_id = pd.id\nLEFT JOIN \n    mes_daily_data.pack_detail ee ON di.pack_id = ee.id\nLEFT JOIN \n    mes_daily_data.delivery_detail dd ON di.delivery_id = dd.id\nWHERE \n    di.createtime BETWEEN '{{ $json.startTime}}' AND '{{ $json.endTime }}';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -48,
+        -192
+      ],
+      "id": "30436dd4-b4ec-46ee-99dd-96e670b4ead4",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook2": {
+      "main": [
+        [
+          {
+            "node": "成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "startTime": "2025-08-24T14:00:00.000+08:00",
+          "endTime": "2025-08-25T14:00:27.000+08:00"
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.25.65",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {
+            "sn": "W92A001823"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/mes_info",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "8103e88f-557b-447f-bb41-0fd4661ec31f",
+  "activeVersionId": "8103e88f-557b-447f-bb41-0fd4661ec31f",
+  "versionCounter": 44,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-06-10T10:17:30.829Z",
+      "createdAt": "2025-06-10T10:17:30.829Z",
+      "role": "workflow:owner",
+      "workflowId": "OTfqbKqJ2CiDmTJ6",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

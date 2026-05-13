@@ -1,0 +1,656 @@
+{
+  "updatedAt": "2025-04-25T09:01:02.703Z",
+  "createdAt": "2025-04-23T06:47:06.526Z",
+  "id": "Kh3Q9MmvXMslkD9D",
+  "name": "deviceparts_retroid_generate",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/deviceparts/generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -40
+      ],
+      "id": "2b5d0fc0-3a42-4b09-be04-770ffb885651",
+      "name": "Webhook",
+      "webhookId": "763e85f4-9c14-42ee-8613-229ef94109e0"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst res={};\nfor (const item of $input.all()) {\n  //判断jobNumber非空，且长度是10位的数字\n  if(validateField(item.json.body.jobNumber)){\n    res.code=1;\n    res.jobNumber=item.json.body.jobNumber;\n  }else{\n    res.code=2;\n    res.message=\"工单号不正确，请重新输入工单号！\"\n  };\n  \n}\nfunction validateField(input) {\n  const str = String(input).trim();\n  return str.length === 10 && /^\\d{10}$/.test(str);\n}\n\nreturn res;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        -40
+      ],
+      "id": "4871c67d-c323-447f-a45b-47e61416b96b",
+      "name": "校验工单号是否正确"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f0e6e32f-9c3b-4084-8edc-54685d9d3377",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        540,
+        -40
+      ],
+      "id": "d1f39a8e-81c7-4f7e-8af9-41475b8f60d3",
+      "name": "判断工单号是否正确"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "joborder",
+          "mode": "list",
+          "cachedResultName": "joborder"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "joborder_number",
+              "value": "={{ $json.jobNumber }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "joborder_number",
+            "product_quantity"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        780,
+        -140
+      ],
+      "id": "7592fa7f-0b1e-4f97-994f-c36d565708ae",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "hW9OCmLkbDsCF40U",
+          "name": "mes.pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "74cec634-eb79-4cd5-862e-26aacd801775",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        -160
+      ],
+      "id": "d82d74e2-97ce-4c70-9cc7-f7da46e495e1",
+      "name": "判断工单号是否存在"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 201,\n  \"message\":\"{{ $json.message }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        100
+      ],
+      "id": "78e23ddd-3b0a-4ee3-890c-a958814fc037",
+      "name": "错误：工单号错误"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        -60
+      ],
+      "id": "00648291-0fc0-4df5-b3a8-5ee39255a4e2",
+      "name": "错误：工单号不存在"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 创建月份映射表（0-based index）\nconst monthMap = new Map(\n  [\"J\", \"F\", \"M\", \"A\", \"M\", \"J\", \"J\", \"A\", \"S\", \"O\", \"N\", \"D\"]\n    .map((monthAbbr, index) => [index, monthAbbr])\n);\nlet snList=[];\n// 处理所有输入项\nfor (const item of $input.all()) {\n  const joborderNumber = item.json.joborder_number;\n  const quantity=item.json.product_quantity;\n  // 生成序列号组件\n  const currentMonth = new Date().getMonth(); // 自动获取当前月份（0-11）\n  const monthAbbr = monthMap.get(currentMonth) || 'X'; // 添加默认值防止undefined\n  for(let i=0;i<quantity;i++){\n    const fiveDigitRandom = Math.floor(Math.random() * 90000) + 10000; // 生成5位随机数\n     // 构建完整序列号\n    const devicePartsSN = `${joborderNumber}${monthAbbr}${fiveDigitRandom}`;\n    snList.push(devicePartsSN)\n  }\n\n  \n  // 添加新字段到当前项\n  item.json.snList = snList;\n\n  \n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        -240
+      ],
+      "id": "8fd8047a-d19f-4d18-8048-2ef9903d00ba",
+      "name": "批量生产SN ID"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "snList",
+        "options": {
+          "destinationFieldName": "sn"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -240
+      ],
+      "id": "f11625ee-45f6-4189-b265-b7eef5b9b9be",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        -240
+      ],
+      "id": "dbeab93c-97ba-4dc2-ac16-8b375b1afe50",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "sn",
+              "renameField": true,
+              "outputFieldName": "snList"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        -240
+      ],
+      "id": "ac34f4a6-27af-4702-a8ab-1c9374928727",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3caee76-4eba-44b9-9da3-73beee1e2519",
+              "leftValue": "={{ $json.snList.length }}",
+              "rightValue": "={{ $('批量生产SN ID').all()[0].json.product_quantity }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2340,
+        -240
+      ],
+      "id": "a4b84ffa-70d4-4e65-b174-cff2ed4bc4e0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 201,\n  \"message\":\"存在重复的SN，请重新生成！\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2680,
+        -80
+      ],
+      "id": "f62de3b6-8d60-44ea-9ee1-e3f1f305448b",
+      "name": "错误：sn重复"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"生成成功！\",\n  \"data\":{{ JSON.stringify($json.snList.join(\"\\n\")) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3380,
+        -420
+      ],
+      "id": "38288841-2ecb-4a75-b844-64c39552fc64",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "deviceparts_retroid",
+          "mode": "list",
+          "cachedResultName": "deviceparts_retroid"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.sn }}",
+            "create_time": "={{ $now }}",
+            "job_number": "={{ $('Webhook').item.json.body.jobNumber }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_number",
+              "displayName": "job_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "create_time",
+              "displayName": "create_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2860,
+        -420
+      ],
+      "id": "cc0552fd-d8a8-4ccb-a2ea-ee0103935a8e",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "snList",
+        "options": {
+          "destinationFieldName": "sn"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2660,
+        -420
+      ],
+      "id": "deff44c0-5d7c-4b42-b664-1eabc919cba5",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid",
+              "renameField": true,
+              "outputFieldName": "snList"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3060,
+        -420
+      ],
+      "id": "58f78388-2ce2-4821-85ab-043117d845e4",
+      "name": "Aggregate1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "校验工单号是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验工单号是否正确": {
+      "main": [
+        [
+          {
+            "node": "判断工单号是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工单号是否正确": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：工单号错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "判断工单号是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工单号是否存在": {
+      "main": [
+        [
+          {
+            "node": "批量生产SN ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：工单号不存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "批量生产SN ID": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误：sn重复",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.29.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "26",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "jobNumber": "5000000265"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/deviceparts/generate",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "f6fd4b39-7d49-4eaa-b4e7-7591dc83e566",
+  "activeVersionId": "f6fd4b39-7d49-4eaa-b4e7-7591dc83e566",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-23T06:47:06.526Z",
+      "createdAt": "2025-04-23T06:47:06.526Z",
+      "role": "workflow:owner",
+      "workflowId": "Kh3Q9MmvXMslkD9D",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

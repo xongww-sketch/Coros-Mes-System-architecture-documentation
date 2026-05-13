@@ -1,0 +1,449 @@
+{
+  "updatedAt": "2026-01-08T06:55:43.084Z",
+  "createdAt": "2025-04-15T08:26:33.244Z",
+  "id": "zIsWkclkRfztC4WQ",
+  "name": "uuidGetSn",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "19d12fe9-0ba6-4ecd-a29d-8f721e3af055",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "2c4c370a-accb-4902-9241-f963fbaa1291",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let inputArray = $input.all();\nlet result = null;\n\nif (Array.isArray(inputArray) && inputArray.length > 0) {\n  const firstItem = inputArray[0];\n\n  if (firstItem?.json?.body) {\n    const body = firstItem.json.body;\n\n    // 永远保证有 uuid_unique\n    body.uuid_unique = body.uuid_unique ?? '';\n\n    if (body.uuid) {\n      const uuid_original = String(body.uuid).trim();\n      const uuid_original2 = String(body.uuid);\n\n      // 先判断是否为纯hex\n      const hexOnly = uuid_original.replace(/\\s+/g, '');\n      const isHex = /^[A-Fa-f0-9]+$/.test(hexOnly);\n\n      if (isHex && hexOnly.length === 30) {\n        // 30位：先得到uuid，再切割生成uuid_unique\n        body.uuid = hexOnly.toLowerCase();\n        body.uuid_original = uuid_original;\n        body.uuid_unique = body.uuid.slice(0, 16) + body.uuid.slice(18);\n      } else if (isHex && hexOnly.length === 28) {\n        // 28位：直接当作 uuid_unique（不再切割）\n        body.uuid = hexOnly.toLowerCase();          // 可保留/不保留都行，这里保留\n        body.uuid_original = uuid_original;\n        body.uuid_unique = body.uuid;               // 关键：不切割\n      } else {\n        // URL格式\n        const regex = /a=[\\w\\s]+?([A-Fa-f\\d]+)&b=([A-Fa-f\\d]+)&c=([A-Fa-f\\d]+)/;\n        const match = uuid_original2.match(regex);\n\n        if (match && match.length === 4) {\n          const parts = [match[1], match[2], match[3]].map(s => s.toLowerCase());\n          body.uuid = parts.join('');\n          body.uuid_original = uuid_original;\n\n          // URL拼出来的uuid：按原逻辑切割生成uuid_unique（如果长度够18）\n          body.uuid_unique = body.uuid.length >= 18\n            ? (body.uuid.slice(0, 16) + body.uuid.slice(18))\n            : body.uuid;\n        } else {\n          // 兜底：仍保证 uuid_unique 有值\n          body.uuid = uuid_original;\n          body.uuid_original = uuid_original;\n          body.uuid_unique = body.uuid_unique || '';\n        }\n      }\n\n      console.log(\"Processed UUID:\", { uuid: body.uuid, uuid_unique: body.uuid_unique });\n    } else {\n      body.uuid_unique = '';\n      console.log(\"UUID not found in body.\");\n    }\n\n    result = body;\n  } else {\n    result = { uuid_unique: '' };\n    console.log(\"Body not found in first item.\");\n  }\n} else {\n  result = { uuid_unique: '' };\n  console.log(\"Input array is empty or not an array.\");\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -48
+      ],
+      "id": "dfb43236-ed04-452c-9a05-0f7c8b3428f2",
+      "name": "切割uuid"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select pd.procedure_detail_id from mes.procedure_detail pd \nwhere pd.procedure_name = 'SN与UUID绑定'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        -48
+      ],
+      "id": "05172074-2b52-4190-a8e3-68da2de9974f",
+      "name": "查询uuid绑定sn的工序id",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM mes.machine_data\nWHERE\n  (\n    -- 绑定记录：顶层 bind_id\n    LOWER(data ->> 'bind_id') = LOWER('{{ $json.data.uuid }}')\n    OR\n    -- 解绑记录：data_old 里的 bind_id\n    LOWER(data #>> '{data_old,bind_id}') = LOWER('{{ $json.data.uuid }}')\n\n    OR\n    -- 解绑记录：顶层 unbind_id\n    LOWER(data ->> 'unbind_id') = LOWER('{{ $json.data.uuid }}')\n\n    OR\n    -- 绑定记录：顶层 uuid_unique\n    LOWER(data ->> 'uuid_unique') = LOWER('{{ $json.data.uuid_unique }}')\n    OR\n    -- 解绑记录：data_old 里的 uuid_unique\n    LOWER(data #>> '{data_old,uuid_unique}') = LOWER('{{ $json.data.uuid_unique }}')\n  )\n  AND procedure_detail_id IN (\n    SELECT pd.procedure_detail_id\n    FROM mes.procedure_detail pd\n    WHERE pd.procedure_name IN ('物料解除绑定','SN与UUID绑定')\n  )\n  AND retroid_id = '{{ $json.retroid_id }}'\nORDER BY createtime DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        976,
+        -176
+      ],
+      "id": "60a941dc-92b2-4f16-bc1f-555d52663b1e",
+      "name": "判断是否有绑定关系",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        -176
+      ],
+      "id": "3bbdca54-aac7-4fe3-bc6d-947a68b12179",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.machine_data\nwhere LOWER(data ->>'uuid_unique')=LOWER('{{ $json.uuid_unique }}') and procedure_detail_id in (select pd.procedure_detail_id from mes.procedure_detail pd \nwhere pd.procedure_name='SN与UUID绑定' )\norder by createtime DESC\nlimit 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        -48
+      ],
+      "id": "2395fc4e-a12e-4df5-b5a1-3757b9682143",
+      "name": "查询最新绑定",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93eda7b2-e2d9-4c35-9a40-653cef865dd3",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        -48
+      ],
+      "id": "1f5d8e46-dad9-4e5e-b21a-78006ac0e3b8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('切割uuid').all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -48
+      ],
+      "id": "268fa2c5-ddd2-4fd1-855f-c3ca043fd411",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e4096292-7aa1-4f61-b340-fc7dd23bd741",
+              "leftValue": "={{ $json.procedure_detail_id }}",
+              "rightValue": 62,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -176
+      ],
+      "id": "496f85db-eb6b-490d-ba90-74aabf707ff8",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json:{\n    tag:1\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        32
+      ],
+      "id": "0cb38a8b-d56c-4697-b2e4-5800364a5257",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all()\nreturn {\n  json:{\n    tag:0,\n    data:data\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        -240
+      ],
+      "id": "baf0ef76-0e18-4182-8894-622d72856eab",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "uuidGetSn",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -368,
+        80
+      ],
+      "id": "dde1ee21-0efc-4ee7-98aa-dc966abd1756",
+      "name": "Webhook",
+      "webhookId": "b2a4843d-fae0-40c1-8dea-69e3f9c19e4e"
+    }
+  ],
+  "connections": {
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "切割uuid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "切割uuid": {
+      "main": [
+        [
+          {
+            "node": "查询uuid绑定sn的工序id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询uuid绑定sn的工序id": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有绑定关系": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询最新绑定": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "判断是否有绑定关系",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "查询最新绑定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "body": {
+            "sn": "",
+            "uuid": "REDACTED",
+            "procedure_name": "",
+            "model": "",
+            "bgtime": "",
+            "edtime": "",
+            "result": ""
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "821d8f4f-c988-42db-88bc-8f7e74fcea0e",
+  "activeVersionId": "821d8f4f-c988-42db-88bc-8f7e74fcea0e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T03:33:49.281Z",
+      "createdAt": "2025-04-24T03:33:49.281Z",
+      "role": "workflow:owner",
+      "workflowId": "zIsWkclkRfztC4WQ",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

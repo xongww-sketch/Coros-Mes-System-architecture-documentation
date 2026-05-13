@@ -1,0 +1,236 @@
+{
+  "updatedAt": "2025-04-24T06:54:46.921Z",
+  "createdAt": "2024-08-02T07:42:16.302Z",
+  "id": "4UitmYHNUU2BIsTx",
+  "name": "getPackageInfo",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "package_name",
+              "renameField": true,
+              "outputFieldName": "pkNameList"
+            },
+            {
+              "fieldToAggregate": "package_version",
+              "renameField": true,
+              "outputFieldName": "pkVersionList"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "361b09e6-ea43-4c1b-aafb-8050e544b130",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"message\":\"查询成功！\",\n  \"data\":{{ JSON.stringify($json) }}\n} ",
+        "options": {}
+      },
+      "id": "1de7c335-d1cf-4e63-9b3c-c17df7100312",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "installation_package",
+          "mode": "list",
+          "cachedResultName": "installation_package"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "is_delete",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "package_name",
+            "package_version"
+          ]
+        }
+      },
+      "id": "449ca910-1322-46ea-8de3-f59e59f0b79e",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        800,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 201,\n  \"message\":\"数据库错误！\",\n} ",
+        "options": {}
+      },
+      "id": "32d73ade-f77f-4648-a9ed-8ed0dfb02d7b",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1020,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "path": "pakcageListInfo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "20e0a3a3-3de5-45ee-97ce-b80928fc0399",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        580,
+        260
+      ],
+      "webhookId": "e9a139ae-90b8-4941-8393-f50ecab0c865"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\n//使用set进行数组去重\nfor (const item of $input.all()) {\n  const pkNameList=item.json.pkNameList;\n  const pkVersionList=item.json.pkVersionList;\n  const newPkNameList=[...new Set(pkNameList)].map((item,index)=>{\n    return {\n      code:index,\n      name:item\n    }\n  });\n  const newVerList=[...new Set(pkVersionList)].map((item,index)=>{\n    return {\n      code:index,\n      name:item\n    }\n  });\n  item.json.pkNameList=newPkNameList;\n  item.json.pkVersionList=newVerList;\n}\n\nreturn $input.all();"
+      },
+      "id": "ea3fc91f-9a80-4820-8a40-667fcf002b73",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0d2fc12d-5c71-41be-a9ee-e3f96570e464",
+  "activeVersionId": "0d2fc12d-5c71-41be-a9ee-e3f96570e464",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T06:44:42.977Z",
+      "createdAt": "2025-04-24T06:44:42.977Z",
+      "role": "workflow:owner",
+      "workflowId": "4UitmYHNUU2BIsTx",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

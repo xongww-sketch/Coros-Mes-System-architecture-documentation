@@ -1,0 +1,306 @@
+{
+  "updatedAt": "2024-12-04T07:00:58.863Z",
+  "createdAt": "2024-12-04T03:35:38.634Z",
+  "id": "jKJdMFSJOVm3gg29",
+  "name": "Coroschanel_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "962f5472-4d51-47d8-a16f-229c1b0b4dde",
+              "leftValue": "={{ $json.body.Channel }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "30eb0272-26c3-48f9-8540-447ce12ad9ea",
+              "leftValue": "={{ $json.body.CreateDate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "efc849e9-fe0f-4cfb-8a51-9d28fa003311",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        580,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\"\n}",
+        "options": {}
+      },
+      "id": "28e3899f-ffae-41bd-90fc-6ba013e1b57b",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Coroschanel_API",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f8827306-9931-452d-9666-3af632533439",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        400,
+        400
+      ],
+      "webhookId": "3f98d8f6-b500-4c40-8516-5bcb2072ec38"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "7d0f03b6-4779-4927-bcd8-901431ad4644",
+              "leftValue": "={{ $json.RowsInserted }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0e4161f3-f74c-45f5-a7ca-2af5160b92fb",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        980,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"插入失败\"\n}",
+        "options": {}
+      },
+      "id": "50f86193-eaba-43e5-aa31-78935f2ab4f5",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":\"传入值为空\"\n}",
+        "options": {}
+      },
+      "id": "c0fa04a3-4285-4d54-a8c0-ea2077670d1b",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DECLARE @RowsInserted INT;\nINSERT INTO YFConsumer.dbo.consm_barcodebindinfo_CorosChannel (\n  Channel,\n  CreateDate,\n  ModifyDate\n)\nVALUES (\n  '{{ $json.body.Channel }}',\n  '{{ $json.body.CreateDate }}',\n  '{{ $json.body.ModifyDate }}'\n);\nSET @RowsInserted = @@ROWCOUNT;\n\nSELECT @RowsInserted AS RowsInserted;"
+      },
+      "id": "cda5b0c3-16ff-43bc-95c3-a07951106af6",
+      "name": "Microsoft SQL",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        300
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.32.65",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "108",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "Channel": "11043",
+            "CreateDate": "2024-12-04 11:28:41",
+            "ModifyDate": "2024-12-04 11:28:41"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/Coroschanel_API",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "59fb732b-dade-4f45-af65-a53dffcfbe3e",
+  "activeVersionId": "59fb732b-dade-4f45-af65-a53dffcfbe3e",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:32.105Z",
+      "createdAt": "2024-01-26T07:50:15.258Z",
+      "id": "Sagrd0CJUl5QtuS4",
+      "name": "MES相关应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-12-04T03:35:38.634Z",
+      "createdAt": "2024-12-04T03:35:38.634Z",
+      "role": "workflow:owner",
+      "workflowId": "jKJdMFSJOVm3gg29",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

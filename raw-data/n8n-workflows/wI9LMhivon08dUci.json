@@ -1,0 +1,705 @@
+{
+  "updatedAt": "2025-02-17T06:02:00.683Z",
+  "createdAt": "2024-04-24T03:51:58.445Z",
+  "id": "wI9LMhivon08dUci",
+  "name": "定时从管易中获取订单信息存储到数据库中",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "a0f12c9b-5f3f-4ac1-9782-bfd0683d7359",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "f3481d37-09fd-4b4f-8730-4a9d0eed0b4d",
+      "name": "Crypto",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.get"
+            },
+            {
+              "name": "start_create",
+              "value": "={{ $json.oneHourAfter}}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "end_create",
+              "value": "={{ $json.now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ac737745-7698-4760-ad4f-b321b2369d7f",
+      "name": "管易通过单据编号查询到对应订单信息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1520,
+        300
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nlet res={};\nfunction toDatabaseDateTimeString(date) {\n  const pad = (number) => number.toString().padStart(2, '0');\n\n  const year = date.getFullYear();\n  const month = pad(date.getMonth() + 1); // 月份从0开始，所以+1\n  const day = pad(date.getDate());\n  const hours = pad(date.getHours());\n  const minutes = pad(date.getMinutes());\n  const seconds = pad(date.getSeconds());\n\n  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;\n}\n\n// 获取当前时间\nconst now = new Date();\n const utcOffset = now.getTimezoneOffset() * 60000; // 获取UTC偏移量并转成毫秒\n  const chinaOffset = 8 * 60 * 60 * 1000;\n  const chinaTime=new Date(now.getTime() + utcOffset + chinaOffset);\nconsole.log(chinaTime);\n// 获取当前时间之前的半小时的数据\nconst oneHourAfter = new Date(chinaTime.getTime() - 60 * 60 * 500);\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.trade.deliverys.get\",\n  \"start_create\":toDatabaseDateTimeString(oneHourAfter),\n  \"end_create\":toDatabaseDateTimeString(chinaTime)\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nres.now=toDatabaseDateTimeString(chinaTime);\nres.oneHourAfter=toDatabaseDateTimeString(oneHourAfter);\nresult.push(res);\nreturn result;"
+      },
+      "id": "cb015a0e-a8c5-44db-b4aa-e4b6e6dc2a44",
+      "name": "生成管易签名",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst orderList=[];\nfor (const item of $input.all()) {\n  const tempList=JSON.parse(item.json.data).deliverys;\n  tempList.forEach(e=>{\n    orderList.push(e.code);\n  })\n}\n\nreturn {\n  orderList:orderList\n};"
+      },
+      "id": "fef02e8c-ba68-45d2-b1fd-4c17a8c6b447",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "orderList",
+        "options": {
+          "destinationFieldName": "code"
+        }
+      },
+      "id": "0bf2a8da-a143-4f8d-81ea-347d5802a35a",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3240,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.res.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "d8ac26fa-17f6-4b9c-9850-011f2cbb03cc",
+      "name": "Crypto1",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        3740,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.detail.get"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "code",
+              "value": "={{ $json.code }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b4e4f4d2-cad9-483c-bab2-ddfb024a1249",
+      "name": "管易通过单据编号查询到对应订单信息1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        3980,
+        320
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor(const item of $input.all()){\n  let res={};\n  let json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.trade.deliverys.detail.get\",\n  \"code\":item.json.code,\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\n  item.json.res=res;\n}\n\nreturn $input.all();"
+      },
+      "id": "f8e73217-7bc6-4247-b59e-9a32829f04b6",
+      "name": "生成管易签名1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3480,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "delivery_order_caches",
+          "mode": "list",
+          "cachedResultName": "delivery_order_caches"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "express_no": "={{ JSON.parse($json.data).delivery.express_no }}",
+            "data": "={{ $json.data }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "express_no",
+              "displayName": "express_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8adcf7fc-f9be-4d80-af3d-c12bb999113b",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        4220,
+        280
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "BL4wSHRFrPv7yqAa",
+          "name": "warehouse.pgsql.mes.coros.team"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 发送警告邮件\n",
+        "height": 260.987430654623,
+        "width": 297.8994602419833
+      },
+      "id": "edf336ac-8ab8-4260-9e84-be71a835c2fe",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3220,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "huangqili@coros.com",
+        "subject": "[n8n warn] -  管易API同步失败",
+        "html": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "265adda7-f435-401e-92a4-054f5a27917e",
+      "name": "Send Warn Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3320,
+        880
+      ],
+      "retryOnFail": false,
+      "webhookId": "a350a08f-a7fc-407e-8fdd-47880088da57",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dca557a2-6542-4424-8480-9c280036e8e6",
+              "name": "total",
+              "value": "={{ Math.ceil(JSON.parse($json.data).total/10) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2793f994-fbfb-4c47-8802-68fa99ceed98",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1740,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.str }}",
+        "dataPropertyName": "sign"
+      },
+      "id": "1c34343b-371a-4093-af97-d1063e0d899d",
+      "name": "Crypto2",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        2600,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.guanyierp.com/rest/erp_open",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "176397"
+            },
+            {
+              "name": "sessionkey",
+              "value": "REDACTED"
+            },
+            {
+              "name": "method",
+              "value": "gy.erp.trade.deliverys.get"
+            },
+            {
+              "name": "start_create",
+              "value": "={{ $json.oneHourAfter}}"
+            },
+            {
+              "name": "sign",
+              "value": "={{ $json.sign.toUpperCase() }}"
+            },
+            {
+              "name": "end_create",
+              "value": "={{ $json.now }}"
+            },
+            {
+              "name": "page_no",
+              "value": "={{ $json.page }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dc1b2a2f-30f3-4e0a-a3f8-2d3a30bf9947",
+      "name": "管易通过单据编号查询到对应订单信息2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2820,
+        260
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet result=[];\nlet res={};\nfunction toDatabaseDateTimeString(date) {\n  const pad = (number) => number.toString().padStart(2, '0');\n\n  const year = date.getFullYear();\n  const month = pad(date.getMonth() + 1); // 月份从0开始，所以+1\n  const day = pad(date.getDate());\n  const hours = pad(date.getHours());\n  const minutes = pad(date.getMinutes());\n  const seconds = pad(date.getSeconds());\n\n  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;\n}\n\n// 获取当前时间\nconst now = new Date();\n const utcOffset = now.getTimezoneOffset() * 60000; // 获取UTC偏移量并转成毫秒\n  const chinaOffset = 8 * 60 * 60 * 1000;\n  const chinaTime=new Date(now.getTime() + utcOffset + chinaOffset);\nconsole.log(chinaTime);\n// 获取当前时间之前的半小时的数据\nconst oneHourAfter = new Date(chinaTime.getTime() - 60 * 60 * 500);\nlet json={\n  \"appkey\":\"176397\",\n  \"sessionkey\":\"1f9fd48ad3d14304a40c4a52df91646a\",\n  \"method\":\"gy.erp.trade.deliverys.get\",\n  \"start_create\":toDatabaseDateTimeString(oneHourAfter),\n  \"end_create\":toDatabaseDateTimeString(chinaTime),\n  \"page_no\":$input.all()[0].json.page+1\n}\nlet secret="REDACTED";\nlet str=secret+JSON.stringify(json)+secret;\nres.str=str;\nres.page=$input.all()[0].json.page+1,\nres.now=toDatabaseDateTimeString(chinaTime);\nres.oneHourAfter=toDatabaseDateTimeString(oneHourAfter);\nresult.push(res);\nreturn result;"
+      },
+      "id": "99841722-b54d-43db-a78f-2b8174bd6433",
+      "name": "生成管易签名2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2380,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet pageList=[];\nfor (const item of $input.all()) {\n  for(let i=0;i<item.json.total;i++){\n    pageList.push({\n      page:i\n    })\n  }\n}\n\nreturn pageList;"
+      },
+      "id": "b63eb4e7-ba25-4dc1-a1d9-673a96565baa",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bdded7e1-1d5a-45a2-a52c-5987dd097c13",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2180,
+        200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "2bc97030-1fa3-45a5-b433-b00810942165",
+      "name": "Replace Me",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        860
+      ]
+    }
+  ],
+  "connections": {
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto1": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名1": {
+      "main": [
+        [
+          {
+            "node": "Crypto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "生成管易签名1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息1": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warn Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto2": {
+      "main": [
+        [
+          {
+            "node": "管易通过单据编号查询到对应订单信息2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成管易签名2": {
+      "main": [
+        [
+          {
+            "node": "Crypto2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "生成管易签名2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "管易通过单据编号查询到对应订单信息2": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrencyRules": [],
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-02-17T10:30:58.013+08:00",
+          "Readable date": "February 17th 2025, 10:30:58 am",
+          "Readable time": "10:30:58 am",
+          "Day of week": "Monday",
+          "Year": "2025",
+          "Month": "February",
+          "Day of month": "17",
+          "Hour": "10",
+          "Minute": "30",
+          "Second": "58",
+          "Timezone": "Asia/Shanghai (UTC+08:00)"
+        }
+      }
+    ]
+  },
+  "versionId": "e1a94d3b-7ded-4020-ba96-fbd815a5edd7",
+  "activeVersionId": "e1a94d3b-7ded-4020-ba96-fbd815a5edd7",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T09:11:31.290Z",
+      "createdAt": "2024-04-24T09:11:31.290Z",
+      "id": "iWa6cFsaNCZZuvFh",
+      "name": "仓库出货API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-04-24T03:51:58.445Z",
+      "createdAt": "2024-04-24T03:51:58.445Z",
+      "role": "workflow:owner",
+      "workflowId": "wI9LMhivon08dUci",
+      "projectId": "5OPa47DpFXNkfnTO",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "5OPa47DpFXNkfnTO",
+        "name": "huang qili <huangqili@coros.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1aa478dc-b04d-4bf9-aac8-c9ac5ec33c2c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

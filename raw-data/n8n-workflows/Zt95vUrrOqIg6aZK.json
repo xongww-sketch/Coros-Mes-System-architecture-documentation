@@ -1,0 +1,755 @@
+{
+  "updatedAt": "2025-05-16T05:43:42.477Z",
+  "createdAt": "2025-05-15T10:04:50.464Z",
+  "id": "Zt95vUrrOqIg6aZK",
+  "name": "insert_vmaterial_code",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "insert_vmaterial_code",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2380,
+        260
+      ],
+      "id": "64b1c517-1cc9-4567-8153-9d63c6308568",
+      "name": "Webhook",
+      "webhookId": "42ace1d3-1692-4670-a35c-e24ad87d6072"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"200\",\n  \"msg\": \"编码规则记录成功\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        -60
+      ],
+      "id": "4233803d-785e-4567-b0f7-bf219763701d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a8b20a27-64b2-4e98-b9f2-f9936fddf1b9",
+              "leftValue": "={{ $json.body.productname }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b87770fd-1bb5-4e66-bdb3-d18028439c2d",
+              "leftValue": "={{ $json.body.materials_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "54931023-ad6c-4508-b959-f5fd9f27a089",
+              "leftValue": "={{ $json.body.materials_code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2220,
+        260
+      ],
+      "id": "dd0111ba-bdd8-482d-a2b5-13153d5986e0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"参数不完整\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -2040,
+        340
+      ],
+      "id": "1f9772d2-02fb-44d6-9041-e1cadbff4e58",
+      "name": "参数不完整"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"编码格式不正确\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -1480,
+        360
+      ],
+      "id": "bfe5a068-a73c-4e05-b827-d2e7fd4f92f4",
+      "name": "编码格式不正确"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取body中的参数值\nconst materials_code=$input.first().json.body.materials_code;\n\n// 使用正则表达式检查是否只包含英文字母\nconst isEnglish = /^[A-Za-z]+$/.test(materials_code);\n\n\n// 如果是英文，继续流程\nreturn { isValid: isEnglish, materials_code: materials_code };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1880,
+        200
+      ],
+      "id": "5107c343-08b1-4bb7-8bef-e1366bc3f47b",
+      "name": "验证编码格式是否正确",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const materials_name = $input.first().json.body.materials_name\nconst materials_code = $input.first().json.body.materials_code\n\n//正则去除所有换行符\nconst cleanMaterials_name = materials_name.replace(/\\s|\\/n/g, '');\nconst cleanMaterials_code = materials_code.replace(/\\s|\\/n/g, '');\n\n// 返回清理后的数据\nreturn {\n  json: {\n    body: {\n      materials_name:     cleanMaterials_name,\n     materials_code: cleanMaterials_code\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2040,
+        200
+      ],
+      "id": "71c491bf-d318-48eb-9a49-9325df2dcb56",
+      "name": "去除空格"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.vmaterial_code vc \nwhere vc.materials_name = '{{ $('去除空格').item.json.body.materials_name }}' and vc.productname ='{{ $('Webhook').item.json.body.productname }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1380,
+        100
+      ],
+      "id": "1d000ac6-2535-4d5b-b6d4-6086e66d381d",
+      "name": "检查物料名称是否已存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ad4c81d5-4a23-4467-9360-c2f678fe1628",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1180,
+        40
+      ],
+      "id": "40ef57ec-bdca-427c-9a23-c988b83590eb",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"物料名称已存在，请勿重复上传\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        220
+      ],
+      "id": "ce5f92a1-261d-41b2-8a4c-0f8528d2ab88",
+      "name": "物料已存在"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ad4c81d5-4a23-4467-9360-c2f678fe1628",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -780,
+        0
+      ],
+      "id": "b4803394-a254-40b1-bd4a-ed0ad6cb4840",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.vmaterial_code vc \nwhere vc.materials_code = '{{ $('去除空格').item.json.body.materials_code }}' and vc.productname ='{{ $('Webhook').item.json.body.productname }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1000,
+        40
+      ],
+      "id": "bea3095b-49c2-4696-9a03-c130ec998aae",
+      "name": "检查物料编码是否已存在",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"物料编码已存在，请勿重复使用\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -580,
+        240
+      ],
+      "id": "198882ab-fcba-4278-a065-9fdbe9ac6549",
+      "name": "物料编码已存在"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "vmaterial_code",
+          "mode": "list",
+          "cachedResultName": "vmaterial_code"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "materials_code": "={{ $('去除空格').item.json.body.materials_code }}",
+            "materials_name": "={{ $('去除空格').item.json.body.materials_name }}",
+            "createtime": "={{ $now }}",
+            "status": 0,
+            "productname": "={{ $('Webhook').item.json.body.productname }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "materials_name",
+              "displayName": "materials_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "materials_code",
+              "displayName": "materials_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createtime",
+              "displayName": "createtime",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "productname",
+              "displayName": "productname",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -560,
+        -20
+      ],
+      "id": "6b399624-cc96-446f-8aa7-4dd98a0289db",
+      "name": "插入编码",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"数据库操作失败\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        280
+      ],
+      "id": "8d13ee30-c105-4442-a70b-c7e066aa3793",
+      "name": "数据库操作失败"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4e7bff41-1ace-4bbd-bc02-081cbc972c31",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        -40
+      ],
+      "id": "34aec7ef-3a4f-4bc0-94b1-f5e72398255a",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\": \"数据库插入失败，请联系开发检查\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        120
+      ],
+      "id": "cdf8b35e-1a1b-44a2-987a-98b3976924ad",
+      "name": "插入失败"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2cd0d2b2-56fa-41d1-8cdc-cd8b6823edd0",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9ce059ae-3a19-499a-8c71-e84451204866",
+              "leftValue": "={{ $json.materials_code.length }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1720,
+        100
+      ],
+      "id": "4031a957-3ffe-49cd-94ae-8c43737ad1ef",
+      "name": "If4"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "去除空格",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "参数不完整",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "验证编码格式是否正确": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "去除空格": {
+      "main": [
+        [
+          {
+            "node": "验证编码格式是否正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查物料名称是否已存在": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库操作失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "检查物料编码是否已存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "物料已存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "插入编码",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "物料编码已存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查物料编码是否已存在": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库操作失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "插入编码": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库操作失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "插入失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "检查物料名称是否已存在",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "编码格式不正确",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.32.218",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "87",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "productname": "w51",
+            "materials_name": "测试3",
+            "materials_code": "bms"
+          },
+          "webhookUrl": "https://n8n-dev-mes.coros.team/prod/insert_vmaterial_code",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "975fe005-33ac-4f2e-b9df-941445747840",
+  "activeVersionId": "975fe005-33ac-4f2e-b9df-941445747840",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-15T10:04:50.464Z",
+      "createdAt": "2025-05-15T10:04:50.464Z",
+      "role": "workflow:owner",
+      "workflowId": "Zt95vUrrOqIg6aZK",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

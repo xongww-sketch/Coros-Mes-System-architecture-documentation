@@ -1,0 +1,683 @@
+{
+  "updatedAt": "2026-02-09T08:04:28.778Z",
+  "createdAt": "2025-06-16T03:30:37.002Z",
+  "id": "zKOjTMRJkI1LQZS7",
+  "name": "get_fqc",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get_fqc",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "85959f57-1534-4d1c-978b-666d606ee8db",
+      "name": "Webhook",
+      "webhookId": "80304875-fac5-40ee-93d4-f6c72afd79b1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7ecd5f26-2b11-46fc-9bd6-1e4de8f26a6b",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f37a2b1d-550b-41de-9894-babf215aa4ac",
+              "leftValue": "={{ $json.body.start_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b83cf8bd-7590-403c-a733-5b2eed052224",
+              "leftValue": "={{ $json.body.end_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        0
+      ],
+      "id": "dfa65539-838e-42dc-a20a-4122364a214f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":  \"ok\",\n  \"data\": {{ $json.toJsonString() }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2304,
+        -96
+      ],
+      "id": "12af48f3-1169-4c93-9e4f-8f57c2ffd29d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假设 items 是您的输入数据\nconst items = $input.all();\n\n// 检查输入数据是否为空或包含空对象\nif (items.length === 0 || (items.length === 1 && Object.keys(items[0]).length === 0)) {\n  // 返回格式化为空值的输出\n  return { json: { data: [{}] } };\n} else {\n  // 正常处理输入数据\n  const mergedArray = items.map(item => {\n    return {\n      joborder_number: item.json.joborder_number || \"\",\n      retroid_id: item.json.retroid_id || \"\",\n      bind_id: item.json.bind_id || \"\",\n      retroid: item.json.retroid || \"\",\n      createtime: item.json.createtime || \"\"\n    };\n  });\n\n  return { json: { data: mergedArray } };\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        -96
+      ],
+      "id": "c6d91a61-4372-473f-814a-efcf5e6d9605",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"未填写工单或创建时间\",\n  \"data\": []\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        528,
+        128
+      ],
+      "id": "4307de54-421b-4eb0-986c-3975bc7e3917",
+      "name": "未填写工单"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "joborder",
+          "mode": "list",
+          "cachedResultName": "joborder"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "joborder_id",
+              "value": "={{ $json.body.joborder_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        -272
+      ],
+      "id": "a2c788a2-f3ba-4139-baa5-3ac4bf727b5b",
+      "name": "判断工单类型",
+      "retryOnFail": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8cdb86cb-f13b-4138-81dc-075488a2c878",
+              "leftValue": "={{ $json.joborder_type }}",
+              "rightValue": "PACK",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        -304
+      ],
+      "id": "c41752fb-8820-4096-984e-48f53328049d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    -- 1. 修改展示字段：优先取 jobNumber，如果没有则取 ticketNo\n    COALESCE(md.data->>'jobNumber', md.data->>'ticketNo') AS jobNumber, \n    r.retroid_id, \n    r.retroid\nFROM \n    mes.machine_data md\nJOIN \n    mes.retroid r ON md.retroid_id = r.retroid_id\nJOIN \n    mes.joborder jo ON \n    -- 2. 修改关联条件：使用 COALESCE 来匹配工单表，无论 JSON 里存的是哪个 key\n    COALESCE(md.data->>'jobNumber', md.data->>'ticketNo') = jo.joborder_number\nWHERE\n    jo.joborder_number = '{{ $json.joborder_number }}' \n    AND r.status < 3\n    AND md.procedure_detail_id = '79';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1392,
+        -320
+      ],
+      "id": "0a1a769b-82df-4c55-84d6-c0febdbd3a44",
+      "name": "oqc查询",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT ON (md.retroid_id)\n    jo.joborder_number,\n    md.retroid_id as retroid_id,\n    md.data ->>'bind_id' as bind_id,\n    md.data ->>'retroid' as retroid,\n    md.createtime \nFROM \n    mes.machine_data md \nJOIN \n    mes.retroid r ON r.retroid_id = md.retroid_id::INTEGER \nJOIN\n    mes.joborder jo ON r.joborder_id =\n  jo.joborder_id ::INTEGER \nWHERE \n    md.procedure_detail_id = 58 \n    AND r.joborder_id = '{{ $json.joborder_id }}'\n    and r.status<3\nORDER BY \n    md.retroid_id,\n    md.createtime DESC",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        832,
+        -176
+      ],
+      "id": "b7c562d5-5763-4914-91ab-42ffbeea7669",
+      "name": "fqc查询",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    md.data->>'jobNumber' AS jobNumber,\n    r.retroid_id,\n    r.retroid\nFROM \n    mes.machine_data md\nJOIN \n    mes.retroid r ON md.retroid_id = r.retroid_id\nJOIN \n    mes.joborder jo ON md.data->>'jobNumber' = jo.joborder_number\nWHERE\n    jo.joborder_number = '{{ $json.joborder_number }}'\nand r.status<3\nAND\n    md.procedure_detail_id = '79';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        816,
+        -320
+      ],
+      "id": "8b5dc5ed-d0c0-4553-8509-d3836cad383d",
+      "name": "查询工单对应sn",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": \"400\",\n  \"msg\":  \"数据库报错\",\n  \"data\": []\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2272,
+        544
+      ],
+      "id": "da6af7ee-03d8-42b7-b270-e112eba81b49",
+      "name": "数据库报错"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e4742998-4146-4f06-9987-148bf705280a",
+              "leftValue": "={{ $json.body.joborder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        -128
+      ],
+      "id": "cdda070e-78da-4f22-b8c2-24a8d58cae36",
+      "name": "判断查询条件"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT ON (md.retroid_id)\n    jo.joborder_number,\n    md.retroid_id as retroid_id,\n    md.data ->>'bind_id' as bind_id,\n    md.data ->>'retroid' as retroid,\n    md.createtime \nFROM \n    mes.machine_data md \nJOIN \n    mes.retroid r ON r.retroid_id = md.retroid_id::INTEGER \nJOIN\n    mes.joborder jo ON r.joborder_id =\njo.joborder_id ::INTEGER \nWHERE \n    md.procedure_detail_id = 58 \n    and r.status<3\n    and md.createtime between \n        '{{ $json.body.start_date }} 00:00:00.000' and \n        '{{ $json.body.end_date }} 23:59:00.000'\nORDER BY \n    md.retroid_id,\n    md.createtime DESC\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        496,
+        -64
+      ],
+      "id": "f7ff7284-1dc7-42c1-8d97-f9301a37e42e",
+      "name": "fqc查询（根据时间）",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假设这是 n8n code 节点的入口\nconst retroidData = $input.all();\nconst jobOrderData = $(\"If1\").all();\n\n// 我们假设你想将jobOrderData和retroidData的每个对象结合起来。\nconst output = retroidData.map(retroidItem => ({\n    json: {\n        joborder_number: jobOrderData[0].json.joborder_number, // 使用jobOrderData的第一个对象\n        ...retroidItem.json\n    }\n}));\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        -320
+      ],
+      "id": "2766897b-ac17-4b77-9fa2-74e097e0f023",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -336
+      ],
+      "id": "0c474dca-4265-4204-af54-15404b7a19ed",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b46c7740-cb61-4d16-9e09-39278cc26353",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        -320
+      ],
+      "id": "8db6a667-7bc9-4274-8cc3-6086f18ed878",
+      "name": "If2"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "判断查询条件",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "未填写工单",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断工单类型": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "查询工单对应sn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fqc查询",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "oqc查询": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fqc查询": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询工单对应sn": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断查询条件": {
+      "main": [
+        [
+          {
+            "node": "判断工单类型",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fqc查询（根据时间）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fqc查询（根据时间）": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "数据库报错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "oqc查询",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.144.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "70",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "joborder_id": "94",
+            "start_date": "2025-08-18",
+            "end_date": "2025-08-18"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/get_fqc",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "042c9032-b973-4bed-b28e-5babbd84f502",
+  "activeVersionId": "042c9032-b973-4bed-b28e-5babbd84f502",
+  "versionCounter": 34,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-06-16T03:30:37.002Z",
+      "createdAt": "2025-06-16T03:30:37.002Z",
+      "role": "workflow:owner",
+      "workflowId": "zKOjTMRJkI1LQZS7",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

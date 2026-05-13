@@ -1,0 +1,498 @@
+{
+  "updatedAt": "2025-09-24T08:39:14.232Z",
+  "createdAt": "2025-05-07T09:48:47.937Z",
+  "id": "hHmgbvDZUSWhwnAv",
+  "name": "sn查绑定数据通用接口",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "fe0d3d82-938a-414d-bc6a-87359c770b0c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select r.retroid_id from mes.retroid r\nwhere r.retroid ='{{ $json.body.sn }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        128,
+        -256
+      ],
+      "id": "d3dd3b65-b3ef-49f0-901c-9a8d250c13d8",
+      "name": "查sn的retroid_id",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id in(39,62)\nand md.retroid_id ='{{ $json.retroid_id }}'\nand (md.data ->'data_old'->'uuid'is not null or md.data ->>'uuid' is not null)\norder by md.createtime desc\nlimit 1\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        -624
+      ],
+      "id": "9e94e23d-2b37-4182-9c9e-d4e52bb16ec1",
+      "name": "查SN与UUID绑定情况",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id in(50,62)\nand md.retroid_id ='{{ $json.retroid_id }}'\nand (md.data ->'data_old'->'screen'is not null or md.data ->>'screen' is not null)\norder by md.createtime desc\nlimit 1\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        -464
+      ],
+      "id": "36c88038-9597-4491-bb76-8d10f629660a",
+      "name": "查SN与屏批次号绑定情况",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id in(31,62)\nand md.retroid_id ='{{ $json.retroid_id }}'\nand (md.data ->'data_old'->'battery_id'is not null or md.data ->>'battery_id' is not null)\norder by md.createtime desc\nlimit 1\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        -304
+      ],
+      "id": "3e09d212-f9c2-4393-9516-63294cc60101",
+      "name": "查SN与电池二维码绑定情况",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from mes.machine_data md \nwhere md.procedure_detail_id in(59,62)\nand md.retroid_id ='{{ $json.retroid_id }}'\nand (md.data ->'data_old'->'remark'is not null or md.data ->>'remark' is not null)\norder by md.createtime desc\nlimit 1\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        -144
+      ],
+      "id": "6709ec87-488a-4e30-93e5-d27e554c7fbd",
+      "name": "查信息备注绑定情况",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        -336
+      ],
+      "id": "cce94077-a212-41a2-b78b-605a11590afd",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c90888f6-1fa4-4495-975d-35b713a8d748",
+              "leftValue": "={{ $json.body.sn }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "37177fad-5c47-4e89-a184-c458046a99a2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mes.machine_data WHERE retroid_id IN ({{ $json.body.retroid_id }});",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        128,
+        96
+      ],
+      "id": "3f6b1a6b-683d-42e5-b216-b2aa25e3432d",
+      "name": "根据retroid_id查询绑定情况",
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入数据\nconst items = $input.all().map(item => item.json);\n\n// Step 1: 将数据按照 createtime 排序\nitems.sort((a, b) => new Date(a.createtime) - new Date(b.createtime));\n\n// Step 2: 过滤掉 procedure_detail_id 为 13 的数据\nconst filteredItems = items.filter(item => item.procedure_detail_id !== 13);\nconsole.log(\"Filtered Items (without procedure_detail_id 13):\", filteredItems);\n\n// Step 3: 使用 Map 来组织数据，以便根据 retroid_id 管理它们\nconst retroidMap = new Map();\n\nfor (const item of filteredItems) {\n  const id = item.retroid_id;\n\n  if (!retroidMap.has(id)) {\n    retroidMap.set(id, []);\n  }\n\n  retroidMap.get(id).push(item);\n}\n\n// Step 4: 过滤出仍然具有绑定数据的 retroid_id\nconst activeBindings = new Set();\n\nretroidMap.forEach((list, retroidId) => {\n  const boundItemIds = new Set();\n  const unboundItemIds = new Set();\n\n  for (const obj of list) {\n    if (obj.procedure_detail_id === 62) {\n      // 收集解绑的 machine_data_id_old\n      const oldMachineId = parseInt(obj.data.machine_data_id_old);\n      unboundItemIds.add(oldMachineId);\n    } else {\n      // 收集所有绑定数据的 machine_data_id\n      boundItemIds.add(obj.machine_data_id);\n    }\n  }\n\n  // 如果存在绑定但没有被解绑的记录\n  if ([...boundItemIds].some(id => !unboundItemIds.has(id))) {\n    activeBindings.add(retroidId);\n  }\n});\n\n// Step 5: 格式化输出，返回具有活动绑定的 retroid_id\nreturn [...activeBindings].map(id => ({ json: { retroid_id: id }}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        96
+      ],
+      "id": "72a6c756-b9ff-4816-a94a-d772f35a909a",
+      "name": "统计拥有绑定数据的sn",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "//tag：0 代表未查到绑定数据，tag：1 代表sn存在绑定数据\n//tag：2 代表存在绑定数据，但均已解绑\n\n\nconst items = $input.all();\n\n// 1. 过滤空item（检查json是否存在且非空对象）\nconst nonEmptyItems = items.filter(item => \n  item?.json && Object.keys(item.json).length > 0\n);\n\n// 2. 如果全部为空，返回tag:0\nif (nonEmptyItems.length === 0) {\n  return [{ json: { tag: 0 } }];\n}\n\n// 3. 筛选procedure_detail_id≠62的项，并提取sn或retroid\nconst resultItems = nonEmptyItems\n  .filter(item => item.json.procedure_detail_id !== 62)\n  .map(item => {\n    // 尝试从不同位置获取sn\n    const sn = item.json.data?.sn || \n               item.json.data?.data_old?.sn || \n               null;\n    \n    // 尝试获取retroid（可能是字符串或数字）\n    const retroid = item.json.retroid_id?.toString() || \n                    item.json.data?.retroid_id_old?.toString() || \n                    null;\n    \n    return sn || retroid ? { sn, retroid } : null;\n  })\n  .filter(item => item !== null); // 确保至少有一个有效值\n\n// 4. 根据结果返回\nif (resultItems.length > 0) {\n  // 返回tag:1和有效数据（去重）\n  const uniqueResults = [...new Set(resultItems.map(item => \n    item.sn || item.retroid\n  ))];\n  \n  return [{ \n    json: { \n      tag: 1,\n      result: uniqueResults\n    }\n  }];\n} else {\n  // 没有符合条件的有效数据\n  return [{ json: { tag: 2 } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -304
+      ],
+      "id": "0566f735-928e-4062-9619-86fbb2f1b36c",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "retroid_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        480,
+        96
+      ],
+      "id": "abb46a82-8542-4ce5-ae9c-caf988098f16",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "//tag：0 代表未查到绑定数据，tag：1 代表sn存在绑定数据\n//tag：2 代表存在绑定数据，但均已解绑\n\n\nconst items = $input.all();\n\n// 1. 过滤空item（检查json是否存在且非空对象）\nconst nonEmptyItems = items.filter(item => \n  item?.json && Object.keys(item.json).length > 0\n);\n\n// 2. 如果全部为空，返回tag:0\nif (nonEmptyItems.length === 0) {\n  return [{ json: { tag: 0 } }];\n}\n\n// 3. 筛选procedure_detail_id≠62的项，并提取sn或retroid\nconst resultItems = nonEmptyItems\n  .filter(item => item.json.procedure_detail_id !== 62)\n  .map(item => {\n    // 尝试从不同位置获取sn\n    const sn = item.json.data?.sn || \n               item.json.data?.data_old?.sn || \n               null;\n    \n    // 尝试获取retroid（可能是字符串或数字）\n    const retroid = item.json.retroid_id?.toString() || \n                    item.json.data?.retroid_id_old?.toString() || \n                    null;\n    \n    return sn || retroid ? { sn, retroid } : null;\n  })\n  .filter(item => item !== null); // 确保至少有一个有效值\n\n// 4. 根据结果返回\nif (resultItems.length > 0) {\n  // 返回tag:1和有效数据（去重）\n  const uniqueResults = [...new Set(resultItems.map(item => \n    item.sn || item.retroid\n  ))];\n  \n  return [{ \n    json: { \n      tag: 1,\n      result: uniqueResults\n    }\n  }];\n} else {\n  // 没有符合条件的有效数据\n  return [{ json: { tag: 2 } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        96
+      ],
+      "id": "a919d551-c44d-4e71-87e3-9e50cd1c05ab",
+      "name": "Code"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查sn的retroid_id": {
+      "main": [
+        [
+          {
+            "node": "查SN与UUID绑定情况",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查SN与屏批次号绑定情况",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查SN与电池二维码绑定情况",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "查信息备注绑定情况",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查SN与UUID绑定情况": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查SN与屏批次号绑定情况": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "查SN与电池二维码绑定情况": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "查信息备注绑定情况": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "查sn的retroid_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "根据retroid_id查询绑定情况",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "根据retroid_id查询绑定情况": {
+      "main": [
+        [
+          {
+            "node": "统计拥有绑定数据的sn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统计拥有绑定数据的sn": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.160.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "215",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "joborder_id": "351",
+            "retroid_id": [
+              39313,
+              39314,
+              39315,
+              39316,
+              39317,
+              39318,
+              39319,
+              39320,
+              39321,
+              39322,
+              39323,
+              39324,
+              39325,
+              39326,
+              39327,
+              39328,
+              39329,
+              39330,
+              39331,
+              39332
+            ],
+            "delete_reason": "1",
+            "procedure_name": "删除sn",
+            "type": "1"
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/delete_retroid_generate_list",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "7962bc54-cf98-4175-9541-a5a11fe64646",
+  "activeVersionId": "7962bc54-cf98-4175-9541-a5a11fe64646",
+  "versionCounter": 16,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-05-07T09:48:47.937Z",
+      "createdAt": "2025-05-07T09:48:47.937Z",
+      "role": "workflow:owner",
+      "workflowId": "hHmgbvDZUSWhwnAv",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

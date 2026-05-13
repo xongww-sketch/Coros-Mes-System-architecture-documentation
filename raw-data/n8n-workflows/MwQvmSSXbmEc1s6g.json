@@ -1,0 +1,769 @@
+{
+  "updatedAt": "2025-11-05T02:38:58.975Z",
+  "createdAt": "2024-08-06T08:15:28.140Z",
+  "id": "MwQvmSSXbmEc1s6g",
+  "name": "updateResource",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "2a5a9a1b-a438-4a87-9653-d06535f748ff",
+      "name": "parametet error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "c0bb43f9-3728-4f1d-8563-6f0be9f58e41",
+      "name": "database error1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = [];\nlet isValid = true;\n\nfor (const item of $input.all()) {\n  const { \n    resourceName,\n    resourceId,\n    packageId,\n    resourceType,\n    productionLine,\n  } = item.json.body;\n\n  // 添加新字段 [[10]]\n  const resource = {\n    resourceName,\n    resourceId,\n    packageId,\n    resourceType,\n    productionLine\n  };\n\n  // 参数验证逻辑 [[2]][[6]][[8]]\n  if (resourceType === 1) {\n    if (![resourceName, packageId].every(v => v != null)) {\n      isValid = false;\n      break;\n    }\n  } else {\n    if (![resourceName].every(v => v != null)) {\n      isValid = false;\n      break;\n    }\n  }\n\n  result.push(resource);\n}\n\nif (!isValid) {\n  return { code: 201, message: \"请求参数不能为空！\" };\n}\n\nreturn result;"
+      },
+      "id": "0c79c19e-c2cb-4ca3-b528-df9e48a27f35",
+      "name": "CheckParam",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "24e2c11e-6c84-4623-a58d-99adc5180516",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "68733081-24a8-494a-839d-66227a422d84",
+      "name": "If3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d811dc5f-f51d-4b09-bfbe-972b3c0f012c",
+              "leftValue": "={{ $input.all()[0].json }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "036ba638-1a49-495d-93f3-ed17725ac1c2",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 203,\n  \"message\":\"存在同名的图片！\"\n}",
+        "options": {}
+      },
+      "id": "118dce90-c1f7-4e3f-8120-1f284a5c3164",
+      "name": "exist the same package",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1488,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 202,\n  \"message\":\"数据库错误！\"\n}",
+        "options": {}
+      },
+      "id": "10c18353-b060-4cca-b09a-fffa72f923d0",
+      "name": "database error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2912,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "test",
+        "fileName": "=image/{{ $input.item.binary.image.fileName }}",
+        "binaryPropertyName": "image",
+        "additionalFields": {}
+      },
+      "id": "1919aa55-7855-4894-85ce-73893342ed03",
+      "name": "S3",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        320
+      ],
+      "credentials": {
+        "s3": {
+          "id": "iOjZH472CrlcDjHC",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e8689ccb-2028-490b-aba2-8408049459d1",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 201,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dc2dbe63-39f3-4228-aa9d-01233dc1227a",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        448,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c4c877b8-cc02-4a58-905a-82c780494695",
+              "leftValue": "={{ $('Webhook').all()[0].binary }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6ceae462-dcfc-474e-97c0-a35435eb8e54",
+      "name": "check the image weather is exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        688,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"图片上传失败！\"\n}",
+        "options": {}
+      },
+      "id": "d4acdfa4-3357-41c2-8c70-d915d7e16985",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2432,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sql }}",
+        "options": {}
+      },
+      "id": "abaeb413-71a6-49bb-a315-6dad843947da",
+      "name": "update resource without image",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2624,
+        688
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst SQLstr = {};\n\nfor (const item of $input.all()) {\n  const resource = item.json.body;\n  let sql = `update mes.resources \nset resource_name='${resource.resourceName}', \nprocedure_id='${resource.procedureId}',  production_line='${resource.productionLine}'`;\n\n\n  if (resource.packageId !== \"null\") {\n    sql += `, package_id='${resource.packageId}',resource_status=1`;\n  }\n\n  //  if (resource.deviceType !== \"null\") {\n  //   sql +=`, resource_info = jsonb_set(resource_info, '{deviceType}', '${resource.deviceType}'::jsonb)`\n  // }\n\n  sql += ` where id=${resource.resourceId}`;\n  SQLstr.sql = sql;\n}\n\nreturn SQLstr;\n"
+      },
+      "id": "66475998-faa8-4174-b742-02a932aff57e",
+      "name": "generate dynastic SQL without image",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "mes",
+          "mode": "list",
+          "cachedResultName": "mes"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resources",
+          "mode": "list",
+          "cachedResultName": "resources"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "image",
+              "value": "=image/{{$('Webhook').all()[0].binary.image.fileName}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5831e1a8-163f-4bfd-9892-52fc03a6d3f4",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        880,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "d5aeeb31-64c8-4f1d-81c6-8fb597d70826",
+              "leftValue": "={{ $input.all()[0].binary }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a6df2171-2c39-4483-9c3c-d2de3310be23",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 检查是否存在相同的图片",
+        "height": 734.9244913478228,
+        "width": 1403.0749173911252
+      },
+      "id": "9acf08e1-0e0e-4493-acc0-6005b7b809a0",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 如果上传图片则更新文件服务器上的图片，不存在图片则直接进行更新操作",
+        "height": 668.2492042474948,
+        "width": 1172.3996193029548
+      },
+      "id": "512ea6f8-ad54-44d6-b5ca-e55ee24ff140",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 200,\n  \"message\":\"修改成功！\"\n}",
+        "options": {}
+      },
+      "id": "3e3ae4b2-2433-42cc-82f9-f7c4d8b14e75",
+      "name": "database error2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2928,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sql }}",
+        "options": {}
+      },
+      "id": "228fd16a-f880-4b60-8274-869832ef6a56",
+      "name": "update resource with image",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2640,
+        320
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Br2ubPbG6ZoVjCkh",
+          "name": "mes"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resource = $('CheckParam').all()[0].json.query;\nconst image = '/image/' + $('Webhook').all()[0].binary.image.fileName;\n\nlet SQLstr = {};\nlet sql = `update mes.resources \nset resource_name='${resource.resourceName}', purchase_time='${resource.purchaseTime}', image='${image}'`;\n\nif (resource.packageId !== \"null\") {\n  sql += `, package_id='${resource.packageId}',resource_status=1`;\n}\n\nsql += ` where id=${resource.resourceId}`;\n\nSQLstr.sql = sql;\n\nreturn SQLstr;\n"
+      },
+      "id": "3d325db0-fbc7-47f3-93b4-80b0c294259c",
+      "name": "generate sql with image",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2432,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nreturn $('Webhook').all();"
+      },
+      "id": "d38cb085-0af0-4f74-b591-5aaaec894cce",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/resource/updateResouce",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f20a799f-ab39-4028-a5d1-cc9d78f584b9",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        592
+      ],
+      "webhookId": "3c7f47cc-7b42-4eb2-b8d6-5d1a99bd3dac"
+    }
+  ],
+  "connections": {
+    "CheckParam": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "generate sql with image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "exist the same package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S3": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "check the image weather is exist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "parametet error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check the image weather is exist": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update resource without image": {
+      "main": [
+        [
+          {
+            "node": "database error2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate dynastic SQL without image": {
+      "main": [
+        [
+          {
+            "node": "update resource without image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "S3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "generate dynastic SQL without image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update resource with image": {
+      "main": [
+        [
+          {
+            "node": "database error2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "database error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate sql with image": {
+      "main": [
+        [
+          {
+            "node": "update resource with image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CheckParam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.192.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "100",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.22",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "resourceId": 338,
+            "packageId": 110,
+            "resourceName": "整箱打印-D",
+            "procedureId": 81,
+            "resourceType": 1
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/resource/updateResouce",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "582f8d77-881e-4344-9a85-b517dc65f598",
+  "activeVersionId": "582f8d77-881e-4344-9a85-b517dc65f598",
+  "versionCounter": 34,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-07-08T09:16:54.884Z",
+      "createdAt": "2024-07-08T09:16:54.884Z",
+      "id": "5f0K75xGUDllx6nA",
+      "name": "Mes重构"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-04-24T05:56:47.538Z",
+      "createdAt": "2025-04-24T05:56:47.538Z",
+      "role": "workflow:owner",
+      "workflowId": "MwQvmSSXbmEc1s6g",
+      "projectId": "Z1eUE3fwJqHSiGKY",
+      "project": {
+        "updatedAt": "2025-10-27T02:22:22.440Z",
+        "createdAt": "2025-01-28T17:01:25.056Z",
+        "id": "Z1eUE3fwJqHSiGKY",
+        "name": "1.Mes重构",
+        "type": "team",
+        "icon": {
+          "type": "icon",
+          "value": "tools"
+        },
+        "description": "",
+        "creatorId": null
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

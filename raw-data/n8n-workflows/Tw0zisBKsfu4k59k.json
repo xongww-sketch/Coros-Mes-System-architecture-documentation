@@ -1,0 +1,251 @@
+{
+  "updatedAt": "2024-12-18T02:27:08.626Z",
+  "createdAt": "2024-01-29T08:45:10.887Z",
+  "id": "Tw0zisBKsfu4k59k",
+  "name": "barcodeinfo_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "147295e4-6179-4e0d-a0c7-833e8d33e623",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "c8278ec2-8f12-43d5-b194-d6c423cd2fcf",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        260
+      ],
+      "webhookId": "4aa9ec24-1809-4d7a-9b2f-69a8ebdb2da0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "9b59d2d2-a743-457f-8b12-bb2eea0689a8",
+              "leftValue": "={{ $json.headers.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "27bbcd8c-58c8-47d5-829d-e28ff772d580",
+              "leftValue": "={{ $json.headers.ordernumber2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "dc9aeb10-b252-4bb2-b2ba-81474543b7dd",
+              "leftValue": "={{ $json.headers.boxid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "00430422-35b5-40c2-a019-30fb5e4e2731",
+              "leftValue": "={{ $json.headers.jobnumber2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "44e9a9a9-f6c9-488e-a7ee-f30d13990907",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        800,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sql }}"
+      },
+      "id": "d6d06805-ae22-4c31-b318-5b5077cff128",
+      "name": "Microsoft SQL1",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        260
+      ],
+      "credentials": {
+        "microsoftSql": {
+          "id": "sXlTCwIbf42MUs4H",
+          "name": "MES_SQL_SERVER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst linestage2 = {\n  ASSY: '组装',\n  PACK: '包装',\n  null: '空',\n};\n\nconst productcode = {\n  handloop: '穿戴式手环',\n  watch: '穿戴式手表',\n  pnd: '便携式导航',\n  deviceparts: '配件',\n  coros: '智能头盔',\n  null: '空',\n};\n\n\nfor (const item of $input.all()) {\n  item.json.productcode = productcode[item.json.productcode] ||    \n  item.json.productcode;\n  item.json.linestage2 = linestage2[item.json.linestage2] ||    \n  item.json.linestage2;  \n\n}\n\nreturn $input.all();\n  \n\n"
+      },
+      "id": "796b9c5e-8c21-4312-87be-e94a2f9c72a3",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从输入的第一项的数据获取 query 参数\nconst input = $input.all()[0] || {};\nconst query = input.json.query || {};\n\n// 如果没有传入参数，则初始化为空字符串\nconst filters = {\n  uuid: query.uuid || '',\n  jobnumber2: query.jobnumber2 || '',\n  ordernumber2: query.ordernumber2 || '',\n  boxid: query.boxid || ''\n};\n\n// 函数来创建LIKE语句部分\nfunction buildLikeClause(field, value) {\n  return value ? `${field} LIKE '%${value}%'` : null; // 仅在有值时生成条件\n}\n\n// 构建WHERE子句\nconst whereClauses = [\n  buildLikeClause('consm_barcodeinfo.uuid', filters.uuid),\n  buildLikeClause('consm_barcodeinfo.jobnumber2', filters.jobnumber2),\n  buildLikeClause('consm_barcodeinfo.ordernumber2', filters.ordernumber2),\n  buildLikeClause('consm_barcodeinfo.boxid', filters.boxid),\n].filter(Boolean); // 移除所有为null的条件\n\n// 如果没有WHERE条件，则使用1=1\nconst whereClauseString = whereClauses.length > 0 ? whereClauses.join(' AND ') : '1=1';\n\n// 拼接完整SQL查询\nconst sql = `\n  SELECT \n    consm_barcodeinfo.jobnumber2,\n    consm_barcodeinfo.uuid,\n    consm_barcodeinfo.productcode,\n    consm_barcodeinfo.linestage2,\n    consm_barcodeinfo.ordernumber2,\n    consm_barcodeinfo.boxid,\n    consm_barcodeinfo.createtime2,\n    consm_barcodeinfo.extrainfo,\n    consm_barcodeinfo.modifytime2,\n    consm_deviceweight.objweight\n  FROM consm_barcodeinfo\n  LEFT JOIN consm_deviceweight ON consm_barcodeinfo.uuid = consm_deviceweight.barcode\n  WHERE ${whereClauseString}\n`;\n\n// 返回SQL查询字符串\nreturn [\n  {\n    json: {\n      sql: sql.trim(),\n    }\n  }\n];\n"
+      },
+      "id": "24b591da-caf1-4e22-80a2-929700967d6c",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.30.0.2",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "accept-encoding": "gzip",
+            "user-agent": "ReactorNetty/1.1.9",
+            "accept": "*/*",
+            "uuid": "",
+            "jobnumber2": "1000002799",
+            "ordernumber2": "",
+            "boxid": ""
+          },
+          "params": {},
+          "query": {
+            "uuid": "",
+            "jobunmber2": "1000002799",
+            "ordernumber2": "",
+            "boxid": ""
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.mes.coros.team/prod/147295e4-6179-4e0d-a0c7-833e8d33e623",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "d4a9d5ee-d72e-4657-a65f-d0e9f979cf59",
+  "activeVersionId": "d4a9d5ee-d72e-4657-a65f-d0e9f979cf59",
+  "versionCounter": 32,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:41.807Z",
+      "createdAt": "2024-01-29T03:43:19.869Z",
+      "id": "wbylAziHNIuwj3Uh",
+      "name": "MES查询应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-01-29T08:45:10.890Z",
+      "createdAt": "2024-01-29T08:45:10.890Z",
+      "role": "workflow:owner",
+      "workflowId": "Tw0zisBKsfu4k59k",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

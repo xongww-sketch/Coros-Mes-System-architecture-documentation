@@ -1,0 +1,1721 @@
+{
+  "updatedAt": "2025-12-09T07:12:46.937Z",
+  "createdAt": "2024-03-28T07:02:47.946Z",
+  "id": "ZZIFvpRx5yk4P2mu",
+  "name": "DefectiveUpload_API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "xls",
+        "binaryPropertyName": "=data",
+        "options": {
+          "rawData": true
+        }
+      },
+      "id": "672cf97e-52bb-4d82-bfe6-702ae04ff78b",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04a97bc0-7a83-465c-b016-03d4cc6d08a6",
+              "name": "SN",
+              "value": "={{ $json[\"Device SN\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "ff0e1d78-e126-4c66-b633-60c476fc03ed",
+              "name": "Reasontype",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "21be6d0f-38ac-4628-b6f3-f1f1c27c7277",
+              "name": "Reason",
+              "value": "={{ $json[\"RMA Reason\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "0dc89cfa-0a5a-4aa2-a81e-6fc73e002ece",
+              "name": "Date",
+              "value": "={{ $json['Defective Date'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d5823fa8-1d3a-4cd3-ba3a-729adb6773d8",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -144,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "=data",
+        "options": {
+          "rawData": true
+        }
+      },
+      "id": "e69c5faa-cfe4-4ef9-829d-93f0a3819475",
+      "name": "Extract from File1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        432
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04a97bc0-7a83-465c-b016-03d4cc6d08a6",
+              "name": "SN",
+              "value": "={{ $json[\"原始设备序列号\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "21be6d0f-38ac-4628-b6f3-f1f1c27c7277",
+              "name": "ReasonType",
+              "value": "= {{ $json['售后类型'] }}",
+              "type": "string"
+            },
+            {
+              "id": "37d6264b-bb06-441f-999b-d987dd8ad348",
+              "name": "Reason",
+              "value": "={{ $json['换机原因'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d3da20eb-7b7d-476b-904e-aa88f61e42c5",
+              "name": "Date",
+              "value": "={{ $json['登记日期'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6ad85acc-d073-4ce5-ba22-a4c960f4ac67",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -128,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "body.data_Overseas",
+        "options": {
+          "fileName": "Defective_Overseas.xlsx"
+        }
+      },
+      "id": "26182226-ac91-4ad9-b2aa-3b1504a8fc37",
+      "name": "海外不良品上传",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "body.data_CN",
+        "options": {
+          "fileName": "Defective_.xlsx"
+        }
+      },
+      "id": "d653e742-6c0d-4372-87c0-0ea494d1daed",
+      "name": "国内不良上传",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"200\",\n  \"msg\":\"数据已上传\",\n  \"result\":{{JSON.stringify($json.result)}}\n}",
+        "options": {}
+      },
+      "id": "6b13f5ae-617a-4678-a570-d23886980495",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3088,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cd6448dc-9b02-47a8-8cdf-c4290602f202",
+              "leftValue": "={{ $input.all() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9a3449d2-655c-4b5a-9049-8c524d5d597d",
+      "name": "文档格式判断",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        192,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": \"400\",\n  \"msg\":请检查上传文档的格式是否正确\"\"\n}",
+        "options": {}
+      },
+      "id": "e3631400-c4a4-4b24-a90f-891c8208628b",
+      "name": "报错信息：请检查上传文档是否符合格式",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2c1a4f56-4974-4283-83c1-8ea48d44717b",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "bf0aed2f-6e77-4836-8854-bc2a290df0ae",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        304
+      ],
+      "webhookId": "2c1a4f56-4974-4283-83c1-8ea48d44717b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cd6448dc-9b02-47a8-8cdf-c4290602f202",
+              "leftValue": "={{ $input.all() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "551bbbd2-9654-4b2d-955e-652a5dca3a65",
+      "name": "文档格式判断1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        448,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 封装一个通用的处理函数\nfunction normalizeDate(inputDate) {\n  if (!inputDate) return null;\n\n  // 核心判断逻辑：\n  // 检查入参是否为“纯数字”格式（即 Excel 序列号）\n  // 正则含义：开头到结尾都是数字，允许包含小数点\n  const isExcelFormat = /^\\d+(\\.\\d+)?$/.test(String(inputDate));\n\n  if (isExcelFormat) {\n    // === 情况 A: Excel 格式 (例如: 45626) ===\n    const excelEpoch = new Date(Date.UTC(1899, 11, 30));\n    // 使用 parseFloat 以便保留 Excel 中的时间部分（如果有小数）\n    const days = parseFloat(inputDate); \n    const jsDate = new Date(excelEpoch.getTime() + days * 86400000);\n    return jsDate.toISOString().split('.')[0];\n  } else {\n    // === 情况 B: 标准字符串格式 (例如: \"2025-11-30 11:46:54\") ===\n    // 尝试直接解析\n    const jsDate = new Date(inputDate);\n    \n    // 如果解析结果是有效日期\n    if (!isNaN(jsDate.getTime())) {\n      // 统一输出为 ISO 格式，保持与 Excel 处理逻辑一致的输出风格\n      return jsDate.toISOString().split('.')[0];\n    }\n    \n    // 如果都解析不了，返回原值\n    return inputDate;\n  }\n}\n\nconst transformedData = $input.all().map(item => {\n  // 你的入参结构看起来是 { json: { SN:..., Date:... } } 或者直接是对象数组\n  // 根据你提供的代码上下文，经常是 { json: ... } 结构\n  const newItem = item.json ? { ...item.json } : { ...item }; // 兼容带 json 包装或不带的情况\n  \n  newItem.Date = normalizeDate(newItem.Date);\n  \n  // 保持原有返回结构\n  return { ...item, json: newItem };\n});\n\nreturn transformedData;"
+      },
+      "id": "0f0a2b1c-0c74-4b61-bb9b-1b22b1507f51",
+      "name": "Excel日期转换",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] -  激活设备数据库插入数据失败",
+        "html": "={{ $('整理插入数据').all }}",
+        "options": {}
+      },
+      "id": "7b92c754-7128-4c81-93f9-726d63d01554",
+      "name": "接口调取失败",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2848,
+        992
+      ],
+      "webhookId": "7f7441c7-5254-464c-8ee5-9fca7c87017e",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function processDate(inputDate) {\n  if (!inputDate) return null;\n\n  const dateStr = String(inputDate);\n  \n  // 核心判断：正则检查是否“纯数字”（允许带小数点），例如 45230 或 45230.5\n  // 如果是纯数字，说明是 Excel 格式\n  const isExcelFormat = /^\\d+(\\.\\d+)?$/.test(dateStr);\n\n  let jsDate;\n\n  if (isExcelFormat) {\n    // === 处理 Excel 数字格式 ===\n    const excelEpoch = new Date(Date.UTC(1899, 11, 30));\n    const days = parseFloat(inputDate); // 建议用 parseFloat 以保留时间精度\n    jsDate = new Date(excelEpoch.getTime() + days * 86400000);\n  } else {\n    // === 处理 \"2025-10-10\" 或 \"2025-11-30...\" 字符串格式 ===\n    // 直接利用 JS 原生能力解析\n    jsDate = new Date(inputDate);\n  }\n\n  // 检查是否转换成功\n  if (isNaN(jsDate.getTime())) {\n    return inputDate; // 如果解析失败，返回原值\n  }\n\n  // 统一输出 ISO 格式 (YYYY-MM-DDTHH:mm:ss)\n  return jsDate.toISOString().split('.')[0];\n}\n\nconst transformedData = $input.all().map(item => {\n  const newItem = {...item.json}; // 复制对象\n  newItem.Date = processDate(newItem.Date); // 转换日期\n  return { ...item, json: newItem };\n});\n\nreturn transformedData;"
+      },
+      "id": "8e6b793a-b86d-41af-9680-83f4ff749b55",
+      "name": "Excel日期转换1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0433238f-9480-4e18-a5c2-a7970fd542e5",
+              "name": "SN",
+              "value": "={{ $json.SN }}",
+              "type": "string"
+            },
+            {
+              "id": "7bda20ad-3f04-4162-bc16-ed8cf47e83a2",
+              "name": "ReasonType",
+              "value": "={{ $json.ReasonType }}",
+              "type": "string"
+            },
+            {
+              "id": "22f57805-b180-492e-9245-de49b646a766",
+              "name": "Date",
+              "value": "={{$json.Date}}",
+              "type": "string"
+            },
+            {
+              "id": "6319d868-24f3-4d0a-8b13-b07bf1ba688c",
+              "name": "Reason",
+              "value": "={{ $json.Reason }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0c91a5cd-5794-4c26-a0eb-a1b7009391de",
+      "name": "整理插入数据",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        800,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "public@coros.com",
+        "toEmail": "chenyongqi@coros.com",
+        "subject": "[n8n warn] -  不良设备插入信息",
+        "html": "={{JSON.stringify( $json )}}",
+        "options": {}
+      },
+      "id": "068fca38-f7c4-4611-a346-8d8a9448234a",
+      "name": "接口调取失败1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3088,
+        272
+      ],
+      "webhookId": "fda21b30-df84-4f09-867a-1dacb94e5eae",
+      "credentials": {
+        "smtp": {
+          "id": "2KuXmj6ZAw4UDJMm",
+          "name": "SMTP for Public@coros.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86d6b5a6-875a-4692-8be6-6bccb516d774",
+              "name": "Id",
+              "value": "='{{ $json.id }}'",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "286b1e42-ee1f-40a1-b31e-eeeb7cffa71a",
+      "name": "Edit Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1632,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * from public.activation_records where retroid in ({{ $json.snlist }})",
+        "options": {}
+      },
+      "id": "df8cf00b-b615-4a47-bfe4-894d526341a0",
+      "name": "判断是否有激活记录",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1504,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "35643b64-12e9-4de7-b26d-fb3b64d531c7",
+              "name": "sn",
+              "value": "='{{ $json.SN }}'",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "32124871-362f-4b58-a009-5f8339e72207",
+      "name": "构建SnList",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        944,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\n\nconst result = input\n  .filter(item => item.json.sn !== \"''\") // 过滤掉 sn 为 \"''\" 的项\n  .map(item => item.json.sn)\n  .join(',');\n\nreturn { snlist: result };\n\n\n\n\n"
+      },
+      "id": "791458c7-6bc7-4ecf-bb0d-5cf931de7e79",
+      "name": "整合snlist",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\n\nconst result = input.map(item => item.json.Id).join(',');\n\nreturn { Idlist: result };\n\n\n\n"
+      },
+      "id": "10d6dce5-e1ae-47d0-a408-5dcfab2aa9fa",
+      "name": "整合idlist",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "errdefective",
+        "options": {}
+      },
+      "id": "d87b0fe5-4ad4-4eeb-b8b6-37f5a858388a",
+      "name": "重复不良",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "errActiveItem",
+        "options": {}
+      },
+      "id": "e28b2578-094c-42e2-8541-f2f11187fda4",
+      "name": "该设备未激活",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "SuccessItem",
+        "options": {}
+      },
+      "id": "35fa998d-2283-4eb3-879f-fbb1176527d4",
+      "name": "成功插入",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let res = [];\nfor (const item of $input.all()) {\n  const itemContent = item.json;\n  if (!itemContent) continue; // 如果 itemContent 为空则跳过\n\n  // 遍历 itemContent 的所有项\n  for (const key in itemContent) {\n    if (!itemContent.hasOwnProperty(key)) continue;\n\n    const cur = itemContent[key];\n    let hasError = false;\n\n    if (key === 'errdefective' && Array.isArray(cur)) {\n      hasError = true;\n      const temp = cur.map(defectiveItem => ({\n        SN: defectiveItem['retroid'],\n        Reason: '该设备已有不良记录',\n      }));\n      res = res.concat(temp);\n    } else if (key === 'SuccessItem' && Array.isArray(cur)) {\n      hasError = true;\n      const temp = cur.map(successItem => ({\n        SN: successItem['retroid'],\n        Reason: '该设备已成功上传',\n      }));\n      res = res.concat(temp);\n    } else if (key === 'errActiveItem' && Array.isArray(cur)) {\n      hasError = true;\n      const temp = cur.map(errActive => ({\n        SN: errActive['SN'],\n        Reason: '该设备未激活',\n      }));\n      res = res.concat(temp);\n    }\n\n    if (!hasError) {\n      res.push({ SN: null, Reason: '上传失败' });\n    }\n  }\n}\n\nreturn {\n  result: res\n};\n"
+      },
+      "id": "3fbf171a-d1e3-4d8b-875a-b9fd41844f7e",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2912,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM public.defective_records x WHERE active_id IN ({{ $json.Idlist }});",
+        "options": {}
+      },
+      "id": "c63b1b88-8d39-465c-96f8-fc7fea759c70",
+      "name": "判断机器是否存在不良记录",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2000,
+        -48
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "retroid",
+              "field2": "retroid"
+            }
+          ]
+        },
+        "outputDataFrom": "input1",
+        "options": {}
+      },
+      "id": "945e97cf-f2ca-42b6-9229-44b7898a0313",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2464,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "retroid",
+              "field2": "SN"
+            }
+          ]
+        },
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input2",
+        "options": {}
+      },
+      "id": "d0a2587a-e58f-4ecc-866d-6a21d6000c71",
+      "name": "整合未激活数据",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1600,
+        768
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d72acf11-d877-44cd-b9e1-3375d4e7ea0f",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        640,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "f61528c7-cc62-496e-88b6-e23fea15311c",
+      "name": "Merge3",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2768,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "defective_records",
+          "mode": "list",
+          "cachedResultName": "defective_records"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "retroid": "={{ $json.SN }}",
+            "defective_date": "={{ $json.Date }}",
+            "defective_type": "={{ $json.ReasonType }}",
+            "defective_reason": "={{ $json.Reason }}",
+            "active_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "retroid",
+              "displayName": "retroid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "defective_date",
+              "displayName": "defective_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "defective_type",
+              "displayName": "defective_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "defective_reason",
+              "displayName": "defective_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "active_id",
+              "displayName": "active_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f14e290b-bcda-4837-ae34-5b9726464513",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        2400,
+        352
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "uYFcNmDHkmjM6vXJ",
+          "name": "pgsql.mes.coros.team"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "retroid",
+              "field2": "retroid"
+            }
+          ]
+        },
+        "joinMode": "keepNonMatches",
+        "options": {}
+      },
+      "id": "33b0abfa-436a-406f-a6b3-59c0c35b72f0",
+      "name": "整合插入数据",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2112,
+        240
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "retroid",
+              "field2": "SN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2756d3a-598f-48b7-af10-af6a24189a7c",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2240,
+        352
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ba9b75cc-04f0-47c4-84d8-4f85e4b8edd8",
+              "leftValue": "={{ $json.snlist }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        208
+      ],
+      "id": "754fe9ba-7e57-49dc-9d7a-69987cc263ee",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Excel日期转换",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "海外不良品上传": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "国内不良上传": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Excel日期转换1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文档格式判断": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查上传文档是否符合格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "海外不良品上传",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "国内不良上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文档格式判断1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "报错信息：请检查上传文档是否符合格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Excel日期转换": {
+      "main": [
+        [
+          {
+            "node": "文档格式判断1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Excel日期转换1": {
+      "main": [
+        [
+          {
+            "node": "文档格式判断",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理插入数据": {
+      "main": [
+        [
+          {
+            "node": "构建SnList",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "整合未激活数据",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "整合idlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断是否有激活记录": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "整合未激活数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "整合插入数据",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建SnList": {
+      "main": [
+        [
+          {
+            "node": "整合snlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合snlist": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合idlist": {
+      "main": [
+        [
+          {
+            "node": "判断机器是否存在不良记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "成功插入": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "接口调取失败1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断机器是否存在不良记录": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "整合插入数据",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "重复不良",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合未激活数据": {
+      "main": [
+        [
+          {
+            "node": "该设备未激活",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "整理插入数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "成功插入",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "接口调取失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整合插入数据": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "该设备未激活": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "重复不良": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "判断是否有激活记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 600
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "192.168.128.8",
+            "host": "n8n_webhook",
+            "connection": "close",
+            "content-length": "22083",
+            "user-agent": "ReactorNetty/1.1.8",
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "data_Overseas": "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",
+            "data_CN": ""
+          },
+          "webhookUrl": "https://n8n.mes.coros.team/prod/2c1a4f56-4974-4283-83c1-8ea48d44717b",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "SN": "W31A021041",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "2025-10-10"
+        }
+      },
+      {
+        "json": {
+          "SN": "M18JB02080",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45937"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19AP13116",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45938"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU16076",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45939"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AE79432",
+          "Reasontype": "",
+          "Reason": "心率臂带_外壳破损",
+          "Date": "45941"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AE71212",
+          "Reasontype": "",
+          "Reason": "蓝牙_经常断连",
+          "Date": "45943"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU10626",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45944"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20AU00815",
+          "Reasontype": "",
+          "Reason": "电池_耗电异常",
+          "Date": "45944"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31BX33906",
+          "Reasontype": "",
+          "Reason": "电池_耗电异常",
+          "Date": "45945"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU12823",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45945"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31A024273",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45945"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19AP03523",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45949"
+        }
+      },
+      {
+        "json": {
+          "SN": "W32B014086",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45954"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31AB12597",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45954"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31A035944",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45957"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU12959",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45957"
+        }
+      },
+      {
+        "json": {
+          "SN": "B13D004782",
+          "Reasontype": "",
+          "Reason": "电池_发热",
+          "Date": "45958"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AF52925",
+          "Reasontype": "",
+          "Reason": "蓝牙_经常断连",
+          "Date": "45958"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31BV16367",
+          "Reasontype": "",
+          "Reason": "电池_耗电异常",
+          "Date": "45961"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AF03359",
+          "Reasontype": "",
+          "Reason": "心率_无",
+          "Date": "45931"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20AR08177",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45931"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU08395",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45932"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU16170",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45932"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BG00926",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45932"
+        }
+      },
+      {
+        "json": {
+          "SN": "M18LG02801",
+          "Reasontype": "",
+          "Reason": "气压计_无累计上升",
+          "Date": "45936"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19AP03859",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45936"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AE41892",
+          "Reasontype": "",
+          "Reason": "心率臂带_外壳破损",
+          "Date": "45936"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19P2B0241",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45937"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19AP07844",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45940"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU08929",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45943"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31AZ37157",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45943"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AA08832",
+          "Reasontype": "",
+          "Reason": "蓝牙_经常断连",
+          "Date": "45943"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19AP07368",
+          "Reasontype": "",
+          "Reason": "屏幕_油墨脱落",
+          "Date": "45944"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AE08511",
+          "Reasontype": "",
+          "Reason": "心率臂带_外壳破损",
+          "Date": "45945"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AE05682",
+          "Reasontype": "",
+          "Reason": "蓝牙_经常断连",
+          "Date": "45945"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31AC47881",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45945"
+        }
+      },
+      {
+        "json": {
+          "SN": "M18ET08180",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45952"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31KX04451",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45954"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19AP04261",
+          "Reasontype": "",
+          "Reason": "屏幕_油墨脱落",
+          "Date": "45957"
+        }
+      },
+      {
+        "json": {
+          "SN": "V19AP08997",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45957"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AE81921",
+          "Reasontype": "",
+          "Reason": "心率_无",
+          "Date": "45958"
+        }
+      },
+      {
+        "json": {
+          "SN": "M18JC01645",
+          "Reasontype": "",
+          "Reason": "蓝牙_经常断连",
+          "Date": "45958"
+        }
+      },
+      {
+        "json": {
+          "SN": "M18EV15769",
+          "Reasontype": "",
+          "Reason": "气压计_无累计上升",
+          "Date": "45959"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU12222",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45960"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BU16044",
+          "Reasontype": "",
+          "Reason": "电池_无法充电或开机",
+          "Date": "45961"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20AR08214",
+          "Reasontype": "",
+          "Reason": "心率_无",
+          "Date": "45931"
+        }
+      },
+      {
+        "json": {
+          "SN": "H31AA19732",
+          "Reasontype": "",
+          "Reason": "心率_无",
+          "Date": "45940"
+        }
+      },
+      {
+        "json": {
+          "SN": "B20BR10530",
+          "Reasontype": "",
+          "Reason": "GPS_信号差",
+          "Date": "45940"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31BC21272",
+          "Reasontype": "",
+          "Reason": "气压计_不准",
+          "Date": "45945"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31FV01604",
+          "Reasontype": "",
+          "Reason": "按键_旋钮失灵",
+          "Date": "45950"
+        }
+      },
+      {
+        "json": {
+          "SN": "W31AV14066",
+          "Reasontype": "",
+          "Reason": "电池_耗电异常",
+          "Date": "45950"
+        }
+      },
+      {
+        "json": {
+          "SN": "M18JG04224",
+          "Reasontype": "",
+          "Reason": "电池_发热",
+          "Date": "45958"
+        }
+      }
+    ]
+  },
+  "versionId": "bab88216-f522-4f4c-8f99-03a5d3c6cfea",
+  "activeVersionId": "bab88216-f522-4f4c-8f99-03a5d3c6cfea",
+  "versionCounter": 46,
+  "triggerCount": 1,
+  "tags": [
+    {
+      "updatedAt": "2024-04-24T05:57:56.804Z",
+      "createdAt": "2024-01-26T07:49:15.286Z",
+      "id": "nTeYqAfpKKoeAJjH",
+      "name": "品质部门应用API"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2024-03-28T07:02:47.946Z",
+      "createdAt": "2024-03-28T07:02:47.946Z",
+      "role": "workflow:owner",
+      "workflowId": "ZZIFvpRx5yk4P2mu",
+      "projectId": "bEZCDhUuacQnl4pP",
+      "project": {
+        "updatedAt": "2024-05-30T17:44:47.541Z",
+        "createdAt": "2024-05-30T17:44:47.541Z",
+        "id": "bEZCDhUuacQnl4pP",
+        "name": "Easy wang <e@mpnew.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "94775e1f-fc17-45ee-9e00-e7bc7ec06090"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
